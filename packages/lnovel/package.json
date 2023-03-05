@@ -2,7 +2,12 @@
   "name": "lnovel",
   "version": "0.0.0",
   "description": "",
-  "keywords": [],
+  "keywords": [
+    "cli",
+    "轻小说",
+    "wenku8",
+    "轻小说文库"
+  ],
   "homepage": "https://github.com/yjl9903/lnovel#readme",
   "bugs": {
     "url": "https://github.com/yjl9903/lnovel/issues"
@@ -24,7 +29,11 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "lnovel": "cli.mjs"
+  },
   "files": [
+    "*.mjs",
     "dist"
   ],
   "scripts": {
@@ -34,7 +43,15 @@
     "test:ci": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@breadc/color": "^0.8.9",
+    "breadc": "^0.8.9",
+    "cheerio": "1.0.0-rc.12",
+    "epubook": "^0.0.5",
+    "iconv-lite": "^0.6.3"
+  },
   "devDependencies": {
+    "@types/cheerio": "^0.22.31",
     "vitest": "^0.29.2"
   },
   "engines": {
