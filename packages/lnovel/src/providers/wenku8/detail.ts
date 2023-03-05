@@ -119,7 +119,7 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
             chapters.push({
               index: chapterIndex + 1,
               title: chapterTitle,
-              href: chapterUrl
+              href: url.replace(/index\.htm$/, chapterUrl)
             });
           }
         });

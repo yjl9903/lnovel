@@ -52,12 +52,14 @@ program
     if (options.dryRun) return;
 
     const volumes = await provider.promptSelectVolume(novel);
-    if (!volumes) return;
+    if (!volumes || volumes.length === 0) return;
 
     const ok = options.yes || (await provider.promptConfirm());
     if (!ok) return;
 
-    await provider.download(novel, volumes);
+    for (const volume of volumes) {
+      await provider.download(novel, volume, { outDir: options.outDir });
+    }
   });
 
 program

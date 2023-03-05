@@ -5,7 +5,7 @@ export abstract class LightNovelProvider {
 
   abstract fetch(result: SearchResult): Promise<LightNovel>;
 
-  abstract download(novel: LightNovel, volumes: Volume[]): Promise<void>;
+  abstract download(novel: LightNovel, volume: Volume, option: DownloadOption): Promise<Book>;
 
   public async promptSelect(list: SearchResult[]): Promise<SearchResult | undefined> {
     const inquirer = (await import('inquirer')).default;
@@ -46,6 +46,10 @@ export abstract class LightNovelProvider {
 
 export interface SearchOption {
   type: 'name' | 'author';
+}
+
+export interface DownloadOption {
+  outDir: string;
 }
 
 export interface SearchResult {
@@ -121,4 +125,16 @@ export interface Chapter {
   title: string;
 
   href: string;
+}
+
+export interface Book {
+  novel: LightNovel;
+
+  volume: Volume;
+
+  contents: Array<Chapter & { content: string }>;
+
+  cover?: string;
+
+  images: string[];
 }

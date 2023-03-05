@@ -2,7 +2,17 @@
  * This module is migrated from https://github.com/Messiahhh/wenku8-downloader
  */
 
-import { LightNovelProvider, LightNovel, SearchOption, SearchResult, Volume } from '../base';
+import ora from 'ora';
+
+import {
+  LightNovelProvider,
+  SearchOption,
+  DownloadOption,
+  SearchResult,
+  LightNovel,
+  Book,
+  Volume
+} from '../base';
 
 import { getCookie } from './fetch';
 
@@ -15,9 +25,16 @@ export class Wenku8Provider extends LightNovelProvider {
     name: string,
     { type = 'name' }: Partial<SearchOption> = {}
   ): Promise<SearchResult[]> {
-    const { doSearch } = await import('./search');
+    const spinner = ora();
+    spinner.start(`正在搜索${name}...`);
 
-    return doSearch(name, type === 'name' ? 'articlename' : 'author');
+    try {
+      const { doSearch } = await import('./search');
+      return await doSearch(name, type === 'name' ? 'articlename' : 'author');
+    } finally {
+      spinner.succeed();
+      console.log();
+    }
   }
 
   public async fetch(result: SearchResult): Promise<LightNovel> {
@@ -25,7 +42,8 @@ export class Wenku8Provider extends LightNovelProvider {
     return await getNovelDetails(result.id);
   }
 
-  public download(novel: LightNovel, volumes: Volume[]): Promise<void> {
-    throw new Error('Method not implemented.');
+  public async download(novel: LightNovel, volume: Volume, options: DownloadOption): Promise<Book> {
+    const { doDownload } = await import('./download');
+    return doDownload(novel, volume, options);
   }
 }
