@@ -3,15 +3,16 @@ import { breadc } from 'breadc';
 
 import { version } from '../package.json';
 
+import { useLogger } from './logger';
+import { useProvider } from './providers';
+
+const logger = useLogger('lnovel');
+
 const program = breadc('lnovel', {
   version,
-  description: 'Download your favourite light novels easily',
-  plugins: [
-    {
-      async onPreRun() {}
-    }
-  ]
+  description: 'Download your favourite light novels easily'
 })
+  .option('-p, --provider <site>', '下载站点, 默认使用轻小说文库', { default: 'wenku8' })
   .option('-y, --yes', '是否进行确认')
   .option('--ext <ext>', {
     description: '生成 EPUB 或者 markdown 格式',
@@ -28,10 +29,18 @@ program
   .command('<name>', '搜索并下载轻小说')
   .alias('search')
   .option('--key <type>', '搜索方式（可选：name / author）', { default: 'name' })
-  .action(async (key, options) => {});
+  .action(async (name, options) => {
+    const provider = await useProvider(options.provider);
+    if (!provider) {
+      logger.error(`Unknown provider ${options.provider}`);
+      return;
+    }
+
+    await provider.search(name, {});
+  });
 
 program
   .command('fetch <url>', '使用小说详情页链接或 ID 进行下载')
-  .action(async (key, options) => {});
+  .action(async (link, options) => {});
 
 program.run(process.argv.slice(2)).catch((err) => console.error(err));
