@@ -1,4 +1,5 @@
-import type { LightNovel } from '../base';
+import { Volume } from './../base';
+import type { Chapter, LightNovel } from '../base';
 
 import { fetch } from './fetch';
 
@@ -10,7 +11,8 @@ const BASE_URL = 'https://www.wenku8.net/book/';
  * @returns
  */
 export async function getNovelDetails(id: string): Promise<LightNovel> {
-  const $ = await fetch(`${BASE_URL}${id}.htm`);
+  const url = `${BASE_URL}${id}.htm`;
+  const $ = await fetch(url);
 
   const name = $('#content')
     .children()
@@ -81,9 +83,48 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
       .map((l) => l.trim())
       .join('\n'),
     href: catalogueUrl!,
+    volumes: await getChapterList(catalogueUrl!),
     meta: {
       length,
       recentChapter
     }
   };
+
+  async function getChapterList(url: string): Promise<Volume[]> {
+    const $ = await fetch(url);
+    const rows = $('tbody').children();
+
+    const volumes = $('table tbody tr td.vcss')
+      .map((index, item) => ({
+        index,
+        name: $(item).text().trim(),
+        chapter: [],
+        rowNumber: $(item).parent().index()
+      }))
+      .get();
+
+    for (let i = 0; i < volumes.length; i++) {
+      const v = volumes[i];
+      const chapters = v.chapter as Chapter[];
+      rows
+        .slice(
+          volumes[i].rowNumber,
+          i + 1 < volumes.length ? volumes[i + 1].rowNumber : rows.length
+        )
+        .find('a')
+        .each((chapterIndex, item) => {
+          const chapterTitle = $(item).text();
+          const chapterUrl = $(item).attr('href');
+          if (chapterUrl) {
+            chapters.push({
+              index: chapterIndex + 1,
+              title: chapterTitle,
+              href: chapterUrl
+            });
+          }
+        });
+    }
+
+    return volumes.map((v) => ({ id: v.id, name: v.name, chapter: v.chapter }));
+  }
 }

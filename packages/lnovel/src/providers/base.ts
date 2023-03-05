@@ -73,5 +73,25 @@ export interface LightNovel {
    */
   description: string;
 
-  meta?: Record<string, string>;
+  volumes: Volume[];
+
+  meta?: Record<string, any>;
+}
+
+export interface Volume {
+  id: string;
+
+  name: string;
+
+  chapter: Chapter[];
+
+  href?: string;
+}
+
+export interface Chapter {
+  index: number;
+
+  title: string;
+
+  href: string;
 }
