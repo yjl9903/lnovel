@@ -125,6 +125,6 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
         });
     }
 
-    return volumes.map((v) => ({ id: v.id, name: v.name, chapter: v.chapter }));
+    return volumes.map((v) => ({ id: String(v.index), name: v.name, chapter: v.chapter }));
   }
 }

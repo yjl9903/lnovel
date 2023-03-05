@@ -22,6 +22,7 @@ const program = breadc('lnovel', {
     description: '指定小说放置目录，默认在当前目录下生成',
     default: './novels'
   })
+  .option('--dry-run', '不下载轻小说')
   .option('--verbose', '显示更多日志')
   .option('--strict', '严格模式下图片的下载失败将会阻止 epub 文件的生成');
 
@@ -49,6 +50,19 @@ program
 
     const novel = await provider.fetch(selected);
     displayLightNovel(novel);
+
+    if (options.dryRun) {
+      return;
+    }
+
+    const volumes = await provider.promptSelectVolume(novel);
+
+    const ok = options.yes || (await provider.promptConfirm());
+    if (!ok) {
+      return;
+    }
+
+    await provider.download(novel, volumes);
   });
 
 program
