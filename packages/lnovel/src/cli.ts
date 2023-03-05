@@ -3,8 +3,8 @@ import { breadc } from 'breadc';
 
 import { version } from '../package.json';
 
-import { useLogger } from './logger';
 import { useProvider } from './providers';
+import { useLogger, displayLightNovel } from './logger';
 
 const logger = useLogger('lnovel');
 
@@ -42,10 +42,13 @@ program
       return;
     }
 
-    const selected = await provider.promptSearch(list);
+    const selected = list.length === 1 ? list[0] : await provider.promptSelect(list);
     if (!selected) {
       return;
     }
+
+    const novel = await provider.fetch(selected);
+    displayLightNovel(novel);
   });
 
 program

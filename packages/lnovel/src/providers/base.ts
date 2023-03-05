@@ -3,9 +3,9 @@ export abstract class LightNovelProvider {
 
   abstract search(key: string, options?: Partial<SearchOption>): Promise<SearchResult[]>;
 
-  abstract fetch(key: string): Promise<void>;
+  abstract fetch(result: SearchResult): Promise<LightNovel>;
 
-  public async promptSearch(list: SearchResult[]): Promise<SearchResult | undefined> {
+  public async promptSelect(list: SearchResult[]): Promise<SearchResult | undefined> {
     const inquirer = (await import('inquirer')).default;
     const { selected } = await inquirer.prompt({
       type: 'list',
@@ -29,4 +29,49 @@ export interface SearchResult {
   href: string;
 
   meta?: Record<string, any>;
+}
+
+export interface LightNovel {
+  id: string;
+
+  name: string;
+
+  href: string;
+
+  /**
+   * 封面
+   */
+  cover: string;
+
+  /**
+   * 作者
+   */
+  author: string;
+
+  /**
+   * 文库
+   */
+  publisher: string;
+
+  /**
+   * 是否完结
+   */
+  status: string;
+
+  /**
+   * 最后更新时间
+   */
+  lastUpdateTime: string;
+
+  /**
+   * 小说标签
+   */
+  tags: string[];
+
+  /**
+   * 内容简介
+   */
+  description: string;
+
+  meta?: Record<string, string>;
 }

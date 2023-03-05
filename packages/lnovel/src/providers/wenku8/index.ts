@@ -2,7 +2,7 @@
  * This module is migrated from https://github.com/Messiahhh/wenku8-downloader
  */
 
-import { LightNovelProvider, SearchOption, SearchResult } from '../base';
+import { LightNovelProvider, LightNovel, SearchOption, SearchResult } from '../base';
 
 import { getCookie } from './fetch';
 
@@ -20,7 +20,8 @@ export class Wenku8Provider extends LightNovelProvider {
     return doSearch(name, type === 'name' ? 'articlename' : 'author');
   }
 
-  public fetch(): Promise<void> {
-    throw new Error('Method not implemented.');
+  public async fetch(result: SearchResult): Promise<LightNovel> {
+    const { getNovelDetails } = await import('./detail');
+    return await getNovelDetails(result.id);
   }
 }
