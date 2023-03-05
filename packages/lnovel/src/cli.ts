@@ -38,7 +38,7 @@ program
 
     const list = await provider.search(name, {});
     if (list.length === 0) {
-      console.log(`没有找到任何与 ${name} 相关的轻小说`);
+      console.log(color.red(`没有找到任何与《${name}》相关的轻小说`));
       return;
     }
 
