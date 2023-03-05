@@ -44,23 +44,18 @@ program
     }
 
     const selected = list.length === 1 ? list[0] : await provider.promptSelect(list);
-    if (!selected) {
-      return;
-    }
+    if (!selected) return;
 
     const novel = await provider.fetch(selected);
     displayLightNovel(novel);
 
-    if (options.dryRun) {
-      return;
-    }
+    if (options.dryRun) return;
 
     const volumes = await provider.promptSelectVolume(novel);
+    if (!volumes) return;
 
     const ok = options.yes || (await provider.promptConfirm());
-    if (!ok) {
-      return;
-    }
+    if (!ok) return;
 
     await provider.download(novel, volumes);
   });

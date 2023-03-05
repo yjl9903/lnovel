@@ -22,16 +22,6 @@ importers:
       vite: 4.1.4_@types+node@18.14.6
       vitest: 0.29.2
 
-  packages:
-
-    specifiers:
-      pino: ^8.11.0
-      pino-pretty: ^9.4.0
-
-    dependencies:
-      pino: 8.11.0
-      pino-pretty: 9.4.0
-
   packages/lnovel:
     specifiers:
       '@breadc/color': ^0.8.9
