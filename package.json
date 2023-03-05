@@ -1,0 +1,28 @@
+{
+  "name": "@lnovel/monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "format": "turbo run format --parallel",
+    "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
+    "test:ci": "turbo run test:ci",
+    "typecheck": "turbo run typecheck",
+    "preversion": "turbo run test:ci",
+    "postversion": "turbo run build"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.6",
+    "bumpp": "latest",
+    "turbo": "^1.8.3",
+    "typescript": "^4.9.5",
+    "unbuild": "^1.1.2",
+    "vite": "^4.1.4",
+    "vitest": "^0.29.2"
+  },
+  "packageManager": "pnpm@7.28.0",
+  "engines": {
+    "node": ">=v18.14.2"
+  }
+}
