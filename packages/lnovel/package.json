@@ -48,12 +48,14 @@
     "cheerio": "1.0.0-rc.12",
     "epubook": "^0.0.5",
     "iconv-lite": "^0.6.3",
+    "inquirer": "^9.1.4",
     "pino": "^8.11.0",
     "pino-pretty": "^9.4.0",
     "set-cookie-parser": "^2.5.1"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.31",
+    "@types/inquirer": "^9.0.3",
     "@types/set-cookie-parser": "^2.4.2",
     "vitest": "^0.29.2"
   },

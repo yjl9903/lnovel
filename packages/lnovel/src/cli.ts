@@ -37,7 +37,15 @@ program
     }
 
     const list = await provider.search(name, {});
-    console.log(list);
+    if (list.length === 0) {
+      console.log(`没有找到任何与 ${name} 相关的轻小说`);
+      return;
+    }
+
+    const selected = await provider.promptSearch(list);
+    if (!selected) {
+      return;
+    }
   });
 
 program
