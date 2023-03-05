@@ -74,9 +74,12 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
     publisher,
     author,
     status,
-    lastUpdateTime,
+    lastUpdateTime: new Date(lastUpdateTime),
     tags: tag.split(' '),
-    description,
+    description: description
+      .split('\n')
+      .map((l) => l.trim())
+      .join('\n'),
     href: catalogueUrl!,
     meta: {
       length,

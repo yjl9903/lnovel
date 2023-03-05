@@ -61,7 +61,7 @@ export interface LightNovel {
   /**
    * 最后更新时间
    */
-  lastUpdateTime: string;
+  lastUpdateTime: Date;
 
   /**
    * 小说标签
