@@ -36,7 +36,8 @@ program
       return;
     }
 
-    await provider.search(name, {});
+    const list = await provider.search(name, {});
+    console.log(list);
   });
 
 program
