@@ -25,6 +25,6 @@
   },
   "packageManager": "pnpm@7.29.0",
   "engines": {
-    "node": ">=v18.14.2"
+    "node": ">=v18.15.0"
   }
 }
