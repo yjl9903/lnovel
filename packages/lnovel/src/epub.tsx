@@ -1,9 +1,8 @@
 import * as path from 'node:path';
 
-import { Epubook, XHTMLBuilder } from 'epubook';
+import { Epubook, XHTMLBuilder, Image } from 'epubook';
 
 import { Book } from './providers/base';
-import { padNumber } from './utils';
 
 export async function bundle(book: Book): Promise<Epubook> {
   const epubook = (
@@ -17,20 +16,27 @@ export async function bundle(book: Book): Promise<Epubook> {
   ).extend({
     pages: {
       content(file, props: { title: string; content: string }) {
-        return new XHTMLBuilder(file).title(props.title).body(<div html={props.content}></div>);
+        return new XHTMLBuilder(file)
+          .title(props.title)
+          .body(<h2>{props.title}</h2>)
+          .body(<div html={props.content}></div>);
       }
     }
   });
 
-  const pages = book.contents.map((c) => {
-    return epubook.page('content', { title: c.title, content: c.content });
-  });
+  const images = (
+    await Promise.all(
+      book.images.map((i) => {
+        return epubook.image(path.join(book.root, i));
+      })
+    )
+  ).filter(Boolean) as Image[];
 
-  const images = await Promise.all(
-    book.images.map((i) => {
-      return epubook.image(path.join(book.root, i));
-    })
-  );
+  const pages = book.contents.map((c) => {
+    const content =
+      images.length > 0 ? c.content.replace(/__IMAGE_ROOT__/g, '../images') : c.content;
+    return epubook.page('content', { title: c.title, content });
+  });
 
   const cover = book.cover ? [await epubook.cover(path.join(book.root, book.cover))] : [];
 

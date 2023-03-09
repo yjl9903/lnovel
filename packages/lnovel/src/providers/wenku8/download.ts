@@ -96,7 +96,21 @@ export async function doDownload(
     localImages.push(...config.images);
   } else {
     localImages.push(...((await Promise.all(imageTasks)).filter(Boolean) as string[]));
-    cover = localImages[0];
+
+    for (const image of localImages) {
+      const sizeOf = (await import('image-size')).default;
+      const size = sizeOf(path.join(root, image));
+      if (size.height && size.width) {
+        if (size.height >= size.width) {
+          cover = image;
+          break;
+        }
+      } else {
+        cover = image;
+        break;
+      }
+    }
+
     await fs.promises.writeFile(
       novelPath,
       stringify({ novel: { ...novel, volumes: undefined }, volume, cover, images: localImages }),
@@ -125,6 +139,7 @@ export async function doDownload(
  */
 async function downloadChapter(chapterUrl: string) {
   const $ = await fetch(chapterUrl);
+
   if ($('#contentmain span').first().text().trim() == 'null') {
     // for: 因版权问题，文库不再提供该小说的阅读！
     let content = '';
@@ -166,14 +181,16 @@ async function downloadChapter(chapterUrl: string) {
     };
   }
 
-  const content =
+  const content = (
     $('#content')
       .html()
       ?.replace('<ul id="contentdp">本文来自 轻小说文库(http://www.wenku8.com)</ul>', '')
       .replace('本文来自 轻小说文库(http://www.wenku8.com)', '')
       .replace('台版 转自 轻之国度', '')
-      .replace('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '') ??
-    '';
+      .replace('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '')
+      .replace('<ul id="contentdp"></ul>', '')
+      .replace(/http:\/\/pic\.wenku8\.com\/pictures\/\d+\/\d+\/\d+/g, '__IMAGE_ROOT__') ?? ''
+  ).trim();
 
   const images = $('img')
     .map(function (i, imgEle: any) {
