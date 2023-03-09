@@ -29,6 +29,7 @@ const program = breadc('lnovel', {
 program
   .command('<name>', '搜索并下载轻小说')
   .alias('search')
+  .option('--force', '覆盖下载缓存', { default: false })
   .option('--key <type>', '搜索方式（可选：name / author）', { default: 'name' })
   .action(async (name, options) => {
     const provider = await useProvider(options.provider);
@@ -58,7 +59,7 @@ program
     if (!ok) return;
 
     for (const volume of volumes) {
-      await provider.download(novel, volume, { outDir: options.outDir });
+      await provider.download(novel, volume, { outDir: options.outDir, force: options.force });
     }
   });
 

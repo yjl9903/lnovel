@@ -50,6 +50,8 @@ export interface SearchOption {
 
 export interface DownloadOption {
   outDir: string;
+
+  force: boolean;
 }
 
 export interface SearchResult {

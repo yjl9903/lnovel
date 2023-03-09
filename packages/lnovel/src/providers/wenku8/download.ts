@@ -27,19 +27,23 @@ export async function doDownload(
 
   const tasks = volume.chapter.map((chapter, index) => {
     return limit(async () => {
+      const localPath = path.join(root, `${chapter.index}-${chapter.title}.md`);
+      if (fs.existsSync(localPath)) {
+        const content = await fs.promises.readFile(localPath, 'utf-8');
+        contents[index] = { ...chapter, content };
+      }
+
       spinner.start(`正在下载 ${novel.name} ${volume.name} ${chapter.title}`);
       try {
-        const content = await downloadChapter(chapter.href);
-        contents[index] = { ...chapter, content: content.content ?? '' };
-        await fs.promises.writeFile(
-          path.join(root, `${chapter.index}-${chapter.title}.md`),
-          content.content ?? '',
-          'utf-8'
-        );
+        const resp = await downloadChapter(chapter.href);
+        const content = resp.content ?? '';
+        contents[index] = { ...chapter, content };
+        await fs.promises.writeFile(localPath, content, 'utf-8');
         spinner.succeed(`完成下载 ${novel.name} ${volume.name} ${chapter.title}`);
       } catch (err) {
         spinner.fail();
       }
+
       return undefined;
     });
   });
