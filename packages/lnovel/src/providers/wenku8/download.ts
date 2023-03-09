@@ -21,14 +21,19 @@ export async function doDownload(
   if (!fs.existsSync(root)) {
     fs.mkdirSync(root, { recursive: true });
   }
+  const imageRoot = path.join(root, 'images');
+  if (!fs.existsSync(imageRoot)) {
+    fs.mkdirSync(imageRoot);
+  }
 
   const limit = pLimit(5);
   const contents = volume.chapter.map(() => undefined as Book['contents'][0] | undefined);
+  const imageSet = new Set<string>();
 
   const tasks = volume.chapter.map((chapter, index) => {
     return limit(async () => {
       const localPath = path.join(root, `${chapter.index}-${chapter.title}.md`);
-      if (fs.existsSync(localPath)) {
+      if (!options.force && fs.existsSync(localPath)) {
         const content = await fs.promises.readFile(localPath, 'utf-8');
         contents[index] = { ...chapter, content };
       }
@@ -38,6 +43,7 @@ export async function doDownload(
         const resp = await downloadChapter(chapter.href);
         const content = resp.content ?? '';
         contents[index] = { ...chapter, content };
+        resp.images.forEach((i) => imageSet.add(i));
         await fs.promises.writeFile(localPath, content, 'utf-8');
         spinner.succeed(`完成下载 ${novel.name} ${volume.name} ${chapter.title}`);
       } catch (err) {
@@ -54,6 +60,30 @@ export async function doDownload(
   });
 
   await Promise.all(tasks);
+
+  const imageTasks = [...imageSet.values()].map((image) => {
+    return limit(async () => {
+      const imageName = image.slice(image.lastIndexOf('/'));
+      const localPath = path.join(imageRoot, imageName);
+      if (!options.force && fs.existsSync(localPath)) {
+        return;
+      }
+
+      spinner.start(`正在下载插图 ${image}`);
+      for (let i = 0; i < 10; i++) {
+        try {
+          const resp = await axios.get(image, { responseType: 'arraybuffer' });
+          await fs.promises.writeFile(localPath, resp.data);
+          spinner.succeed(`完成下载 ${image}`);
+          return;
+        } catch {}
+      }
+      spinner.fail();
+    });
+  });
+
+  await Promise.all(imageTasks);
+
   limit.clearQueue();
   spinner.stop();
   cancel();
@@ -62,7 +92,7 @@ export async function doDownload(
     novel,
     volume,
     contents: contents as Book['contents'],
-    images: []
+    images: [...imageSet]
   };
 }
 
@@ -107,6 +137,7 @@ async function downloadChapter(chapterUrl: string) {
     const picRegL = /http:\/\/pic\.wenku8\.com\/pictures\/[\/0-9]+.jpg\([0-9]+K\)/g;
     const images = content.match(picReg) ?? [];
     content = content.replace(picRegL, '');
+
     return {
       content,
       images
