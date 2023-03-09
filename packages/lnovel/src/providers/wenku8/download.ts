@@ -45,7 +45,7 @@ export async function doDownload(
       spinner.start(`正在下载 ${novel.name} ${volume.name} ${chapter.title}`);
       try {
         const resp = await downloadChapter(chapter.href);
-        const content = resp.content ?? '';
+        const content = resp.content;
         contents[index] = { ...chapter, content };
         resp.images.forEach((i) => imageSet.add(i));
         await fs.promises.writeFile(localPath, content, 'utf-8');
@@ -153,8 +153,8 @@ async function downloadChapter(chapterUrl: string) {
       content =
         $('body')
           .html()
-          ?.replace('&nbsp;', '')
-          .replace(
+          ?.replaceAll('&nbsp;', '')
+          .replaceAll(
             '更多精彩热门日本轻小说、动漫小说，轻小说文库(http://www.wenku8.com) 为你一网打尽！',
             ''
           ) || '';
@@ -166,7 +166,7 @@ async function downloadChapter(chapterUrl: string) {
             responseType: 'arraybuffer'
           }
         );
-        content = iconv.decode(res.data, 'utf-8');
+        content = iconv.decode(res.data, 'utf-8').replace('&nbsp;', '');
       }
     }
 
@@ -184,12 +184,13 @@ async function downloadChapter(chapterUrl: string) {
   const content = (
     $('#content')
       .html()
-      ?.replace('<ul id="contentdp">本文来自 轻小说文库(http://www.wenku8.com)</ul>', '')
-      .replace('本文来自 轻小说文库(http://www.wenku8.com)', '')
-      .replace('台版 转自 轻之国度', '')
-      .replace('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '')
-      .replace('<ul id="contentdp"></ul>', '')
-      .replace(/http:\/\/pic\.wenku8\.com\/pictures\/\d+\/\d+\/\d+/g, '__IMAGE_ROOT__') ?? ''
+      ?.replaceAll('<ul id="contentdp">本文来自 轻小说文库(http://www.wenku8.com)</ul>', '')
+      .replaceAll('本文来自 轻小说文库(http://www.wenku8.com)', '')
+      .replaceAll('台版 转自 轻之国度', '')
+      .replaceAll('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '')
+      .replaceAll('<ul id="contentdp"></ul>', '')
+      .replaceAll(/http:\/\/pic\.wenku8\.com\/pictures\/\d+\/\d+\/\d+/g, '__IMAGE_ROOT__')
+      .replaceAll('&nbsp;', '') ?? ''
   ).trim();
 
   const images = $('img')
