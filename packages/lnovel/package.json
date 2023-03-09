@@ -1,6 +1,6 @@
 {
   "name": "lnovel",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Scrapes light novels from various websites and converts them into EPUB format e-books",
   "keywords": [
     "cli",
