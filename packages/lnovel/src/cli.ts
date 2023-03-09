@@ -1,5 +1,6 @@
 import * as path from 'node:path';
 
+import ora from 'ora';
 import * as color from '@breadc/color';
 import { breadc } from 'breadc';
 
@@ -67,10 +68,18 @@ program
         outDir: options.outDir,
         force: options.force
       });
-      const epubook = await bundle(book);
-      await epubook.writeFile(
-        path.join(options.outDir, `${book.novel.name} ${book.volume.name}.epub`)
-      );
+
+      const spinner = ora();
+      spinner.start(`开始生成 ${book.novel.name} ${book.volume.name}.epub`);
+      try {
+        const epubook = await bundle(book);
+        await epubook.writeFile(
+          path.join(options.outDir, `${book.novel.name} ${book.volume.name}.epub`)
+        );
+        spinner.succeed(`生成成功 ${book.novel.name} ${book.volume.name}.epub`);
+      } catch {
+        spinner.fail();
+      }
     }
   });
 
