@@ -190,7 +190,8 @@ async function downloadChapter(chapterUrl: string) {
       .replaceAll('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '')
       .replaceAll('<ul id="contentdp"></ul>', '')
       .replaceAll(/http:\/\/pic\.wenku8\.com\/pictures\/\d+\/\d+\/\d+/g, '__IMAGE_ROOT__')
-      .replaceAll('&nbsp;', '') ?? ''
+      .replaceAll('&nbsp;', '')
+      .replaceAll('<br>', '<br/>') ?? ''
   ).trim();
 
   const images = $('img')
