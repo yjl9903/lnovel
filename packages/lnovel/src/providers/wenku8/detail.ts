@@ -118,13 +118,31 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
           if (chapterUrl) {
             chapters.push({
               index: chapterIndex + 1,
-              title: chapterTitle,
+              title: replaceTitle(chapterTitle),
               href: url.replace(/index\.htm$/, chapterUrl)
             });
           }
         });
     }
 
-    return volumes.map((v) => ({ id: String(v.index), name: v.name, chapter: v.chapter }));
+    return volumes.map((v) => ({
+      id: String(v.index),
+      name: replaceTitle(v.name),
+      chapter: v.chapter
+    }));
   }
+}
+
+function replaceTitle(title: string) {
+  return title
+    .replace('一', '1')
+    .replace('二', '2')
+    .replace('三', '3')
+    .replace('四', '4')
+    .replace('五', '5')
+    .replace('六', '6')
+    .replace('七', '7')
+    .replace('八', '8')
+    .replace('九', '9')
+    .replace('零', '0');
 }
