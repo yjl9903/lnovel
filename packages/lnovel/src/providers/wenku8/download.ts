@@ -4,10 +4,13 @@ import * as path from 'node:path';
 import ora from 'ora';
 import axios from 'axios';
 import death from 'death';
-import pLimit from 'p-limit';
 import iconv from 'iconv-lite';
+import pLimit from 'p-limit';
+
+import { parse, stringify } from 'yaml';
 
 import { DownloadOption, LightNovel, Volume, Book } from '../base';
+
 import { fetch } from './fetch';
 
 const spinner = ora();
@@ -25,6 +28,7 @@ export async function doDownload(
   if (!fs.existsSync(imageRoot)) {
     fs.mkdirSync(imageRoot);
   }
+  const novelPath = path.join(root, 'novel.yaml');
 
   const limit = pLimit(5);
   const contents = volume.chapter.map(() => undefined as Book['contents'][0] | undefined);
@@ -61,6 +65,7 @@ export async function doDownload(
 
   await Promise.all(tasks);
 
+  let cover: string | undefined = undefined;
   const imageTasks = [...imageSet.values()].map((image) => {
     return limit(async () => {
       const imageName = image.slice(image.lastIndexOf('/'));
@@ -75,14 +80,29 @@ export async function doDownload(
           const resp = await axios.get(image, { responseType: 'arraybuffer' });
           await fs.promises.writeFile(localPath, resp.data);
           spinner.succeed(`完成下载 ${image}`);
-          return;
+          return path.relative(root, localPath);
         } catch {}
       }
       spinner.fail();
+
+      return undefined;
     });
   });
 
-  await Promise.all(imageTasks);
+  const localImages = [] as string[];
+  if (!options.force && fs.existsSync(novelPath)) {
+    const config = parse(fs.readFileSync(novelPath, 'utf-8'));
+    cover = config.cover;
+    localImages.push(...config.images);
+  } else {
+    localImages.push(...((await Promise.all(imageTasks)).filter(Boolean) as string[]));
+    cover = localImages[0];
+    await fs.promises.writeFile(
+      novelPath,
+      stringify({ novel: { ...novel, volumes: undefined }, volume, cover, images: localImages }),
+      'utf-8'
+    );
+  }
 
   limit.clearQueue();
   spinner.stop();
@@ -92,7 +112,8 @@ export async function doDownload(
     novel,
     volume,
     contents: contents as Book['contents'],
-    images: [...imageSet]
+    cover,
+    images: localImages
   };
 }
 
