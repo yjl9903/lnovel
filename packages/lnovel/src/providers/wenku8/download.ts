@@ -165,11 +165,14 @@ async function downloadChapter(chapterUrl: string) {
     };
   }
 
-  const content = $('#content')
-    .html()
-    ?.replace('本文来自 轻小说文库(http://www.wenku8.com)', '')
-    .replace('台版 转自 轻之国度', '')
-    .replace('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '');
+  const content =
+    $('#content')
+      .html()
+      ?.replace('<ul id="contentdp">本文来自 轻小说文库(http://www.wenku8.com)</ul>', '')
+      .replace('本文来自 轻小说文库(http://www.wenku8.com)', '')
+      .replace('台版 转自 轻之国度', '')
+      .replace('最新最全的日本动漫轻小说 轻小说文库(http://www.wenku8.com) 为你一网打尽！', '') ??
+    '';
 
   const images = $('img')
     .map(function (i, imgEle: any) {
