@@ -1,8 +1,12 @@
-import color from '@breadc/color';
+import * as path from 'node:path';
+
+import * as color from '@breadc/color';
 import { breadc } from 'breadc';
 
 import { version } from '../package.json';
 
+import { bundle } from './epub';
+import { padNumber } from './utils';
 import { useProvider } from './providers';
 import { useLogger, displayLightNovel } from './logger';
 
@@ -59,7 +63,14 @@ program
     if (!ok) return;
 
     for (const volume of volumes) {
-      await provider.download(novel, volume, { outDir: options.outDir, force: options.force });
+      const book = await provider.download(novel, volume, {
+        outDir: options.outDir,
+        force: options.force
+      });
+      const epubook = await bundle(book);
+      await epubook.writeFile(
+        path.join(options.outDir, `${book.novel.name} ${book.volume.name}.epub`)
+      );
     }
   });
 

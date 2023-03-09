@@ -1,0 +1,15 @@
+diff --git a/dist/shared/unbuild.e1e6feef.mjs b/dist/shared/unbuild.e1e6feef.mjs
+index 5efb149df405e81132bb6ed0f906765036a6514e..dc5493f0b2ea75df3bdb235c7d3a43567d4f1d5e 100644
+--- a/dist/shared/unbuild.e1e6feef.mjs
++++ b/dist/shared/unbuild.e1e6feef.mjs
+@@ -363,7 +363,9 @@ function esbuild(options) {
+         target: options.target,
+         define: options.define,
+         sourcemap: options.sourceMap,
+-        sourcefile: id
++        sourcefile: id,
++        jsxFactory: options.jsxFactory,
++        jsxFragment: options.jsxFragment
+       });
+       printWarnings(id, result, this);
+       return result.code && {

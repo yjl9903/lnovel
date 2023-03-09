@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "format": "turbo run format --parallel",
-    "lnovel": "tsx packages/lnovel/src/cli.ts",
+    "lnovel": "node packages/lnovel/cli.mjs",
     "release": "bumpp package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
     "test:ci": "turbo run test:ci",
     "typecheck": "turbo run typecheck",
@@ -26,5 +26,10 @@
   "packageManager": "pnpm@7.29.1",
   "engines": {
     "node": ">=v18.14.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "unbuild@1.1.2": "patches/unbuild@1.1.2.patch"
+    }
   }
 }

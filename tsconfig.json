@@ -4,6 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "lib": ["ESNext"],
+    "jsx": "preserve",
     "moduleResolution": "Node",
     "esModuleInterop": true,
     "strict": true,

@@ -130,6 +130,8 @@ export interface Chapter {
 }
 
 export interface Book {
+  root: string;
+
   novel: LightNovel;
 
   volume: Volume;

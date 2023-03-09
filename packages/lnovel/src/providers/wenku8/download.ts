@@ -109,6 +109,7 @@ export async function doDownload(
   cancel();
 
   return {
+    root,
     novel,
     volume,
     contents: contents as Book['contents'],
