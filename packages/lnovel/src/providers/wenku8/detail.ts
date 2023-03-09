@@ -144,5 +144,7 @@ function replaceTitle(title: string) {
     .replace('七', '7')
     .replace('八', '8')
     .replace('九', '9')
-    .replace('零', '0');
+    .replace('零', '0')
+    .replace(/十(\d)/, '1$1')
+    .replace('十', '10');
 }
