@@ -191,7 +191,8 @@ async function downloadChapter(chapterUrl: string) {
       .replaceAll('<ul id="contentdp"></ul>', '')
       .replaceAll(/http:\/\/pic\.wenku8\.com\/pictures\/\d+\/\d+\/\d+/g, '__IMAGE_ROOT__')
       .replaceAll('&nbsp;', '')
-      .replaceAll('<br>', '<br/>') ?? ''
+      .replaceAll('<br>', '<br/>')
+      .replaceAll(/<img ([^>]+)>/g, '<img $1 />') ?? ''
   ).trim();
 
   const images = $('img')
