@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@breadc/color": "^0.8.9",
-    "@epubook/core": "^0.0.8",
+    "@epubook/core": "^0.0.9",
     "axios": "^1.3.4",
     "breadc": "^0.8.9",
     "cheerio": "1.0.0-rc.12",
