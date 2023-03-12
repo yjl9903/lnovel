@@ -9,7 +9,7 @@ importers:
 
   .:
     specifiers:
-      '@types/node': ^18.14.6
+      '@types/node': ^18.15.0
       bumpp: latest
       tsx: ^3.12.3
       turbo: ^1.8.3
@@ -18,20 +18,20 @@ importers:
       vite: ^4.1.4
       vitest: ^0.29.2
     devDependencies:
-      '@types/node': 18.14.6
+      '@types/node': 18.15.0
       bumpp: 9.0.0
       tsx: 3.12.3
       turbo: 1.8.3
       typescript: 4.9.5
       unbuild: 1.1.2_ifo5hplsmlyjft7aov6eq2mfwa
-      vite: 4.1.4_@types+node@18.14.6
+      vite: 4.1.4_@types+node@18.15.0
       vitest: 0.29.2
 
   packages/lnovel:
     specifiers:
       '@breadc/color': ^0.8.9
       '@clack/prompts': ^0.6.3
-      '@epubook/core': ^0.0.8
+      '@epubook/core': ^0.0.9
       '@types/cheerio': ^0.22.31
       '@types/death': ^1.1.2
       '@types/set-cookie-parser': ^2.4.2
@@ -51,7 +51,7 @@ importers:
     dependencies:
       '@breadc/color': 0.8.9
       '@clack/prompts': 0.6.3
-      '@epubook/core': 0.0.8
+      '@epubook/core': 0.0.9
       axios: 1.3.4
       breadc: 0.8.9
       cheerio: 1.0.0-rc.12
@@ -298,16 +298,6 @@ packages:
     dev: false
     bundledDependencies:
       - is-unicode-supported
-
-  /@epubook/core/0.0.8:
-    resolution: {integrity: sha512-qJBs9SIE/cnvfD9TDqLguYwLAMMZS8I7MFMApoN7bnx4cCQw8iHkCV50srRoye7k+CqtONkF5ODFjA4FgD5xow==}
-    engines: {node: '>=v18.15.0'}
-    dependencies:
-      defu: 6.1.2
-      fast-xml-parser: 4.1.3
-      fflate: 0.7.4
-      pathe: 1.1.0
-    dev: false
 
   /@epubook/core/0.0.9:
     resolution: {integrity: sha512-FFOfXK8ka+9CfHBDRoyPuKeMShMDh/DkV27uNqFmLTNilGxHMbJyTcDCX/d4dSjaDcYsA8gT38RRkCHqB2DpTA==}
@@ -925,6 +915,10 @@ packages:
 
   /@types/node/18.14.6:
     resolution: {integrity: sha512-93+VvleD3mXwlLI/xASjw0FzKcwzl3OdTCzm1LaRfqgS21gfFtK3zDXM5Op9TeeMsJVOaJ2VRDpT9q4Y3d0AvA==}
+    dev: true
+
+  /@types/node/18.15.0:
+    resolution: {integrity: sha512-z6nr0TTEOBGkzLGmbypWOGnpSpSIBorEhC4L+4HeQ2iezKCi4f77kyslRwvHeNitymGQ+oFyIWGP96l/DPSV9w==}
     dev: true
 
   /@types/resolve/1.20.2:
@@ -2513,7 +2507,7 @@ packages:
       fsevents: 2.3.2
     dev: true
 
-  /vite/4.1.4_@types+node@18.14.6:
+  /vite/4.1.4_@types+node@18.15.0:
     resolution: {integrity: sha512-3knk/HsbSTKEin43zHu7jTwYWv81f8kgAL99G5NWBcA1LKvtvcVAC4JjBH1arBunO9kQka+1oGbrMKOjk4ZrBg==}
     engines: {node: ^14.18.0 || >=16.0.0}
     hasBin: true
@@ -2538,7 +2532,7 @@ packages:
       terser:
         optional: true
     dependencies:
-      '@types/node': 18.14.6
+      '@types/node': 18.15.0
       esbuild: 0.16.17
       postcss: 8.4.21
       resolve: 1.22.1
