@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import ora from 'ora';
 import axios from 'axios';
 import death from 'death';
 import iconv from 'iconv-lite';
 import pLimit from 'p-limit';
+import { spinner as createSpinner } from '@clack/prompts';
 
 import { parse, stringify } from 'yaml';
 
@@ -13,7 +13,7 @@ import { DownloadOption, LightNovel, Volume, Book } from '../base';
 
 import { fetch } from './fetch';
 
-const spinner = ora();
+const spinner = createSpinner();
 
 export async function doDownload(
   novel: LightNovel,
@@ -30,7 +30,7 @@ export async function doDownload(
   }
   const novelPath = path.join(root, 'novel.yaml');
 
-  const limit = pLimit(5);
+  const limit = pLimit(1);
   const contents = volume.chapter.map(() => undefined as Book['contents'][0] | undefined);
   const imageSet = new Set<string>();
 
@@ -49,9 +49,9 @@ export async function doDownload(
         contents[index] = { ...chapter, content };
         resp.images.forEach((i) => imageSet.add(i));
         await fs.promises.writeFile(localPath, content, 'utf-8');
-        spinner.succeed(`完成下载 ${novel.name} ${volume.name} ${chapter.title}`);
+        spinner.stop(`完成下载 ${novel.name} ${volume.name} ${chapter.title}`);
       } catch (err) {
-        spinner.fail();
+        spinner.stop(`下载失败`);
       }
 
       return undefined;
@@ -79,11 +79,11 @@ export async function doDownload(
         try {
           const resp = await axios.get(image, { responseType: 'arraybuffer' });
           await fs.promises.writeFile(localPath, resp.data);
-          spinner.succeed(`完成下载 ${image}`);
+          spinner.stop(`完成下载 ${image}`);
           return path.relative(root, localPath);
         } catch {}
       }
-      spinner.fail();
+      spinner.stop();
 
       return undefined;
     });
@@ -99,7 +99,10 @@ export async function doDownload(
 
     for (const image of localImages) {
       const sizeOf = (await import('image-size')).default;
-      const size = sizeOf(path.join(root, image));
+      const imagePath = path.join(root, image);
+      if (!fs.existsSync(imagePath)) continue;
+
+      const size = sizeOf(imagePath);
       if (size.height && size.width) {
         if (size.height >= size.width) {
           cover = image;
@@ -119,7 +122,6 @@ export async function doDownload(
   }
 
   limit.clearQueue();
-  spinner.stop();
   cancel();
 
   return {

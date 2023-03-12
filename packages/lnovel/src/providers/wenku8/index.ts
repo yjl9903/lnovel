@@ -2,7 +2,7 @@
  * This module is migrated from https://github.com/Messiahhh/wenku8-downloader
  */
 
-import ora from 'ora';
+import { spinner } from '@clack/prompts';
 
 import {
   LightNovelProvider,
@@ -25,15 +25,17 @@ export class Wenku8Provider extends LightNovelProvider {
     name: string,
     { type = 'name' }: Partial<SearchOption> = {}
   ): Promise<SearchResult[]> {
-    const spinner = ora();
-    spinner.start(`正在搜索${name}...`);
+    const spin = spinner();
+    spin.start(`正在搜索${name}...`);
 
     try {
       const { doSearch } = await import('./search');
-      return await doSearch(name, type === 'name' ? 'articlename' : 'author');
-    } finally {
-      spinner.succeed();
-      console.log();
+      const result = await doSearch(name, type === 'name' ? 'articlename' : 'author');
+      spin.stop(`搜索到 ${result.length} 本相关的轻小说`);
+      return result;
+    } catch {
+      spin.stop('搜索失败');
+      process.exit(1);
     }
   }
 
