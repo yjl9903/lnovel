@@ -65,7 +65,7 @@
     "@types/cheerio": "^0.22.31",
     "@types/death": "^1.1.2",
     "@types/set-cookie-parser": "^2.4.2",
-    "vitest": "^0.29.2"
+    "vitest": "^0.29.3"
   },
   "engines": {
     "node": ">=v18.15.0"
