@@ -58,7 +58,7 @@
     "p-limit": "^4.0.0",
     "pino": "^8.11.0",
     "pino-pretty": "^9.4.0",
-    "set-cookie-parser": "^2.5.1",
+    "set-cookie-parser": "^2.6.0",
     "yaml": "^2.2.1"
   },
   "devDependencies": {

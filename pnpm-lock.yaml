@@ -45,7 +45,7 @@ importers:
       p-limit: ^4.0.0
       pino: ^8.11.0
       pino-pretty: ^9.4.0
-      set-cookie-parser: ^2.5.1
+      set-cookie-parser: ^2.6.0
       vitest: ^0.29.3
       yaml: ^2.2.1
     dependencies:
@@ -62,7 +62,7 @@ importers:
       p-limit: 4.0.0
       pino: 8.11.0
       pino-pretty: 9.4.0
-      set-cookie-parser: 2.5.1
+      set-cookie-parser: 2.6.0
       yaml: 2.2.1
     devDependencies:
       '@types/cheerio': 0.22.31
@@ -2144,8 +2144,8 @@ packages:
       lru-cache: 6.0.0
     dev: true
 
-  /set-cookie-parser/2.5.1:
-    resolution: {integrity: sha512-1jeBGaKNGdEq4FgIrORu/N570dwoPYio8lSoYLWmX7sQ//0JY08Xh9o5pBcgmHQ/MbsYp/aZnOe1s1lIsbLprQ==}
+  /set-cookie-parser/2.6.0:
+    resolution: {integrity: sha512-RVnVQxTXuerk653XfuliOxBP81Sf0+qfQE73LIYKcyMYHG94AuH0kgrQpRDuTZnSmjpysHmzxJXKNfa6PjFhyQ==}
     dev: false
 
   /shebang-command/2.0.0:
