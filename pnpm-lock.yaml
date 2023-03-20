@@ -11,7 +11,7 @@ importers:
     specifiers:
       '@types/node': ^18.15.3
       bumpp: latest
-      tsx: ^3.12.5
+      tsx: ^3.12.6
       turbo: ^1.8.3
       typescript: ^5.0.2
       unbuild: ^1.1.2
@@ -20,7 +20,7 @@ importers:
     devDependencies:
       '@types/node': 18.15.3
       bumpp: 9.0.0
-      tsx: 3.12.5
+      tsx: 3.12.6
       turbo: 1.8.3
       typescript: 5.0.2
       unbuild: 1.1.2_ifo5hplsmlyjft7aov6eq2mfwa
@@ -2302,8 +2302,8 @@ packages:
       is-number: 7.0.0
     dev: true
 
-  /tsx/3.12.5:
-    resolution: {integrity: sha512-/TLj30xF1zcN9JkoFCyROtIQUi8cRQG+AFchsg5YkWou3+RXxTZS/ffWB3nCxyZPoBqF2+8ohs07N815dNb1wQ==}
+  /tsx/3.12.6:
+    resolution: {integrity: sha512-q93WgS3lBdHlPgS0h1i+87Pt6n9K/qULIMNYZo07nSeu2z5QE2CellcAZfofVXBo2tQg9av2ZcRMQ2S2i5oadQ==}
     hasBin: true
     dependencies:
       '@esbuild-kit/cjs-loader': 2.4.2
