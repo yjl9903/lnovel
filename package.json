@@ -14,7 +14,7 @@
     "postversion": "turbo run build"
   },
   "devDependencies": {
-    "@types/node": "^18.15.3",
+    "@types/node": "^18.15.5",
     "bumpp": "latest",
     "tsx": "^3.12.6",
     "turbo": "^1.8.4",
