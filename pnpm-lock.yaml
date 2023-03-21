@@ -9,7 +9,7 @@ importers:
 
   .:
     specifiers:
-      '@types/node': ^18.15.3
+      '@types/node': ^18.15.5
       bumpp: latest
       tsx: ^3.12.6
       turbo: ^1.8.4
@@ -18,13 +18,13 @@ importers:
       vite: ^4.2.1
       vitest: ^0.29.3
     devDependencies:
-      '@types/node': 18.15.3
+      '@types/node': 18.15.5
       bumpp: 9.0.0
       tsx: 3.12.6
       turbo: 1.8.4
       typescript: 5.0.2
       unbuild: 1.1.2_ifo5hplsmlyjft7aov6eq2mfwa
-      vite: 4.2.1_@types+node@18.15.3
+      vite: 4.2.1_@types+node@18.15.5
       vitest: 0.29.3
 
   packages/lnovel:
@@ -915,6 +915,10 @@ packages:
 
   /@types/node/18.15.3:
     resolution: {integrity: sha512-p6ua9zBxz5otCmbpb5D3U4B5Nanw6Pk3PPyX05xnxbB/fRv71N7CPmORg7uAD5P70T0xmx1pzAx/FUfa5X+3cw==}
+    dev: true
+
+  /@types/node/18.15.5:
+    resolution: {integrity: sha512-Ark2WDjjZO7GmvsyFFf81MXuGTA/d6oP38anyxWOL6EREyBKAxKoFHwBhaZxCfLRLpO8JgVXwqOwSwa7jRcjew==}
     dev: true
 
   /@types/resolve/1.20.2:
@@ -2542,6 +2546,40 @@ packages:
         optional: true
     dependencies:
       '@types/node': 18.15.3
+      esbuild: 0.17.8
+      postcss: 8.4.21
+      resolve: 1.22.1
+      rollup: 3.19.1
+    optionalDependencies:
+      fsevents: 2.3.2
+    dev: true
+
+  /vite/4.2.1_@types+node@18.15.5:
+    resolution: {integrity: sha512-7MKhqdy0ISo4wnvwtqZkjke6XN4taqQ2TBaTccLIpOKv7Vp2h4Y+NpmWCnGDeSvvn45KxvWgGyb0MkHvY1vgbg==}
+    engines: {node: ^14.18.0 || >=16.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': '>= 14'
+      less: '*'
+      sass: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.4.0
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      less:
+        optional: true
+      sass:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+    dependencies:
+      '@types/node': 18.15.5
       esbuild: 0.17.8
       postcss: 8.4.21
       resolve: 1.22.1
