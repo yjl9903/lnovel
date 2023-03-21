@@ -17,7 +17,7 @@
     "@types/node": "^18.15.5",
     "bumpp": "latest",
     "tsx": "^3.12.6",
-    "turbo": "^1.8.4",
+    "turbo": "^1.8.5",
     "typescript": "^5.0.2",
     "unbuild": "^1.1.2",
     "vite": "^4.2.1",
