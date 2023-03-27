@@ -15,7 +15,11 @@ const logger = useLogger('lnovel');
 
 const program = breadc('lnovel', {
   version,
-  description: 'Download your favorite light novels easily'
+  description: '轻松下载你想要的轻小说.',
+  builtin: {
+    version: { description: '输出 lnovel 版本号' },
+    help: { description: '输出 lnovel 帮助信息' }
+  }
 })
   .option('-p, --provider <site>', '下载站点, 默认使用轻小说文库', { default: 'wenku8' })
   .option('-y, --yes', '是否进行确认')

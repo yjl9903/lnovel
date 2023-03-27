@@ -36,7 +36,7 @@ importers:
       '@types/death': ^1.1.2
       '@types/set-cookie-parser': ^2.4.2
       axios: ^1.3.4
-      breadc: ^0.8.9
+      breadc: ^0.9.0
       cheerio: 1.0.0-rc.12
       death: ^1.1.0
       epubook: ^0.0.9
@@ -53,7 +53,7 @@ importers:
       '@clack/prompts': 0.6.3
       '@epubook/core': 0.0.9
       axios: 1.3.4
-      breadc: 0.8.9
+      breadc: 0.9.0
       cheerio: 1.0.0-rc.12
       death: 1.1.0
       epubook: 0.0.9
@@ -280,6 +280,10 @@ packages:
 
   /@breadc/color/0.8.9:
     resolution: {integrity: sha512-CIebG7OsOgNixe//W1drSXjEbc01Et6L4Y/VQRGulfecDcrxH9/RjqwMDZ+40G+iZVELIVMDDBAQcuYvOlFU1g==}
+    dev: false
+
+  /@breadc/color/0.9.0:
+    resolution: {integrity: sha512-NDOrslds8q+pSwpZyFRdFsMoIkHsf5czDAPsG9kFHdN/JUcOHILYk5DL5L8Ewig2rZ9VqCmxcUK5MgzTOOI2Gw==}
     dev: false
 
   /@clack/core/0.3.2:
@@ -851,10 +855,10 @@ packages:
       fill-range: 7.0.1
     dev: true
 
-  /breadc/0.8.9:
-    resolution: {integrity: sha512-+Ui7PuGd2+gkqtzBYi8fsmrg8sskyZ09uNAF9yMpU7FbACOFScEwNtJeAq6lHl0hgvVtS4XrMe86jj5EV6C70g==}
+  /breadc/0.9.0:
+    resolution: {integrity: sha512-+xB2332Xmo3e8xe7lBu07OQJGx7TKGOWMuwZ34FmWzQ1mJKidr6Hb0Mm5vxnMoXHlxIxc40XdRm2TD9D59H0Kg==}
     dependencies:
-      '@breadc/color': 0.8.9
+      '@breadc/color': 0.9.0
     dev: false
 
   /browserslist/4.21.4:
