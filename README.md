@@ -11,6 +11,8 @@ Supported platforms:
 
 ![demo](./assets/demo.gif)
 
+> You can find generated epub demo [here](./assets/)
+
 ## Installation
 
 ```bash
