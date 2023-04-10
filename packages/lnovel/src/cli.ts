@@ -2,6 +2,7 @@ import * as path from 'node:path';
 
 import * as color from '@breadc/color';
 import { breadc } from 'breadc';
+import { AxiosError } from 'axios';
 import { spinner as createSpinner } from '@clack/prompts';
 
 import { version } from '../package.json';
@@ -95,4 +96,11 @@ program
   .command('fetch <url>', '使用小说详情页链接或 ID 进行下载')
   .action(async (link, options) => {});
 
-program.run(process.argv.slice(2)).catch((err) => console.error(err));
+program.run(process.argv.slice(2)).catch((err) => {
+  if (err instanceof AxiosError) {
+    console.log(color.lightRed(`[Axios Error] `) + err.message);
+  } else {
+    console.log(color.lightRed(`[Unknown Error] ${err.message}`));
+    console.error(err);
+  }
+});
