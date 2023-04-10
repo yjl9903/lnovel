@@ -16,6 +16,11 @@ npm i -g lnovel
 lnovel 关于邻家的天使大人不知不觉把我惯成了废人这档子事 -y
 ```
 
+## Credits
+
++ [轻小说文库](https://www.wenku8.net/)
++ [Messiahhh/wenku8-downloader](https://github.com/Messiahhh/wenku8-downloader): 轻小说文库的命令行小说下载器
+
 ## License
 
 MIT License © 2023 [XLor](https://github.com/yjl9903)
