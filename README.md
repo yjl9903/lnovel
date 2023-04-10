@@ -9,7 +9,7 @@ Supported platforms:
 + [x] [轻小说文库](https://www.wenku8.net/)
 + [ ] ...
 
-![demo](./assets/demo.gif)
+[![asciicast](https://asciinema.org/a/Cw6k3mFev3Ygs8AHuL9FODVZq.svg)](https://asciinema.org/a/Cw6k3mFev3Ygs8AHuL9FODVZq)
 
 > You can find generated epub demo [here](./assets/)
 
