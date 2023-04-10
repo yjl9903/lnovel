@@ -9,6 +9,8 @@ Supported platforms:
 + [x] [轻小说文库](https://www.wenku8.net/)
 + [ ] ...
 
+![demo](./assets/demo.gif)
+
 ## Installation
 
 ```bash
