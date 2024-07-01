@@ -45,29 +45,29 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@breadc/color": "^0.9.0",
-    "@clack/prompts": "^0.6.3",
-    "@epubook/core": "^0.0.9",
-    "axios": "^1.3.5",
-    "breadc": "^0.9.0",
+    "@breadc/color": "^0.9.7",
+    "@clack/prompts": "^0.7.0",
+    "@epubook/core": "^0.0.11",
+    "axios": "^1.7.2",
+    "breadc": "^0.9.7",
     "cheerio": "1.0.0-rc.12",
     "death": "^1.1.0",
-    "epubook": "^0.0.10",
+    "epubook": "^0.0.11",
     "iconv-lite": "^0.6.3",
-    "image-size": "^1.0.2",
-    "p-limit": "^4.0.0",
-    "pino": "^8.11.0",
-    "pino-pretty": "^10.0.0",
+    "image-size": "^1.1.1",
+    "p-limit": "^5.0.0",
+    "pino": "^9.2.0",
+    "pino-pretty": "^11.2.1",
     "set-cookie-parser": "^2.6.0",
-    "yaml": "^2.2.1"
+    "yaml": "^2.4.5"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.31",
-    "@types/death": "^1.1.2",
-    "@types/set-cookie-parser": "^2.4.2",
-    "vitest": "^0.30.0"
+    "@types/cheerio": "^0.22.35",
+    "@types/death": "^1.1.5",
+    "@types/set-cookie-parser": "^2.4.9",
+    "vitest": "^1.6.0"
   },
   "engines": {
-    "node": ">=v18.15.0"
+    "node": ">=v20.0.0"
   }
 }
