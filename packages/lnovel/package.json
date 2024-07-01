@@ -21,6 +21,7 @@
   "license": "MIT",
   "author": "XLor",
   "sideEffects": false,
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.mjs",

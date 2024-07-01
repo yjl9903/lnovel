@@ -3,7 +3,7 @@ import type { Chapter, LightNovel } from '../base';
 
 import { fetch } from './fetch';
 
-const BASE_URL = 'https://www.wenku8.net/book/';
+const BASE_URL = 'https://www.wenku8.net';
 
 /**
  * 获取小说详细信息
@@ -11,7 +11,7 @@ const BASE_URL = 'https://www.wenku8.net/book/';
  * @returns
  */
 export async function getNovelDetails(id: string): Promise<LightNovel> {
-  const url = `${BASE_URL}${id}.htm`;
+  const url = `${BASE_URL}/book/${id}.htm`;
   const $ = await fetch(url);
 
   const name = $('#content')
@@ -83,12 +83,22 @@ export async function getNovelDetails(id: string): Promise<LightNovel> {
       .map((l) => l.trim())
       .join('\n'),
     href: catalogueUrl!,
-    volumes: await getChapterList(catalogueUrl!),
+    volumes: await getChapterList(fixURL(catalogueUrl)!),
     meta: {
       length,
       recentChapter
     }
   };
+
+  function fixURL(url: string | undefined) {
+    if (url === undefined) {
+      return undefined;
+    } else if (url.startsWith('https://')) {
+      return url;
+    } else {
+      return BASE_URL + (url.startsWith('/') ? '' : '/') + url;
+    }
+  }
 
   async function getChapterList(url: string): Promise<Volume[]> {
     const $ = await fetch(url);
