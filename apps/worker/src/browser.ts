@@ -1,4 +1,6 @@
-import puppeteer, { type Page, type Browser } from '@cloudflare/puppeteer';
+import type { Page, Browser, ActiveSession } from '@cloudflare/puppeteer';
+
+import puppeteer from '@cloudflare/puppeteer';
 
 import type { Context } from './env';
 
@@ -6,7 +8,7 @@ export async function launchBrowser<T>(
   c: Context,
   fn: (page: Page, browser: Browser) => Promise<T>
 ) {
-  const browser = await puppeteer.launch(c.env.BROWSER);
+  const browser = await connectSession(c);
 
   const page = await browser.newPage();
 
@@ -30,6 +32,44 @@ export async function launchBrowser<T>(
     console.error('[browser]', error);
     throw error;
   } finally {
-    await browser.close();
+    await browser.disconnect();
   }
+}
+
+async function connectSession(c: Context): Promise<Browser> {
+  const sessions: ActiveSession[] = await puppeteer.sessions(c.env.BROWSER);
+
+  console.log('[browser]', 'sessions', sessions);
+
+  const sessionsIds = sessions
+    .filter((v) => {
+      return !v.connectionId; // remove sessions with workers connected to them
+    })
+    .map((v) => {
+      return v.sessionId;
+    });
+
+  if (sessionsIds.length === 0) {
+    const browser = await puppeteer.launch(c.env.BROWSER, { keep_alive: 600000 });
+    console.log('[browser]', 'session created', browser.sessionId());
+    return browser;
+  }
+
+  const sessionId = sessionsIds[Math.floor(Math.random() * sessionsIds.length)];
+  if (sessionId) {
+    try {
+      const browser = await puppeteer.connect(c.env.BROWSER, sessionId);
+      console.log('[browser]', 'session connected', sessionId);
+      return browser;
+    } catch (e) {
+      // another worker may have connected first
+      console.error(`[browser]`, 'failed to connect session', sessionId, e);
+      throw e;
+    }
+  }
+
+  const browser = await puppeteer.launch(c.env.BROWSER, { keep_alive: 600000 });
+  console.log('[browser]', 'session created', browser.sessionId());
+
+  return browser;
 }
