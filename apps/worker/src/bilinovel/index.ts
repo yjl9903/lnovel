@@ -22,7 +22,7 @@ app.get('/novel/:nid', async (c: Context) => {
       const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}.html`);
       if (!resp) throw new Error('no response');
       if (resp.ok()) {
-        return await resp.text();
+        return await page.content();
       } else {
         throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
       }
@@ -51,7 +51,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
       const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}/vol_${vid}.html`);
       if (!resp) throw new Error('no response');
       if (resp.ok()) {
-        return await resp.text();
+        return await page.content();
       } else {
         throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
       }
@@ -80,7 +80,7 @@ app.get('/novel/:nid/content/:cid', async (c: Context) => {
       const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}/${cid}.html`);
       if (!resp) throw new Error('no response');
       if (resp.ok()) {
-        return await resp.text();
+        return await page.content();
       } else {
         throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
       }

@@ -1,9 +1,10 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 
-import type { AppEnv } from './env';
+import type { AppEnv, Context } from './env';
 
 import { app as bilinovel } from './bilinovel';
+import { launchBrowser } from './browser';
 
 const app = new Hono<AppEnv>();
 
@@ -48,5 +49,21 @@ app.get('/', (c) =>
 );
 
 app.route('/bili/', bilinovel);
+
+app.get('/html/', async (c) => {
+  const searchParams = new URL(c.req.url).searchParams;
+  const url = new URL(searchParams.get('url')!).toString();
+
+  const html = await launchBrowser(c, async (page) => {
+    const resp = await page.goto(url);
+    console.log('[browser]', resp!.request().headers(), page.viewport(), await page.cookies());
+    return await page.content();
+  });
+
+  return c.json({
+    ok: true,
+    html
+  });
+});
 
 export default app;
