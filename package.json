@@ -16,7 +16,10 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251121.0",
+    "@types/cheerio": "^0.22.35",
+    "@types/death": "^1.1.5",
     "@types/node": "^24.10.1",
+    "@types/set-cookie-parser": "^2.4.9",
     "bumpp": "latest",
     "prettier": "^3.6.2",
     "tsdown": "^0.16.6",

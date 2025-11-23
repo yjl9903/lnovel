@@ -62,12 +62,6 @@
     "set-cookie-parser": "^2.6.0",
     "yaml": "^2.4.5"
   },
-  "devDependencies": {
-    "@types/cheerio": "^0.22.35",
-    "@types/death": "^1.1.5",
-    "@types/set-cookie-parser": "^2.4.9",
-    "vitest": "^1.6.0"
-  },
   "engines": {
     "node": ">=v20.0.0"
   }
