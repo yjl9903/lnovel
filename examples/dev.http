@@ -1,0 +1,14 @@
+###
+GET http://localhost:8787
+
+###
+GET http://localhost:8787/bili/
+
+###
+GET http://localhost:8787/bili/novel/4649
+
+###
+GET http://localhost:8787/bili/novel/4649/vol/274116
+
+###
+GET http://localhost:8787/bili/novel/4649/content/274117

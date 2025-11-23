@@ -3,6 +3,8 @@ import { logger } from 'hono/logger';
 
 import type { AppEnv } from './env';
 
+import { app as bilinovel } from './bilinovel';
+
 const app = new Hono<AppEnv>();
 
 app.use('*', async (c, next) => {
@@ -44,5 +46,7 @@ app.get('/', (c) =>
     message: 'lnovel.animes.garden'
   })
 );
+
+app.route('/bili/', bilinovel);
 
 export default app;

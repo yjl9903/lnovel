@@ -30,7 +30,7 @@
   "scripts": {
     "d1:migrate": "wrangler d1 migrations apply DATABASE",
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev src/worker.ts",
+    "dev": "wrangler dev",
     "drizzle": "drizzle-kit",
     "drizzle:generate": "drizzle-kit generate",
     "test:ci": "wrangler deploy --dry-run"
@@ -41,6 +41,7 @@
     "drizzle-orm": "0.44.7",
     "hono": "4.10.6",
     "p-limit": "7.2.0",
+    "unstorage": "^1.17.3",
     "zod": "4.1.12"
   },
   "engines": {
