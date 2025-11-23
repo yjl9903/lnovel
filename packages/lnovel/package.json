@@ -24,8 +24,8 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
     }
   },
   "module": "./dist/index.mjs",
@@ -43,7 +43,7 @@
     "format": "prettier --write src/**/*.ts test/**/*.ts",
     "test": "vitest",
     "test:ci": "vitest --run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit --jsx preserve"
   },
   "dependencies": {
     "@breadc/color": "^0.9.7",

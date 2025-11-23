@@ -1,0 +1,50 @@
+{
+  "name": "@lnovel/worker",
+  "version": "0.0.4",
+  "description": "",
+  "keywords": [
+  ],
+  "homepage": "https://github.com/yjl9903/lnovel#readme",
+  "bugs": {
+    "url": "https://github.com/yjl9903/lnovel/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yjl9903/lnovel.git"
+  },
+  "license": "MIT",
+  "author": "XLor",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "*.mjs",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "d1:migrate": "wrangler d1 migrations apply DATABASE",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev src/worker.ts",
+    "drizzle": "drizzle-kit",
+    "drizzle:generate": "drizzle-kit generate",
+    "test:ci": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "0.7.4",
+    "drizzle-orm": "0.44.7",
+    "hono": "4.10.4",
+    "p-limit": "7.2.0",
+    "zod": "4.1.12"
+  },
+  "engines": {
+    "node": ">=v20.8.0"
+  }
+}
