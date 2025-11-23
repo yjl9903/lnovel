@@ -38,9 +38,9 @@
     "test:ci": "wrangler deploy --dry-run"
   },
   "dependencies": {
-    "@hono/zod-validator": "0.7.4",
+    "@hono/zod-validator": "0.7.5",
     "drizzle-orm": "0.44.7",
-    "hono": "4.10.4",
+    "hono": "4.10.6",
     "p-limit": "7.2.0",
     "zod": "4.1.12"
   },
