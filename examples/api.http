@@ -1,0 +1,14 @@
+###
+GET https://lnovel.animes.garden
+
+###
+GET https://lnovel.animes.garden/bili/
+
+###
+GET https://lnovel.animes.garden/bili/novel/3605
+
+###
+GET https://lnovel.animes.garden/bili/novel/4649/vol/274116
+
+###
+GET https://lnovel.animes.garden/bili/novel/4649/content/274117

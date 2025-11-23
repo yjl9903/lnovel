@@ -50,7 +50,7 @@ async function connectSession(c: Context): Promise<Browser> {
     });
 
   if (sessionsIds.length === 0) {
-    const browser = await puppeteer.launch(c.env.BROWSER, { keep_alive: 600000 });
+    const browser = await puppeteer.launch(c.env.BROWSER);
     console.log('[browser]', 'session created', browser.sessionId());
     return browser;
   }
@@ -68,7 +68,7 @@ async function connectSession(c: Context): Promise<Browser> {
     }
   }
 
-  const browser = await puppeteer.launch(c.env.BROWSER, { keep_alive: 600000 });
+  const browser = await puppeteer.launch(c.env.BROWSER);
   console.log('[browser]', 'session created', browser.sessionId());
 
   return browser;
