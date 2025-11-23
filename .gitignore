@@ -1,10 +1,20 @@
 # Dependency directory
 node_modules
 
+# Environment
+.env
+.env.*
+!.env.example
+
 # Build output
 dist
-novels
 .turbo
+.output
+.data
+.nuxt
+.nitro
+.cache
+.wrangler
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs

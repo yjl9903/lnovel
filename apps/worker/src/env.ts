@@ -2,7 +2,11 @@
 
 import type { Context as HonoContext } from 'hono';
 
-export type ServiceBindings = {};
+export type ServiceBindings = {
+  BROWSER: Fetcher;
+  lnovel_data: KVNamespace;
+  lnovel_browser: KVNamespace;
+};
 
 export type AppVariables = {
   requestId: string;

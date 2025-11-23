@@ -12,7 +12,9 @@
     "test:ci": "turbo run test:ci",
     "typecheck": "turbo run typecheck",
     "preversion": "turbo run test:ci",
-    "postversion": "turbo run build"
+    "postversion": "turbo run build",
+    "worker:deploy": "pnpm -C apps/worker deploy",
+    "worker:dev": "pnpm -C apps/worker dev"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251121.0",

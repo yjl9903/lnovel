@@ -2,8 +2,7 @@
   "name": "@lnovel/worker",
   "version": "0.0.4",
   "description": "",
-  "keywords": [
-  ],
+  "keywords": [],
   "homepage": "https://github.com/yjl9903/lnovel#readme",
   "bugs": {
     "url": "https://github.com/yjl9903/lnovel/issues"
@@ -29,7 +28,6 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown",
     "d1:migrate": "wrangler d1 migrations apply DATABASE",
     "deploy": "wrangler deploy",
     "dev": "wrangler dev src/worker.ts",
@@ -38,6 +36,7 @@
     "test:ci": "wrangler deploy --dry-run"
   },
   "dependencies": {
+    "@cloudflare/puppeteer": "1.0.4",
     "@hono/zod-validator": "0.7.5",
     "drizzle-orm": "0.44.7",
     "hono": "4.10.6",

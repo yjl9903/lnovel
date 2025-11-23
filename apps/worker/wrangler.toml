@@ -10,5 +10,18 @@ enabled = true
 head_sampling_rate = 1
 invocation_logs = true
 
+[browser]
+binding = "BROWSER"
+
+[[kv_namespaces]]
+binding = "lnovel_browser"
+id = "36851fd178d44fb2ab185533129b6925"
+preview_id = "892add2c62d1477dbc080ba9c126ca10"
+
+[[kv_namespaces]]
+binding = "lnovel_data"
+id = "95229d7a8a6b4efeab4262af792ce79e"
+preview_id = "73943cfe9da444008671747e23a945b6"
+
 [vars]
 # Placeholder bindings – configure actual resources per environment.
