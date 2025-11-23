@@ -54,7 +54,7 @@
     "cheerio": "1.0.0-rc.12",
     "death": "^1.1.0",
     "epubook": "^0.0.11",
-    "iconv-lite": "^0.6.3",
+    "iconv-lite": "^0.7.0",
     "image-size": "^1.1.1",
     "p-limit": "^5.0.0",
     "pino": "^9.2.0",
