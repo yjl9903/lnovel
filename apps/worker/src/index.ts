@@ -27,9 +27,7 @@ app.notFound((c) => {
 });
 
 app.onError((err, c) => {
-  const requestId = c.get('requestId');
-
-  console.error('[bgmw] unhandled error', err, { requestId });
+  console.error('Unhandled error', err);
 
   return c.json(
     {
@@ -39,3 +37,12 @@ app.onError((err, c) => {
     500
   );
 });
+
+app.get('/', (c) =>
+  c.json({
+    ok: true,
+    message: 'lnovel.animes.garden'
+  })
+);
+
+export default app;
