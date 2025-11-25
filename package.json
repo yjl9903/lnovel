@@ -30,7 +30,7 @@
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
     "vite": "^7.2.4",
-    "vitest": "^4.0.13",
+    "vitest": "^4.0.14",
     "wrangler": "^4.50.0"
   },
   "packageManager": "pnpm@10.23.0",
