@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
+import { consola } from 'consola';
 
 import type { AppEnv, Context } from '../app';
 
-import { fetchNovelPage, fetchNovelVolumePage } from 'bilinovel';
+import { fetchNovelChapters, fetchNovelPage, fetchNovelVolumePage } from 'bilinovel';
 
 import { Provider } from '../constants';
 import { launchBrowser, runBrowserContext } from '../browser';
@@ -30,6 +31,8 @@ app.get('/novel/:nid', async (c: Context) => {
       data
     });
   } catch (error) {
+    consola.withTag(Provider.bilinovel).error(error);
+
     return c.json({
       ok: false,
       provider: Provider.bilinovel,
@@ -53,6 +56,8 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
       data
     });
   } catch (error) {
+    consola.withTag(Provider.bilinovel).error(error);
+
     return c.json({
       ok: false,
       provider: Provider.bilinovel,
@@ -66,11 +71,18 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const cid = c.req.param('cid');
 
   try {
+    const data = await runBrowserContext(browser, (context) =>
+      fetchNovelChapters(context, +nid, +cid)
+    );
+
     return c.json({
       ok: true,
-      provider: Provider.bilinovel
+      provider: Provider.bilinovel,
+      data
     });
   } catch (error) {
+    consola.withTag(Provider.bilinovel).error(error);
+
     return c.json({
       ok: false,
       provider: Provider.bilinovel,
