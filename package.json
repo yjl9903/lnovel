@@ -17,7 +17,7 @@
     "worker:dev": "pnpm -C apps/worker run dev"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251121.0",
+    "@cloudflare/workers-types": "^4.20251126.0",
     "@types/cheerio": "^0.22.35",
     "@types/death": "^1.1.5",
     "@types/node": "^24.10.1",
