@@ -1,8 +1,11 @@
 {
-  "name": "@lnovel/worker",
+  "name": "@lnovel/server",
   "version": "0.0.4",
-  "description": "",
-  "keywords": [],
+  "private": true,
+  "description": "lnovel server implementation",
+  "keywords": [
+    "light-novels"
+  ],
   "homepage": "https://github.com/yjl9903/lnovel#readme",
   "bugs": {
     "url": "https://github.com/yjl9903/lnovel/issues"
@@ -11,7 +14,7 @@
     "type": "git",
     "url": "git+https://github.com/yjl9903/lnovel.git"
   },
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "author": "XLor",
   "sideEffects": false,
   "type": "module",
@@ -23,25 +26,28 @@
   },
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "bin": {
+    "lnovel-server": "./cli.mjs"
+  },
   "files": [
     "*.mjs",
     "dist"
   ],
   "scripts": {
-    "d1:migrate": "wrangler d1 migrations apply DATABASE",
-    "deploy": "wrangler deploy",
-    "dev": "wrangler dev",
+    "build": "tsdown",
     "drizzle": "drizzle-kit",
-    "drizzle:generate": "drizzle-kit generate",
-    "test:ci": "wrangler deploy --dry-run"
+    "drizzle:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@cloudflare/puppeteer": "1.0.4",
+    "@hono/node-server": "^1.19.6",
     "@hono/zod-validator": "0.7.5",
+    "breadc": "0.9.7",
+    "consola": "3.4.2",
     "drizzle-orm": "0.44.7",
     "hono": "4.10.6",
     "p-limit": "7.2.0",
-    "unstorage": "^1.17.3",
+    "undici": "^7.16.0",
+    "unstorage": "1.17.3",
     "zod": "4.1.13"
   },
   "engines": {

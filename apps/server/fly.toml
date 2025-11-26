@@ -1,0 +1,47 @@
+# fly.toml app configuration file generated for animegarden-server-test on 2025-01-04T19:09:46+08:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'lnovel-production'
+primary_region = 'lax'
+
+[build]
+dockerfile = 'Dockerfile'
+
+[build.args]
+NODE_VERSION = '24.11.0'
+PNPM_VERSION = '10.23.0'
+APP_HOST = 'lnvoel.animes.garden'
+
+[processes]
+server = 'node apps/worker/'
+
+[http_service]
+internal_port = 3000
+auto_stop_machines = 'suspend'
+auto_start_machines = true
+min_machines_running = 1
+processes = ['server']
+
+[http_service.concurrency]
+type = 'requests'
+soft_limit = 10
+
+[[http_service.checks]]
+grace_period = "30s"
+interval = "60s"
+timeout = "10s"
+method = "GET"
+path = "/health"
+
+[[restart]]
+policy = 'on-failure'
+retries = 10
+processes = ['server']
+
+[[vm]]
+memory = '1g'
+cpu_kind = 'shared'
+cpus = 1
+processes = ['server']

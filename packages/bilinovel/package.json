@@ -1,14 +1,11 @@
 {
-  "name": "lnovel",
+  "name": "bilinovel",
   "version": "0.0.4",
   "description": "Scrapes light novels from various websites and converts them into EPUB format e-books",
   "keywords": [
     "cli",
     "epub",
-    "light-novels",
-    "wenku8",
-    "轻小说",
-    "轻小说文库"
+    "light-novels"
   ],
   "homepage": "https://github.com/yjl9903/lnovel#readme",
   "bugs": {
@@ -18,7 +15,7 @@
     "type": "git",
     "url": "git+https://github.com/yjl9903/lnovel.git"
   },
-  "license": "AGPL-3.0",
+  "license": "MIT",
   "author": "XLor",
   "sideEffects": false,
   "type": "module",
@@ -31,32 +28,31 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "bin": {
-    "lnovel": "cli.mjs"
+    "bilinovel": "cli.mjs"
   },
   "files": [
     "*.mjs",
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub",
+    "build": "tsdown",
     "test": "vitest",
     "test:ci": "vitest --run",
-    "typecheck": "tsc --noEmit --jsx preserve"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@breadc/color": "^0.9.7",
     "@clack/prompts": "^0.11.0",
     "@epubook/core": "^0.0.11",
-    "axios": "^1.13.2",
+    "axios": "^1.7.2",
     "breadc": "^0.9.7",
     "cheerio": "1.0.0-rc.12",
     "death": "^1.1.0",
     "epubook": "^0.0.11",
-    "iconv-lite": "^0.7.0",
-    "image-size": "^1.2.1",
+    "iconv-lite": "^0.6.3",
+    "image-size": "^1.1.1",
     "p-limit": "^5.0.0",
-    "pino": "^9.14.0",
+    "pino": "^9.2.0",
     "pino-pretty": "^11.2.1",
     "set-cookie-parser": "^2.6.0",
     "yaml": "^2.4.5"

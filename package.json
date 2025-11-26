@@ -8,16 +8,16 @@
     "dev": "turbo run dev --parallel",
     "format": "prettier --write '**/*.{ts,js,mjs}'",
     "lnovel": "tsx packages/lnovel/src/cli.ts",
+    "lnovel:server": "tsx apps/server/src/cli.ts",
     "release": "bumpp package.json apps/*/package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
+    "server:deploy": "pnpm -C apps/server run deploy",
+    "server:dev": "pnpm -C apps/server run dev",
     "test:ci": "turbo run test:ci",
     "typecheck": "turbo run typecheck",
     "preversion": "turbo run test:ci",
-    "postversion": "turbo run build",
-    "worker:deploy": "pnpm -C apps/worker run deploy",
-    "worker:dev": "pnpm -C apps/worker run dev"
+    "postversion": "turbo run build"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20251126.0",
     "@types/cheerio": "^0.22.35",
     "@types/death": "^1.1.5",
     "@types/node": "^24.10.1",
@@ -30,8 +30,7 @@
     "typescript": "^5.9.3",
     "unbuild": "^3.6.1",
     "vite": "^7.2.4",
-    "vitest": "^4.0.14",
-    "wrangler": "^4.50.0"
+    "vitest": "^4.0.14"
   },
   "packageManager": "pnpm@10.23.0",
   "engines": {

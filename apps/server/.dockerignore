@@ -1,0 +1,11 @@
+# flyctl launch added from .gitignore
+**/node_modules
+
+**/build
+**/dist
+**/.wrangler
+**/.turbo
+
+**/.cache
+**/.env
+fly.toml
