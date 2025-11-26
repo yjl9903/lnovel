@@ -13,7 +13,7 @@ FROM node:${NODE_VERSION}-slim AS base
 LABEL fly_launch_runtime="Node.js"
 
 # Node.js app lives here
-WORKDIR /app
+WORKDIR /lnovel
 
 # Set production environment
 ENV NODE_ENV="production"
@@ -54,7 +54,7 @@ RUN pnpm prune --prod
 FROM base
 
 # Copy built application
-COPY --from=build /app /app
+COPY --from=build /lnovel /lnovel
 
 # Declare args
 ARG PORT APP_HOST

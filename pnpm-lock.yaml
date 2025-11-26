@@ -62,6 +62,9 @@ importers:
       consola:
         specifier: 3.4.2
         version: 3.4.2
+      dotenv:
+        specifier: 17.2.3
+        version: 17.2.3
       drizzle-orm:
         specifier: 0.44.7
         version: 0.44.7(@cloudflare/workers-types@4.20251126.0)
@@ -72,7 +75,7 @@ importers:
         specifier: 7.2.0
         version: 7.2.0
       undici:
-        specifier: ^7.16.0
+        specifier: 7.16.0
         version: 7.16.0
       unstorage:
         specifier: 1.17.3

@@ -60,6 +60,13 @@ export function createApp() {
     })
   );
 
+  app.get('/health', (c) =>
+    c.json({
+      ok: true,
+      message: 'lnovel.animes.garden'
+    })
+  );
+
   app.route('/bili/', bilinovel);
 
   app.get('/html/', async (c) => {

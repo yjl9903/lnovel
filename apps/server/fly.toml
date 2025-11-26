@@ -15,7 +15,7 @@ PNPM_VERSION = '10.23.0'
 APP_HOST = 'lnvoel.animes.garden'
 
 [processes]
-server = 'node apps/worker/'
+server = 'node apps/server/cli.mjs start'
 
 [http_service]
 internal_port = 3000
