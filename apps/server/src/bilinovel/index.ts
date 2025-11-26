@@ -25,6 +25,11 @@ const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelCh
   max: 100
 });
 
+app.use('*', async (c: Context, next) => {
+  c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+  await next();
+});
+
 app.get('/', async (c: Context) => {
   return c.json({
     ok: true,

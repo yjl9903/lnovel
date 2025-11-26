@@ -11,7 +11,7 @@ GET https://lnovel.animes.garden/bili/novel/4649
 GET https://lnovel.animes.garden/bili/novel/4649/vol/274116
 
 ###
-GET https://lnovel.animes.garden/bili/novel/4649/content/274117
+GET https://lnovel.animes.garden/bili/novel/4649/chapter/274117
 
 ###
-GET https://lnovel.animes.garden/html/?url=https://www.bilinovel.com/novel/4649.html
+GET https://lnovel.animes.garden/bili/novel/4649/chapter/274118
