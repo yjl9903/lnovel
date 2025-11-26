@@ -1,11 +1,15 @@
 import { Hono } from 'hono';
 
-import type { AppEnv, Context } from '../env';
+import type { AppEnv, Context } from '../app';
+
+import { fetchNovelPage } from 'bilinovel';
 
 import { Provider } from '../constants';
-import { launchBrowser } from '../browser';
+import { launchBrowser, runBrowserContext } from '../browser';
 
 export const app = new Hono<AppEnv>();
+
+const browser = launchBrowser();
 
 app.get('/', async (c: Context) => {
   return c.json({
@@ -18,20 +22,12 @@ app.get('/novel/:nid', async (c: Context) => {
   const nid = c.req.param('nid');
 
   try {
-    const content = await launchBrowser(c, async (page) => {
-      const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}.html`);
-      if (!resp) throw new Error('no response');
-      if (resp.ok()) {
-        return await page.content();
-      } else {
-        throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
-      }
-    });
+    const data = await runBrowserContext(browser, (context) => fetchNovelPage(context, +nid));
 
     return c.json({
       ok: true,
       provider: Provider.bilinovel,
-      html: content
+      data
     });
   } catch (error) {
     return c.json({
@@ -47,20 +43,9 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const vid = c.req.param('vid');
 
   try {
-    const content = await launchBrowser(c, async (page) => {
-      const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}/vol_${vid}.html`);
-      if (!resp) throw new Error('no response');
-      if (resp.ok()) {
-        return await page.content();
-      } else {
-        throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
-      }
-    });
-
     return c.json({
       ok: true,
-      provider: Provider.bilinovel,
-      html: content
+      provider: Provider.bilinovel
     });
   } catch (error) {
     return c.json({
@@ -76,20 +61,9 @@ app.get('/novel/:nid/content/:cid', async (c: Context) => {
   const cid = c.req.param('cid');
 
   try {
-    const content = await launchBrowser(c, async (page) => {
-      const resp = await page.goto(`https://www.bilinovel.com/novel/${nid}/${cid}.html`);
-      if (!resp) throw new Error('no response');
-      if (resp.ok()) {
-        return await page.content();
-      } else {
-        throw new Error(`${resp.status()} ${resp.statusText()} ${resp.url()}`);
-      }
-    });
-
     return c.json({
       ok: true,
-      provider: Provider.bilinovel,
-      html: content
+      provider: Provider.bilinovel
     });
   } catch (error) {
     return c.json({

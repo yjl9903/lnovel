@@ -41,12 +41,17 @@
   "dependencies": {
     "@hono/node-server": "^1.19.6",
     "@hono/zod-validator": "0.7.5",
+    "@playwright/browser-chromium": "1.57.0",
+    "bilinovel": "workspace:*",
     "breadc": "0.9.7",
     "consola": "3.4.2",
     "dotenv": "17.2.3",
     "drizzle-orm": "0.44.7",
     "hono": "4.10.6",
     "p-limit": "7.2.0",
+    "playwright": "1.57.0",
+    "playwright-extra": "4.3.6",
+    "puppeteer-extra-plugin-stealth": "2.11.2",
     "undici": "7.16.0",
     "unstorage": "1.17.3",
     "zod": "4.1.13"

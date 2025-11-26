@@ -10,7 +10,12 @@
     "strictNullChecks": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "skipDefaultLibCheck": true
+    "skipDefaultLibCheck": true,
+    "paths": {
+      "bilinovel": [
+        "./packages/bilinovel/src/index.ts"
+      ]
+    }
   },
   "exclude": ["node_modules"]
 }
