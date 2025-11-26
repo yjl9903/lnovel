@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 
 import type { AppEnv, Context } from '../app';
 
-import { fetchNovelPage } from 'bilinovel';
+import { fetchNovelPage, fetchNovelVolumePage } from 'bilinovel';
 
 import { Provider } from '../constants';
 import { launchBrowser, runBrowserContext } from '../browser';
@@ -43,9 +43,14 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const vid = c.req.param('vid');
 
   try {
+    const data = await runBrowserContext(browser, (context) =>
+      fetchNovelVolumePage(context, +nid, +vid)
+    );
+
     return c.json({
       ok: true,
-      provider: Provider.bilinovel
+      provider: Provider.bilinovel,
+      data
     });
   } catch (error) {
     return c.json({
@@ -56,7 +61,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   }
 });
 
-app.get('/novel/:nid/content/:cid', async (c: Context) => {
+app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const nid = c.req.param('nid');
   const cid = c.req.param('cid');
 
