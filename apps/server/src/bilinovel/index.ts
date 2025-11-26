@@ -6,11 +6,24 @@ import type { AppEnv, Context } from '../app';
 import { fetchNovelChapters, fetchNovelPage, fetchNovelVolumePage } from 'bilinovel';
 
 import { Provider } from '../constants';
-import { launchBrowser, runBrowserContext } from '../browser';
+import { launchBrowser, runBrowserContext, runBrowserContextWithCache } from '../browser';
+import { LRUCache } from 'lru-cache';
 
 export const app = new Hono<AppEnv>();
 
 const browser = launchBrowser();
+
+const novelCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelPage>> & {}>({
+  max: 1000
+});
+
+const volCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelVolumePage>> & {}>({
+  max: 1000
+});
+
+const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelChapters>> & {}>({
+  max: 100
+});
 
 app.get('/', async (c: Context) => {
   return c.json({
@@ -23,7 +36,9 @@ app.get('/novel/:nid', async (c: Context) => {
   const nid = c.req.param('nid');
 
   try {
-    const data = await runBrowserContext(browser, (context) => fetchNovelPage(context, +nid));
+    const data = await runBrowserContextWithCache(browser, novelCache, `${nid}`, (context) =>
+      fetchNovelPage(context, +nid)
+    );
 
     return c.json({
       ok: true,
@@ -46,8 +61,11 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const vid = c.req.param('vid');
 
   try {
-    const data = await runBrowserContext(browser, (context) =>
-      fetchNovelVolumePage(context, +nid, +vid)
+    const data = await runBrowserContextWithCache(
+      browser,
+      volCache,
+      `${nid}/vol_${vid}`,
+      (context) => fetchNovelVolumePage(context, +nid, +vid)
     );
 
     return c.json({
@@ -71,8 +89,11 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const cid = c.req.param('cid');
 
   try {
-    const data = await runBrowserContext(browser, (context) =>
-      fetchNovelChapters(context, +nid, +cid)
+    const data = await runBrowserContextWithCache(
+      browser,
+      chapterCache,
+      `${nid}/${cid}`,
+      (context) => fetchNovelChapters(context, +nid, +cid)
     );
 
     return c.json({

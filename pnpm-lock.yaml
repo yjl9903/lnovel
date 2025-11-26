@@ -77,6 +77,9 @@ importers:
       hono:
         specifier: 4.10.6
         version: 4.10.6
+      lru-cache:
+        specifier: ^11.2.2
+        version: 11.2.2
       p-limit:
         specifier: 7.2.0
         version: 7.2.0
@@ -1396,6 +1399,10 @@ packages:
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
+
+  lru-cache@11.2.2:
+    resolution: {integrity: sha512-F9ODfyqML2coTIsQpSkRHnLSZMtkU8Q+mSfcaIyKwy58u+8k5nvAYeiNhsyMARvzNcXJ9QfWVrcPsC9e9rAxtg==}
+    engines: {node: 20 || >=22}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -3352,6 +3359,8 @@ snapshots:
   lodash.uniq@4.5.0: {}
 
   lru-cache@10.4.3: {}
+
+  lru-cache@11.2.2: {}
 
   magic-string@0.30.21:
     dependencies:

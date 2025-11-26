@@ -48,6 +48,7 @@
     "dotenv": "17.2.3",
     "drizzle-orm": "0.44.7",
     "hono": "4.10.6",
+    "lru-cache": "^11.2.2",
     "p-limit": "7.2.0",
     "playwright": "1.57.0",
     "playwright-extra": "4.3.6",
