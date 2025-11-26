@@ -6,7 +6,8 @@ node_modules
 .env.*
 !.env.example
 
-# chrome user data
+# user data
+.data
 .profile
 
 # Build output

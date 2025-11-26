@@ -6,6 +6,10 @@ node_modules
 .env.*
 !.env.example
 
+# user data
+.data
+.profile
+
 # Build output
 dist
 .turbo
