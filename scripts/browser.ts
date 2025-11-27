@@ -15,8 +15,8 @@ import {
 
 const nid = 4649;
 
-// const broswer = connectBrowserOverCDP(
-//   'ws://127.0.0.1:9222/devtools/browser/2daf55e4-ffe4-4c36-b71f-c8f7c0f5784a'
+// const browser = connectBrowserOverCDP(
+//   'ws://127.0.0.1:9222/devtools/browser/a5c1c9d3-9ea9-49f6-ae94-6dd01840c1b1'
 // );
 const browser = launchBrowser();
 
@@ -35,28 +35,38 @@ const { volumes } = await runBrowserContext(browser, async (ctx) => {
   return { novel, volumes: volumes.filter(Boolean) };
 });
 
-await runBrowserContext(
-  browser,
-  async (ctx) => {
-    for (const info of volumes) {
-      if (!info) continue;
+await runBrowserContext(browser, async (ctx) => {
+  for (const info of volumes) {
+    if (!info) continue;
 
-      console.log(info);
+    console.log(info);
 
-      await fs.mkdir(`./.data/${info.name}/`).catch(() => {});
+    await fs.mkdir(`./.data/${info.name}/`).catch(() => {});
 
-      for (const chapter of info?.chapters ?? []) {
-        const content = await fetchNovelChapters(ctx, nid, chapter.cid, { delay: 5000 });
-        if (content) {
-          console.log(chapter.cid, content.title);
-          await fs.writeFile(
-            `./.data/${info.name}/${content.title}.html`,
-            content.content,
-            'utf-8'
-          );
-        }
+    for (const chapter of info?.chapters ?? []) {
+      console.log(chapter);
+      const content = await fetchNovelChapters(ctx, nid, chapter.cid, {
+        delay: 5000,
+        transformRuby: true
+      });
+      if (content) {
+        content.content = content.content.replaceAll('https://img3.readpai.com/4/4649/274117/', '');
+
+        content.content = `<?xml version='1.0' encoding='utf-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="zh" xml:lang="zh"><head>
+  <title>${content.title}</title>
+</head>
+<body>
+<h2>${content.title}</h2>
+${content.content}
+</body></html>`;
+
+        await fs.writeFile(`./.data/${info.name}/${content.title}.html`, content.content, 'utf-8');
       }
     }
-  },
-  { javaScriptEnabled: false }
-);
+  }
+});
+
+console.log('chrome is been closing...');
+
+await (await browser).close();

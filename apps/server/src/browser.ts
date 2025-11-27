@@ -44,7 +44,7 @@ export async function runBrowserContext<T>(
   try {
     return await fn(context);
   } finally {
-    context.close();
+    await context.close().catch(() => {});
   }
 }
 

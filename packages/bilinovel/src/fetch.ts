@@ -1,8 +1,9 @@
 import type { BrowserContext, Page } from 'playwright';
 
-import type { BilinovelFetchOptions } from './types';
+import type { BilinovelFetchChapterOptions, BilinovelFetchOptions } from './types';
 
 import { sleep } from './utils';
+import { blockRoutes, isCloudflarePage } from './browser';
 
 export interface NovelPageResult {
   name: string;
@@ -38,6 +39,10 @@ export async function fetchNovelPage(
   const novelURL = new URL(`/novel/${nid}.html`, options?.baseURL || 'https://www.linovelib.com/');
 
   await page.goto(novelURL.toString());
+
+  if (await isCloudflarePage(page)) {
+    throw new Error('blocked by cloudflare');
+  }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
 
@@ -98,7 +103,13 @@ export async function fetchNovelVolumePage(
     options?.baseURL || 'https://www.linovelib.com/'
   );
 
+  await blockRoutes(page);
+
   await page.goto(novelURL.toString());
+
+  if (await isCloudflarePage(page)) {
+    throw new Error('blocked by cloudflare');
+  }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
 
@@ -145,11 +156,13 @@ export async function fetchNovelChapters(
   context: BrowserContext,
   nid: number,
   cid: number,
-  options?: BilinovelFetchOptions & { delay?: number }
+  options?: BilinovelFetchChapterOptions
 ) {
   if (!nid || !cid) return undefined;
 
   const page = await context.newPage();
+
+  await blockRoutes(page);
 
   const contents = [];
   const images = [];
@@ -184,7 +197,7 @@ export async function fetchNovelChapterPage(
   nid: number,
   cid: number,
   pageCount: number,
-  options?: BilinovelFetchOptions
+  options?: BilinovelFetchChapterOptions
 ) {
   const novelURL = new URL(
     `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`,
@@ -193,13 +206,17 @@ export async function fetchNovelChapterPage(
 
   await page.goto(novelURL.toString());
 
+  if (await isCloudflarePage(page)) {
+    throw new Error('blocked by cloudflare');
+  }
+
   const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
   if (!rawTitle) return undefined;
 
   const { title, current, total } = parseTitle(rawTitle);
   if (!title || current > total) return undefined;
 
-  const content = await page
+  let content = await page
     .locator('#mlfy_main_text > #TextContent')
     .first()
     .evaluate<string>((container) => {
@@ -212,7 +229,13 @@ export async function fetchNovelChapterPage(
             if (dom.getAttribute('class')?.includes('dag')) return acc;
             if (dom.getAttribute('id')?.includes('hidden-images')) return acc;
             if (dom.getAttribute('id')?.includes('show-more-images')) return acc;
-            if (dom.nodeName === 'P') return acc + `<p>${dom.innerHTML}</p>`;
+            if (dom.nodeName === 'BR') return acc + '<br/>';
+            if (dom.nodeName === 'P') {
+              // @ts-ignore
+              const style = getComputedStyle(dom);
+              const position = style.getPropertyValue('position');
+              return acc + (position === 'static' ? `<p>${dom.innerHTML}</p>` : '');
+            }
             if (dom.nodeName === 'IMG') {
               const cloned = dom.cloneNode();
               cloned.removeAttribute('class');
@@ -221,7 +244,7 @@ export async function fetchNovelChapterPage(
                 cloned.removeAttribute('data-src');
                 cloned.setAttribute('src', realSrc);
               }
-              return acc + cloned.outerHTML;
+              return acc + cloned.outerHTML.replace(/>$/, '/>');
             }
             return acc + dom.outerHTML;
           }
@@ -232,7 +255,13 @@ export async function fetchNovelChapterPage(
       }
     });
 
-  if (!content.trim()) return undefined;
+  content = content.trim();
+
+  if (!content) return undefined;
+
+  if (options?.transformRuby) {
+    content = transformRubyTags(content);
+  }
 
   const images = await Promise.all(
     (await page.locator('#mlfy_main_text > #TextContent img').all()).map(async (locator) => {
@@ -290,5 +319,30 @@ export async function fetchNovelChapterPage(
         total: Number.MAX_SAFE_INTEGER
       };
     }
+  }
+
+  /**
+   * 将自定义的 ruby 标签转换为标准 HTML
+   * 输入格式: [ruby=reading]text[/ruby]
+   * 输出格式: <ruby>text<rt>reading</rt></ruby>
+   *
+   * @param content 包含自定义 ruby 标签的原始字符串
+   * @returns 转换后的 HTML 字符串
+   */
+  function transformRubyTags(content: string): string {
+    // 正则表达式解释：
+    // \[ruby=    : 匹配字面量 "[ruby="
+    // ([^\]]+)   : 捕获组 1 (读音/注音)，匹配除了 "]" 以外的任意字符
+    // \]         : 匹配字面量 "]"
+    // (.*?)      : 捕获组 2 (正文)，非贪婪匹配任意字符
+    // \[\/ruby\] : 匹配字面量 "[/ruby]"
+    // g          : 全局匹配
+    const regex = /\[ruby=([^\]]+)\](.*?)\[\/ruby\]/g;
+
+    return content.replace(regex, (match, reading, baseText) => {
+      // 构造标准 HTML5 ruby 结构
+      // <ruby> 汉字 <rt> 注音 </rt> </ruby>
+      return `<ruby>${baseText}<rt>${reading}</rt></ruby>`;
+    });
   }
 }
