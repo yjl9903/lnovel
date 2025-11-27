@@ -1,4 +1,4 @@
-import type { BrowserContext } from 'playwright';
+import type { BrowserContext, Page } from 'playwright';
 
 import type { BilinovelFetchOptions } from './types';
 
@@ -134,6 +134,13 @@ export async function fetchNovelVolumePage(
   };
 }
 
+/**
+ * @param context 需要禁用 JavaScript 执行, javaScriptEnabled: false
+ * @param nid
+ * @param cid
+ * @param options
+ * @returns
+ */
 export async function fetchNovelChapters(
   context: BrowserContext,
   nid: number,
@@ -144,69 +151,22 @@ export async function fetchNovelChapters(
 
   const page = await context.newPage();
 
-  const results = [];
+  const contents = [];
+  const images = [];
 
   let title = '';
   let pageCount = 1;
 
   for (; ; pageCount++) {
-    const novelURL = new URL(
-      `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`,
-      options?.baseURL || 'https://www.linovelib.com/'
-    );
+    const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
 
-    await page.goto(novelURL.toString());
+    if (!result) break;
 
-    const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
-    if (!rawTitle) break;
-    const { title: currentTitle, current, total } = parseTitle(rawTitle);
-    if (!currentTitle || current > total) break;
+    title = result.title;
+    contents.push(result.content);
+    images.push(...result.images);
 
-    title = currentTitle;
-
-    const content = await page
-      .locator('#mlfy_main_text > #TextContent')
-      .first()
-      .evaluate<string>((container) => {
-        try {
-          return [...container.childNodes].reduce((acc, dom) => {
-            if (dom.nodeType === 8) return acc;
-            if (dom.nodeType === 3) return acc + dom.textContent.trim();
-            if (dom.nodeType === 1) {
-              if (dom.getAttribute('class')?.includes('google')) return acc;
-              if (dom.getAttribute('class')?.includes('dag')) return acc;
-              if (dom.getAttribute('id')?.includes('hidden-images')) return acc;
-              if (dom.getAttribute('id')?.includes('show-more-images')) return acc;
-              if (dom.nodeName === 'P') return acc + `<p>${dom.innerHTML}</p>`;
-              if (dom.nodeName === 'IMG') {
-                const cloned = dom.cloneNode();
-                cloned.removeAttribute('class');
-                const realSrc = cloned.getAttribute('data-src');
-                if (realSrc) {
-                  cloned.removeAttribute('data-src');
-                  cloned.setAttribute('src', realSrc);
-                }
-                return acc + cloned.outerHTML;
-              }
-              return acc + dom.outerHTML;
-            }
-            return acc;
-          }, '');
-        } catch (error) {
-          return '';
-        }
-      });
-
-    if (!content.trim()) break;
-
-    results.push(content);
-
-    const pagination = await page.locator('.mlfy_page > a:last-child').getAttribute('href');
-
-    if (!pagination) break;
-    if (!pagination.startsWith(`/novel/${nid}/${cid}_`)) break;
-
-    if (current === total) break;
+    if (result.pagination.complete) break;
 
     const delay = options?.delay || 1000;
     await sleep(delay / 2 + (Math.random() * delay) / 2);
@@ -214,7 +174,93 @@ export async function fetchNovelChapters(
 
   return {
     title,
-    content: results.join('')
+    content: contents.join(''),
+    images
+  };
+}
+
+export async function fetchNovelChapterPage(
+  page: Page,
+  nid: number,
+  cid: number,
+  pageCount: number,
+  options?: BilinovelFetchOptions
+) {
+  const novelURL = new URL(
+    `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`,
+    options?.baseURL || 'https://www.linovelib.com/'
+  );
+
+  await page.goto(novelURL.toString());
+
+  const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
+  if (!rawTitle) return undefined;
+
+  const { title, current, total } = parseTitle(rawTitle);
+  if (!title || current > total) return undefined;
+
+  const content = await page
+    .locator('#mlfy_main_text > #TextContent')
+    .first()
+    .evaluate<string>((container) => {
+      try {
+        return [...container.childNodes].reduce((acc, dom) => {
+          if (dom.nodeType === 8) return acc;
+          if (dom.nodeType === 3) return acc + dom.textContent.trim();
+          if (dom.nodeType === 1) {
+            if (dom.getAttribute('class')?.includes('google')) return acc;
+            if (dom.getAttribute('class')?.includes('dag')) return acc;
+            if (dom.getAttribute('id')?.includes('hidden-images')) return acc;
+            if (dom.getAttribute('id')?.includes('show-more-images')) return acc;
+            if (dom.nodeName === 'P') return acc + `<p>${dom.innerHTML}</p>`;
+            if (dom.nodeName === 'IMG') {
+              const cloned = dom.cloneNode();
+              cloned.removeAttribute('class');
+              const realSrc = cloned.getAttribute('data-src');
+              if (realSrc) {
+                cloned.removeAttribute('data-src');
+                cloned.setAttribute('src', realSrc);
+              }
+              return acc + cloned.outerHTML;
+            }
+            return acc + dom.outerHTML;
+          }
+          return acc;
+        }, '');
+      } catch (error) {
+        return '';
+      }
+    });
+
+  if (!content.trim()) return undefined;
+
+  const images = await Promise.all(
+    (await page.locator('#mlfy_main_text > #TextContent img').all()).map(async (locator) => {
+      const src = (await locator.getAttribute('data-src')) || (await locator.getAttribute('src'));
+      const alt = await locator.getAttribute('alt');
+
+      return {
+        src,
+        alt
+      };
+    })
+  );
+
+  const pagination = await page.locator('.mlfy_page > a:last-child').getAttribute('href');
+  const complete =
+    (current > 1 && current === total) ||
+    !pagination ||
+    !pagination.startsWith(`/novel/${nid}/${cid}_`);
+
+  return {
+    title,
+    content,
+    images,
+    pagination: {
+      current,
+      total,
+      complete
+    }
   };
 
   function parseTitle(input: string) {

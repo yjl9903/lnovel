@@ -98,7 +98,10 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
       browser,
       chapterCache,
       `${nid}/${cid}`,
-      (context) => fetchNovelChapters(context, +nid, +cid)
+      (context) => fetchNovelChapters(context, +nid, +cid),
+      {
+        javaScriptEnabled: false
+      }
     );
 
     return c.json({

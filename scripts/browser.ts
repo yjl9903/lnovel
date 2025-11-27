@@ -20,30 +20,43 @@ const nid = 4649;
 // );
 const browser = launchBrowser();
 
-runBrowserContext<void>(browser, async (ctx) => {
+await fs.mkdir('./.data/').catch(() => {});
+
+const { volumes } = await runBrowserContext(browser, async (ctx) => {
   console.log('chrome has been connected...');
 
   const novel = await fetchNovelPage(ctx, nid);
   console.log(novel);
 
-  await fs.mkdir('./.data/').catch(() => {});
+  const volumes = await Promise.all(
+    (novel?.volumes ?? []).map(async (volume) => await fetchNovelVolumePage(ctx, nid, volume.vid))
+  );
 
-  for (const volume of novel?.volumes ?? []) {
-    const info = await fetchNovelVolumePage(ctx, nid, volume.vid);
-    if (!info) continue;
+  return { novel, volumes: volumes.filter(Boolean) };
+});
 
-    console.log(info);
+await runBrowserContext(
+  browser,
+  async (ctx) => {
+    for (const info of volumes) {
+      if (!info) continue;
 
-    await fs.mkdir(`./.data/${info.name}/`).catch(() => {});
+      console.log(info);
 
-    for (const chapter of info?.chapters ?? []) {
-      const content = await fetchNovelChapters(ctx, nid, chapter.cid);
-      if (content) {
-        console.log(content.title);
-        await fs.writeFile(`./.data/${info.name}/${content.title}.html`, content.content, 'utf-8');
+      await fs.mkdir(`./.data/${info.name}/`).catch(() => {});
+
+      for (const chapter of info?.chapters ?? []) {
+        const content = await fetchNovelChapters(ctx, nid, chapter.cid, { delay: 5000 });
+        if (content) {
+          console.log(chapter.cid, content.title);
+          await fs.writeFile(
+            `./.data/${info.name}/${content.title}.html`,
+            content.content,
+            'utf-8'
+          );
+        }
       }
     }
-
-    break;
-  }
-});
+  },
+  { javaScriptEnabled: false }
+);
