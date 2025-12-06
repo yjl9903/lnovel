@@ -29,8 +29,10 @@ const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelCh
 });
 
 app.use('*', async (c: Context, next) => {
-  c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   await next();
+  if (c.res.status === 200) {
+    c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+  }
 });
 
 app.get('/', async (c: Context) => {
@@ -56,11 +58,14 @@ app.get('/novel/:nid', async (c: Context) => {
   } catch (error) {
     consola.withTag(Provider.bilinovel).error(error);
 
-    return c.json({
-      ok: false,
-      provider: Provider.bilinovel,
-      error: (error as any).message
-    });
+    return c.json(
+      {
+        ok: false,
+        provider: Provider.bilinovel,
+        error: (error as any).message
+      },
+      500
+    );
   }
 });
 
@@ -84,11 +89,14 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   } catch (error) {
     consola.withTag(Provider.bilinovel).error(error);
 
-    return c.json({
-      ok: false,
-      provider: Provider.bilinovel,
-      error: (error as any).message
-    });
+    return c.json(
+      {
+        ok: false,
+        provider: Provider.bilinovel,
+        error: (error as any).message
+      },
+      500
+    );
   }
 });
 
@@ -112,10 +120,13 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   } catch (error) {
     consola.withTag(Provider.bilinovel).error(error);
 
-    return c.json({
-      ok: false,
-      provider: Provider.bilinovel,
-      error: (error as any).message
-    });
+    return c.json(
+      {
+        ok: false,
+        provider: Provider.bilinovel,
+        error: (error as any).message
+      },
+      500
+    );
   }
 });
