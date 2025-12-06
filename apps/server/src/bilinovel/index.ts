@@ -14,15 +14,18 @@ export const app = new Hono<AppEnv>();
 const browser = launchBrowser();
 
 const novelCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelPage>> & {}>({
-  max: 1000
+  max: 1000,
+  ttl: 24 * 60 * 60 * 1000
 });
 
 const volCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelVolumePage>> & {}>({
-  max: 1000
+  max: 1000,
+  ttl: 24 * 60 * 60 * 1000
 });
 
 const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelChapters>> & {}>({
-  max: 100
+  max: 100,
+  ttl: 24 * 60 * 60 * 1000
 });
 
 app.use('*', async (c: Context, next) => {
