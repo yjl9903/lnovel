@@ -117,7 +117,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       }))
     });
 
-    c.res.headers.set('Content-Type', 'application/rss+xml; charset=UTF-8');
+    c.res.headers.set('Content-Type', 'application/xml; charset=UTF-8');
 
     return c.body(rssString);
   } catch (error) {
@@ -213,7 +213,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       }))
     });
 
-    c.res.headers.set('Content-Type', 'application/rss+xml; charset=UTF-8');
+    c.res.headers.set('Content-Type', 'application/xml; charset=UTF-8');
 
     return c.body(rssString);
   } catch (error) {
@@ -311,7 +311,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
       ]
     });
 
-    c.res.headers.set('Content-Type', 'application/rss+xml; charset=UTF-8');
+    c.res.headers.set('Content-Type', 'application/xml; charset=UTF-8');
 
     return c.body(rssString);
   } catch (error) {
