@@ -5,7 +5,7 @@ import type { AppEnv, Context } from '../app';
 import { Provider } from '../constants';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 
-import { consola, buildSite } from './utils';
+import { consola, buildSite, normalizeDescription } from './utils';
 import { getNovel, getNovelVolume, getNovelChapter } from './handlers';
 
 export const app = new Hono<AppEnv>();
@@ -53,7 +53,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
 
     return getFeedResponse(c, {
       title: data.name,
-      description: data.description || data.name,
+      description: normalizeDescription(data.description || data.name),
       link: buildSite(c, `/bili/novel/${nid}`),
       rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
       image: data.cover,
@@ -92,7 +92,7 @@ app.get('/novel/:nid/feed.opml', async (c: Context) => {
 
     return getOpmlResponse(c, {
       title: data.name,
-      description: data.description || data.name,
+      description: normalizeDescription(data.description || data.name),
       items: volumes.flatMap((vol) =>
         vol.chapters.map((chapter) => ({
           title: `${vol.name} ${chapter.title}`,
@@ -141,7 +141,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
 
     return getFeedResponse(c, {
       title: `${data.name}`,
-      description: data.description,
+      description: normalizeDescription(data.description),
       link: buildSite(c, `/bili/novel/${nid}/vol/${vid}`),
       rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
       image: data.cover,
@@ -171,7 +171,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
 
     return getFeedResponse(c, {
       title,
-      description: title,
+      description: normalizeDescription(title),
       link: buildSite(c, `/bili/novel/${nid}/chapter/${cid}`),
       rssLink: buildSite(c, `/bili/novel/${nid}/chapter/${cid}/feed.xml`),
       items: [
