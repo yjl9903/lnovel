@@ -125,16 +125,19 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   if (resp.ok) {
     const { data } = resp;
 
-    const resps = await Promise.all(
-      data.chapters.map(async (chapter) => getNovelChapter(c, nid, '' + chapter.cid))
-    );
+    const chapters = [];
+    for (const chapter of data.chapters) {
+      if (chapter !== data.chapters[0]) {
+        await new Promise((res) => setTimeout(res, 2000));
+      }
 
-    const error = resps.find((vol) => !vol.ok);
-    if (error) {
-      return c.text(`${error.message}`, error.status);
+      const resp = await getNovelChapter(c, nid, '' + chapter.cid);
+      if (resp.ok) {
+        chapters.push(resp.data!);
+      } else {
+        return c.text(`${resp.message}`, resp.status);
+      }
     }
-
-    const chapters = resps.filter((r) => r.ok).map((r) => r.data);
 
     return getFeedResponse(c, {
       title: `${data.name}`,
