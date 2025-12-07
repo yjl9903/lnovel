@@ -127,10 +127,6 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
 
     const chapters = [];
     for (const chapter of data.chapters) {
-      if (chapter !== data.chapters[0]) {
-        await new Promise((res) => setTimeout(res, 2000));
-      }
-
       const resp = await getNovelChapter(c, nid, '' + chapter.cid);
       if (resp.ok) {
         chapters.push(resp.data!);
