@@ -8,6 +8,7 @@ export type ServiceBindings = {};
 
 export type AppVariables = {
   requestId: string;
+  responseTimestamp: Date | undefined | null;
 };
 
 export type AppEnv = {
@@ -27,7 +28,10 @@ export function createApp() {
     await next();
 
     c.res.headers.set('X-Request-Id', requestId);
-    c.res.headers.set('X-Response-Timestamp', new Date().toISOString());
+    c.res.headers.set(
+      'X-Response-Timestamp',
+      (c.get('responseTimestamp') || new Date()).toISOString()
+    );
   });
 
   app.use('*', logger());

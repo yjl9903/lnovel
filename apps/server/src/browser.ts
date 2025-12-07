@@ -55,7 +55,7 @@ export async function runBrowserContextWithCache<T extends {}>(
   fn: (context: BrowserContext) => Promise<Awaited<T> | null | undefined>,
   options?: BrowserContextOptions | undefined
 ) {
-  const result = cache.get(key);
+  const result = await cache.get(key);
   if (result !== undefined && result !== null) return result;
 
   const browser = await browserPromise;
