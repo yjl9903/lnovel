@@ -1,5 +1,6 @@
 import { type Context as HonoContext, Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { prettyJSON } from 'hono/pretty-json';
 
 import { app as bilinovel } from './bilinovel';
 
@@ -30,6 +31,7 @@ export function createApp() {
   });
 
   app.use('*', logger());
+  app.use('*', prettyJSON({ space: 2 }));
 
   app.notFound((c) => {
     return c.json(
