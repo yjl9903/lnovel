@@ -1,4 +1,9 @@
+import { consola as globalConsola } from 'consola';
+
 import type { Context } from '../app';
+import { Provider } from '../constants';
+
+export const consola = globalConsola.withTag(Provider.bilinovel);
 
 export function buildSite(c: Context, path: string) {
   const requestUrl = new URL(c.req.url);

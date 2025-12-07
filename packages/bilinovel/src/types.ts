@@ -5,6 +5,20 @@ export interface BilinovelFetchOptions {
   baseURL?: string;
 }
 
+export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {
+  /**
+   * <img src="..." />
+   */
+  transformImgSrc?: string | ((url: string) => string | undefined | null);
+}
+
+export interface BilinovelFetchNovelVolumeOptions extends BilinovelFetchOptions {
+  /**
+   * <img src="..." />
+   */
+  transformImgSrc?: string | ((url: string) => string | undefined | null);
+}
+
 export interface BilinovelFetchChapterOptions extends BilinovelFetchOptions {
   /**
    * [ruby=tsuku]小[/ruby][ruby=chan]月[/ruby]

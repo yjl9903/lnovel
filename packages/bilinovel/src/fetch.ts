@@ -1,15 +1,20 @@
 import type { BrowserContext, Page } from 'playwright';
 
-import type { BilinovelFetchChapterOptions, BilinovelFetchOptions } from './types';
+import type {
+  BilinovelFetchNovelOptions,
+  BilinovelFetchNovelVolumeOptions,
+  BilinovelFetchChapterOptions
+} from './types';
 
-import { sleep } from './utils';
 import { blockRoutes, isCloudflarePage } from './browser';
+import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
 
 export interface NovelPageResult {
   name: string;
   labels: string[];
   description: string;
-  cover: string | null;
+  cover: string | undefined;
+  updatedAt: Date;
   volumes: Array<{
     vid: number;
     title: string;
@@ -22,7 +27,8 @@ export interface NovelVolumePageResult {
   name: string;
   labels: string[];
   description: string;
-  cover: string | null;
+  cover: string | undefined;
+  updatedAt: Date;
   chapters: Array<{ cid: number; title: string }>;
 }
 
@@ -31,7 +37,7 @@ export interface NovelChaptersResult {}
 export async function fetchNovelPage(
   context: BrowserContext,
   nid: number,
-  options?: BilinovelFetchOptions
+  options?: BilinovelFetchNovelOptions
 ): Promise<NovelPageResult | undefined> {
   if (!nid) return undefined;
 
@@ -46,7 +52,13 @@ export async function fetchNovelPage(
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
 
-  if (!name) return undefined;
+  const updatedAtStr = await page
+    .locator('meta[property="og:novel:update_time"]')
+    .first()
+    .getAttribute('content');
+  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+  if (!name || !updatedAt) return undefined;
 
   const labels = await page.locator('.book-info > .book-label a').allTextContents();
   const description = await page
@@ -54,7 +66,11 @@ export async function fetchNovelPage(
     .first()
     .innerHTML();
 
-  const cover = await page.locator('.book-img > img').first().getAttribute('src');
+  let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
+
+  if (cover && options?.transformImgSrc) {
+    cover = applyTransformImgSrc(cover, options.transformImgSrc);
+  }
 
   const vols = await Promise.all(
     (await page.locator('.book-vol-chapter > a').all()).map(async (locator) => {
@@ -67,7 +83,11 @@ export async function fetchNovelPage(
       const vid = vidMatch ? +vidMatch[1] : 0;
 
       const imgMatch = img?.match(/url\(['"]?(.*?)['"]?\)/);
-      const cover = imgMatch ? imgMatch[1] : '';
+      let cover = imgMatch ? imgMatch[1] : '';
+
+      if (cover) {
+        cover = applyTransformImgSrc(cover, options?.transformImgSrc);
+      }
 
       return {
         vid,
@@ -83,6 +103,7 @@ export async function fetchNovelPage(
     labels,
     description,
     cover,
+    updatedAt,
     volumes: vols
       .filter((v) => v.vid && v.title && v.cover && v.volume)
       .sort((lhs, rhs) => lhs.vid - rhs.vid) as any
@@ -93,7 +114,7 @@ export async function fetchNovelVolumePage(
   context: BrowserContext,
   nid: number,
   vid: number,
-  options?: BilinovelFetchOptions
+  options?: BilinovelFetchNovelVolumeOptions
 ): Promise<NovelVolumePageResult | undefined> {
   if (!nid || !vid) return undefined;
 
@@ -113,7 +134,13 @@ export async function fetchNovelVolumePage(
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
 
-  if (!name) return undefined;
+  const updatedAtStr = await page
+    .locator('meta[property="og:novel:update_time"]')
+    .first()
+    .getAttribute('content');
+  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+  if (!name || !updatedAt) throw new Error(`missing info`);
 
   const labels = await page.locator('.book-info > .book-label a').allTextContents();
   const description = await page
@@ -121,7 +148,11 @@ export async function fetchNovelVolumePage(
     .first()
     .innerHTML();
 
-  const cover = await page.locator('.book-img > img').first().getAttribute('src');
+  let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
+
+  if (cover && options?.transformImgSrc) {
+    cover = applyTransformImgSrc(cover, options.transformImgSrc);
+  }
 
   const chapters = await Promise.all(
     (await page.locator('.book-new-chapter > .tit > a').all()).map(async (locator) => {
@@ -129,6 +160,7 @@ export async function fetchNovelVolumePage(
       const href = await locator.getAttribute('href');
       const cidMatch = href?.match(/\/(\d+)\.html$/);
       const cid = cidMatch ? +cidMatch[1] : 0;
+
       return {
         cid,
         title
@@ -141,6 +173,7 @@ export async function fetchNovelVolumePage(
     labels,
     description,
     cover,
+    updatedAt,
     chapters: chapters.filter((c) => c.cid && c.title) as any
   };
 }
@@ -269,35 +302,24 @@ export async function fetchNovelChapterPage(
       const alt = await locator.getAttribute('alt');
 
       return {
-        src,
-        alt
-      };
+        src: src || undefined,
+        alt: alt || undefined
+      } as { src: string; alt: string | undefined };
     })
   );
+  images = images.filter((img) => img.src);
 
   if (options?.transformImgSrc) {
-    const applyImgTransform = (src: string | null) => {
-      if (!src || !options.transformImgSrc) return src;
-      if (typeof options.transformImgSrc === 'function') {
-        const next = options.transformImgSrc(src);
-        return next ?? src;
-      }
-      const replacement = options.transformImgSrc.endsWith('/')
-        ? options.transformImgSrc
-        : `${options.transformImgSrc}/`;
-      return src.replace(/^https?:\/\/[^/]+\/?/, replacement);
-    };
-
     const rewriteContentImgSrc = (html: string) =>
       html.replace(/<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*?>/gi, (match, src) => {
-        const next = applyImgTransform(src);
+        const next = applyTransformImgSrc(src, options.transformImgSrc);
         if (!next || next === src) return match;
         return match.replace(src, next);
       });
 
     images = images.map((img) => ({
       ...img,
-      src: applyImgTransform(img.src)
+      src: applyTransformImgSrc(img.src, options.transformImgSrc)
     }));
     content = rewriteContentImgSrc(content);
   }
