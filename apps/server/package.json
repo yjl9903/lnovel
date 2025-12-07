@@ -39,7 +39,7 @@
     "drizzle:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.6",
+    "@hono/node-server": "1.19.6",
     "@hono/zod-validator": "0.7.5",
     "@playwright/browser-chromium": "1.57.0",
     "bilinovel": "workspace:*",
@@ -47,6 +47,7 @@
     "consola": "3.4.2",
     "dotenv": "17.2.3",
     "drizzle-orm": "0.44.7",
+    "fast-xml-parser": "5.3.2",
     "hono": "4.10.6",
     "lru-cache": "^11.2.2",
     "p-limit": "7.2.0",

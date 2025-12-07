@@ -1,7 +1,6 @@
 import { type Context as HonoContext, Hono } from 'hono';
 import { logger } from 'hono/logger';
 
-import { launchBrowser } from './browser';
 import { app as bilinovel } from './bilinovel';
 
 export type ServiceBindings = {};
@@ -27,6 +26,7 @@ export function createApp() {
     await next();
 
     c.res.headers.set('X-Request-Id', requestId);
+    c.res.headers.set('X-Response-Timestamp', new Date().toISOString());
   });
 
   app.use('*', logger());
