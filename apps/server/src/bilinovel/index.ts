@@ -100,7 +100,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       );
     }
 
-    const basePath = `/bili/novel/${nid}`;
+    const basePath = `/bili/novel/${nid}/feed.xml`;
 
     const rssString = await getRssString({
       title: data.name,
@@ -109,10 +109,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       items: data.volumes.map((vol) => ({
         title: vol.title || vol.volume,
         description: vol.volume,
-        link: `${basePath}/vol/${vol.vid}`,
-        content: vol.cover
-          ? `<p>${vol.volume}</p><p><img src="${vol.cover}" alt="${vol.title || vol.volume}" /></p>`
-          : `<p>${vol.volume}</p>`,
+        link: `${basePath}/vol/${vol.vid}/feed.xml`,
         categories: data.labels
       }))
     });
@@ -199,16 +196,16 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       );
     }
 
-    const basePath = `/bili/novel/${nid}/vol/${vid}`;
+    const basePath = `/bili/novel/${nid}/vol/${vid}/feed.xml`;
 
     const rssString = await getRssString({
-      title: `${data.name} - 卷 ${vid}`,
-      description: data.description || data.name,
+      title: `${data.name}`,
+      description: data.description,
       site: buildSite(c, basePath),
       items: data.chapters.map((chapter) => ({
         title: chapter.title,
         description: chapter.title,
-        link: `/bili/novel/${nid}/chapter/${chapter.cid}`,
+        link: `/bili/novel/${nid}/chapter/${chapter.cid}/feed.xml`,
         categories: data.labels
       }))
     });
@@ -295,7 +292,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
       );
     }
 
-    const basePath = `/bili/novel/${nid}/chapter/${cid}`;
+    const basePath = `/bili/novel/${nid}/chapter/${cid}/feed.xml`;
     const title = data.title || `Chapter ${cid}`;
 
     const rssString = await getRssString({
@@ -329,6 +326,15 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
 });
 
 function buildSite(c: Context, path: string) {
-  const origin = new URL(c.req.url).origin;
+  const requestUrl = new URL(c.req.url);
+
+  const forwardedProto = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim();
+  const forwardedHost = c.req.header('x-forwarded-host')?.split(',')[0]?.trim();
+
+  const proto = forwardedProto || requestUrl.protocol.replace(/:$/, '');
+  const host = forwardedHost || requestUrl.host;
+
+  const origin = `${proto}://${host}`;
+
   return new URL(path, origin).toString();
 }
