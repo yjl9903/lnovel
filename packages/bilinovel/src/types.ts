@@ -12,6 +12,11 @@ export interface BilinovelFetchChapterOptions extends BilinovelFetchOptions {
   transformRuby?: boolean;
 
   /**
+   * <img src="..." />
+   */
+  transformImgSrc?: string | ((url: string) => string | undefined | null);
+
+  /**
    * 请求延迟
    */
   delay?: number;

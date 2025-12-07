@@ -10,6 +10,8 @@ import { Provider } from '../constants';
 import { getRssString } from '../rss';
 import { launchBrowser, runBrowserContextWithCache } from '../browser';
 
+import { buildSite } from './utils';
+
 export const app = new Hono<AppEnv>();
 
 const browser = launchBrowser();
@@ -31,7 +33,7 @@ const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelCh
 
 app.use('*', async (c: Context, next) => {
   await next();
-  if (c.res.status === 200) {
+  if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
     c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   }
 });
@@ -108,7 +110,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       site: buildSite(c, basePath),
       items: data.volumes.map((vol) => ({
         title: vol.title || vol.volume,
-        description: vol.volume,
+        // description: vol.title || vol.volume,
         link: `${basePath}/vol/${vol.vid}/feed.xml`,
         categories: data.labels
       }))
@@ -204,7 +206,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       site: buildSite(c, basePath),
       items: data.chapters.map((chapter) => ({
         title: chapter.title,
-        description: chapter.title,
+        // description: chapter.title,
         link: `/bili/novel/${nid}/chapter/${chapter.cid}/feed.xml`,
         categories: data.labels
       }))
@@ -236,7 +238,11 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
       browser,
       chapterCache,
       `${nid}/${cid}`,
-      (context) => fetchNovelChapters(context, +nid, +cid, { transformRuby: true })
+      (context) =>
+        fetchNovelChapters(context, +nid, +cid, {
+          transformRuby: true,
+          transformImgSrc: buildSite(c, '/bili/img/')
+        })
     );
 
     if (!data) {
@@ -278,7 +284,11 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
       browser,
       chapterCache,
       `${nid}/${cid}`,
-      (context) => fetchNovelChapters(context, +nid, +cid, { transformRuby: true })
+      (context) =>
+        fetchNovelChapters(context, +nid, +cid, {
+          transformRuby: true,
+          transformImgSrc: buildSite(c, '/bili/img/')
+        })
     );
 
     if (!data) {
@@ -325,16 +335,30 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
   }
 });
 
-function buildSite(c: Context, path: string) {
-  const requestUrl = new URL(c.req.url);
+app.get('/img/*', async (c: Context) => {
+  const pathname = new URL(c.req.url).pathname.replace(/^\/bili\/img/, '');
+  const target = new URL(pathname, `https://img3.readpai.com`);
 
-  const forwardedProto = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim();
-  const forwardedHost = c.req.header('x-forwarded-host')?.split(',')[0]?.trim();
+  c.res.headers.set('X-Forward-Img', target.toString());
 
-  const proto = forwardedProto || requestUrl.protocol.replace(/:$/, '');
-  const host = forwardedHost || requestUrl.host;
+  const resp = await fetch(target, {
+    headers: {
+      Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      'Accept-Language': 'zh-CN,zh;q=0.9',
+      Referer: 'https://www.linovelib.com/',
+      'User-Agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
+    }
+  });
 
-  const origin = `${proto}://${host}`;
+  if (resp.ok) {
+    const data = await resp.arrayBuffer();
 
-  return new URL(path, origin).toString();
-}
+    c.res.headers.set('Content-Type', resp.headers.get('Content-Type') || 'image/jpeg');
+    c.res.headers.set('Cache-Control', resp.headers.get('Cache-Control') || 'max-age=2678400');
+
+    return c.body(data);
+  }
+
+  return c.body(null, 404);
+});

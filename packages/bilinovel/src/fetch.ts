@@ -263,7 +263,7 @@ export async function fetchNovelChapterPage(
     content = transformRubyTags(content);
   }
 
-  const images = await Promise.all(
+  let images = await Promise.all(
     (await page.locator('#mlfy_main_text > #TextContent img').all()).map(async (locator) => {
       const src = (await locator.getAttribute('data-src')) || (await locator.getAttribute('src'));
       const alt = await locator.getAttribute('alt');
@@ -274,6 +274,33 @@ export async function fetchNovelChapterPage(
       };
     })
   );
+
+  if (options?.transformImgSrc) {
+    const applyImgTransform = (src: string | null) => {
+      if (!src || !options.transformImgSrc) return src;
+      if (typeof options.transformImgSrc === 'function') {
+        const next = options.transformImgSrc(src);
+        return next ?? src;
+      }
+      const replacement = options.transformImgSrc.endsWith('/')
+        ? options.transformImgSrc
+        : `${options.transformImgSrc}/`;
+      return src.replace(/^https?:\/\/[^/]+\/?/, replacement);
+    };
+
+    const rewriteContentImgSrc = (html: string) =>
+      html.replace(/<img\b[^>]*?\bsrc=["']([^"']+)["'][^>]*?>/gi, (match, src) => {
+        const next = applyImgTransform(src);
+        if (!next || next === src) return match;
+        return match.replace(src, next);
+      });
+
+    images = images.map((img) => ({
+      ...img,
+      src: applyImgTransform(img.src)
+    }));
+    content = rewriteContentImgSrc(content);
+  }
 
   const pagination = await page.locator('.mlfy_page > a:last-child').getAttribute('href');
   const complete =
