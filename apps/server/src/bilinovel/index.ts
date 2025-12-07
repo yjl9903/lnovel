@@ -111,7 +111,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       items: data.volumes.map((vol) => ({
         title: vol.title || vol.volume,
         // description: vol.title || vol.volume,
-        link: `${basePath}/vol/${vol.vid}/feed.xml`,
+        link: `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`,
         categories: data.labels
       }))
     });
