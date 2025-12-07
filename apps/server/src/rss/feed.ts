@@ -53,7 +53,7 @@ export function getFeedString(options: FeedOptions): string {
   return feed.rss2();
 }
 
-export function getFeedResponse(ctx: Context, options: FeedOptions): Response {
+export function getFeedResponse(ctx: Context, options: FeedOptions) {
   const xml = getFeedString(options);
   ctx.res.headers.set('Content-Type', 'application/xml; charset=UTF-8');
   return ctx.body(xml);

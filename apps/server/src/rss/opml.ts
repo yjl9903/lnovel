@@ -1,3 +1,5 @@
+import type { Context } from '../app';
+
 import { escape } from './utils';
 
 export type OpmlOutline = {
@@ -9,7 +11,7 @@ export type OpmlOutline = {
   type?: string;
 };
 
-export type BuildOpmlOptions = {
+export type OpmlOptions = {
   title: string;
   description?: string;
   ownerName?: string;
@@ -18,7 +20,7 @@ export type BuildOpmlOptions = {
   items: OpmlOutline[];
 };
 
-export function getOpmlString(options: BuildOpmlOptions): string {
+export function getOpmlString(options: OpmlOptions): string {
   const headParts = [
     `<title>${escape(options.title)}</title>`,
     options.description ? `<description>${escape(options.description)}</description>` : null,
@@ -49,7 +51,9 @@ export function getOpmlString(options: BuildOpmlOptions): string {
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<opml version="2.0">',
-    `  <head>${headParts.join('')}</head>`,
+    `  <head>`,
+    ...headParts.map((p) => `    ${p}`),
+    `  </head>`,
     '  <body>',
     outlines,
     '  </body>',
@@ -57,4 +61,10 @@ export function getOpmlString(options: BuildOpmlOptions): string {
   ]
     .filter((line) => line !== '')
     .join('\n');
+}
+
+export function getOpmlResponse(ctx: Context, options: OpmlOptions) {
+  const xml = getOpmlString(options);
+  ctx.res.headers.set('Content-Type', 'text/x-opml; charset=utf-8');
+  return ctx.body(xml);
 }

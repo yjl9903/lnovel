@@ -10,6 +10,7 @@ import { blockRoutes, isCloudflarePage } from './browser';
 import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
 
 export interface NovelPageResult {
+  nid: number;
   name: string;
   labels: string[];
   description: string;
@@ -24,6 +25,7 @@ export interface NovelPageResult {
 }
 
 export interface NovelVolumePageResult {
+  vid: number;
   name: string;
   labels: string[];
   description: string;
@@ -99,6 +101,7 @@ export async function fetchNovelPage(
   );
 
   return {
+    nid: nid,
     name,
     labels,
     description,
@@ -169,6 +172,7 @@ export async function fetchNovelVolumePage(
   );
 
   return {
+    vid,
     name,
     labels,
     description,
@@ -331,6 +335,7 @@ export async function fetchNovelChapterPage(
     !pagination.startsWith(`/novel/${nid}/${cid}_`);
 
   return {
+    cid,
     title,
     content,
     images,
