@@ -32,6 +32,17 @@ app.get('/novel/:nid', async (c: Context) => {
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
+app.get('/novel/:nid/vol/:vid', async (c: Context) => {
+  const nid = c.req.param('nid');
+  const vid = c.req.param('vid');
+
+  const resp = await getNovelVolume(c, nid, vid);
+
+  return resp.ok
+    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
+    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+});
+
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
 
@@ -84,7 +95,7 @@ app.get('/novel/:nid/feed.opml', async (c: Context) => {
       description: data.description || data.name,
       items: volumes.flatMap((vol) =>
         vol.chapters.map((chapter) => ({
-          title: `${vol.name} - ${chapter.title}`,
+          title: `${vol.name} ${chapter.title}`,
           xmlUrl: buildSite(c, `/bili/novel/${nid}/chapter/${chapter.cid}/feed.xml`)
         }))
       )
@@ -94,11 +105,11 @@ app.get('/novel/:nid/feed.opml', async (c: Context) => {
   }
 });
 
-app.get('/novel/:nid/vol/:vid', async (c: Context) => {
+app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const nid = c.req.param('nid');
-  const vid = c.req.param('vid');
+  const cid = c.req.param('cid');
 
-  const resp = await getNovelVolume(c, nid, vid);
+  const resp = await getNovelChapter(c, nid, cid);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
@@ -114,34 +125,35 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   if (resp.ok) {
     const { data } = resp;
 
+    const resps = await Promise.all(
+      data.chapters.map(async (chapter) => getNovelChapter(c, nid, '' + chapter.cid))
+    );
+
+    const error = resps.find((vol) => !vol.ok);
+    if (error) {
+      return c.text(`${error.message}`, error.status);
+    }
+
+    const chapters = resps.filter((r) => r.ok).map((r) => r.data);
+
     return getFeedResponse(c, {
       title: `${data.name}`,
       description: data.description,
       link: buildSite(c, `/bili/novel/${nid}/vol/${vid}`),
       rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
       image: data.cover,
-      items: data.chapters.map((chapter) => ({
-        title: chapter.title,
+      items: chapters.map((chapter) => ({
+        title: `${data.name} ${chapter.title}`,
         id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
         link: buildSite(c, `/bili/novel/${nid}/chapter/${chapter.cid}`),
         date: data.updatedAt,
-        categories: data.labels
+        categories: data.labels,
+        content: chapter.content
       }))
     });
   } else {
     return c.text(`${resp.message}`, resp.status);
   }
-});
-
-app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
-  const nid = c.req.param('nid');
-  const cid = c.req.param('cid');
-
-  const resp = await getNovelChapter(c, nid, cid);
-
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
 app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {

@@ -223,6 +223,7 @@ export async function fetchNovelChapters(
   }
 
   return {
+    cid,
     title,
     content: contents.join(''),
     images
