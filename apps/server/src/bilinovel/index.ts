@@ -112,7 +112,11 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
         image: vol.cover,
         date: data.updatedAt,
         categories: data.labels
-      }))
+      })),
+      follow: {
+        feedId: await getFoloFeedId(getReqURL(c)),
+        userId: FOLLOW_USER_ID
+      }
     });
   } else {
     return c.text(`${resp.message}`, resp.status);
@@ -230,7 +234,11 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
           date: new Date(novel.data.updatedAt),
           content: data.content
         }
-      ]
+      ],
+      follow: {
+        feedId: await getFoloFeedId(getReqURL(c)),
+        userId: FOLLOW_USER_ID
+      }
     });
   } else {
     return c.text(`${resp.message}`, resp.status);
