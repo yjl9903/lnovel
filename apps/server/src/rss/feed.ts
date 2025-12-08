@@ -22,6 +22,12 @@ export type FeedOptions = {
   language?: string;
   copyright?: string;
   items: FeedEntry[];
+
+  // follow challenge
+  follow?: {
+    feedId?: string;
+    userId?: string;
+  };
 };
 
 export function getFeedString(options: FeedOptions): string {
@@ -37,15 +43,17 @@ export function getFeedString(options: FeedOptions): string {
     generator: 'lnovel'
   });
 
-  feed.addExtension({
-    name: 'follow_challenge',
-    objects: [
-      {
-        feedId: '220570508209242112',
-        userId: '41508082357911552'
-      }
-    ]
-  });
+  if (options.follow && options.follow.feedId && options.follow.userId) {
+    feed.addExtension({
+      name: 'follow_challenge',
+      objects: [
+        {
+          feedId: options.follow.feedId,
+          userId: options.follow.userId
+        }
+      ]
+    });
+  }
 
   options.items.forEach((item) => {
     feed.addItem({

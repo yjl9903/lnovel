@@ -5,6 +5,7 @@ import type { AppEnv, Context } from '../app';
 import { Provider } from '../constants';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 
+import { FOLLOW_FEED_ID, FOLLOW_USER_ID } from './constants';
 import { consola, buildSite, normalizeDescription } from './utils';
 import { getNovel, getNovelVolume, getNovelChapter } from './handlers';
 
@@ -141,14 +142,19 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       link: buildSite(c, `/bili/novel/${nid}/vol/${vid}`),
       rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
       image: data.cover,
-      items: chapters.map((chapter) => ({
+      items: chapters.map((chapter, index) => ({
         title: `${data.name} ${chapter.title}`,
         id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
         link: buildSite(c, `/bili/novel/${nid}/chapter/${chapter.cid}`),
-        date: data.updatedAt,
+        // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
+        date: new Date(data.updatedAt.getTime() + 1000 * index),
         categories: data.labels,
         content: chapter.content
-      }))
+      })),
+      follow: {
+        feedId: FOLLOW_FEED_ID.get(`/bili/novel/${nid}/vol/${vid}`),
+        userId: FOLLOW_USER_ID
+      }
     });
   } else {
     return c.text(`${resp.message}`, resp.status);
