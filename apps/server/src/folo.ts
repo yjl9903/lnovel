@@ -7,6 +7,8 @@ export const FOLLOW_USER_ID = '41508082357911552';
 
 export async function getFoloFeedId(url: string) {
   try {
+    if (!process.env.FOLO) return undefined;
+
     const [resp] = await database.select().from(folos).where(eq(folos.url, url));
     if (resp) {
       return resp.feedId;
