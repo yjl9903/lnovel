@@ -89,7 +89,7 @@ export const getNovel = memo(
                 }
                 return _url;
               } catch (error) {
-                consola.error('Transform img src', error);
+                consola.error('Transform img src', error, _url);
                 return _url;
               }
             }
@@ -151,7 +151,7 @@ export const getNovelVolume = memo(
                 }
                 return _url;
               } catch (error) {
-                consola.error('Transform img src', error);
+                consola.error('Transform img src', error, _url);
                 return _url;
               }
             }
@@ -311,8 +311,14 @@ export const getNovelChapterByDatabase = async (
 export const triggerUpdateNovel = memo(
   async (c: Context, nid: string, novel: NovelPageResult) => {
     const [oldNovel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
+    const oldVolumes = await database.select().from(biliVolumes).where(eq(biliVolumes.nid, +nid));
 
-    if (oldNovel && oldNovel.done && oldNovel.updatedAt.getTime() === novel.updatedAt.getTime()) {
+    if (
+      oldNovel &&
+      oldNovel.done &&
+      oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
+      oldVolumes.length === novel.volumes.length
+    ) {
       return;
     }
 

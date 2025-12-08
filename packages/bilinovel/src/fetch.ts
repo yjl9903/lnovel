@@ -85,7 +85,7 @@ export async function fetchNovelPage(
     cover = applyTransformImgSrc(cover, options.transformImgSrc);
   }
 
-  const vols = await Promise.all(
+  let vols = await Promise.all(
     (await page.locator('.book-vol-chapter > a').all()).map(async (locator) => {
       const href = await locator.getAttribute('href');
       const title = await locator.getAttribute('title');
@@ -112,6 +112,40 @@ export async function fetchNovelPage(
     })
   );
 
+  if (vols.length === 0) {
+    await sleep(1000);
+
+    const catalog = new URL(
+      `/novel/${nid}/catalog`,
+      options?.baseURL || 'https://www.linovelib.com/'
+    );
+    await page.goto(catalog.toString());
+
+    vols = await Promise.all(
+      (await page.locator('.volume-list > .volume').all()).map(async (locator) => {
+        const href = await locator.locator('a').first().getAttribute('href');
+        const title = await locator.locator('h2').first().textContent();
+        let cover = (await locator.locator('img').first().getAttribute('data-original')) || '';
+        const volume = '';
+
+        const vidMatch = href?.match(/vol_(\d+)\.html/);
+        const vid = vidMatch ? +vidMatch[1] : 0;
+
+        if (cover) {
+          cover = applyTransformImgSrc(cover, options?.transformImgSrc);
+        }
+
+        return {
+          nid,
+          vid,
+          title,
+          cover,
+          volume
+        };
+      })
+    );
+  }
+
   return {
     nid: nid,
     name,
@@ -119,8 +153,8 @@ export async function fetchNovelPage(
     description,
     cover,
     volumes: vols
-      .filter((v) => v.vid && v.title && v.cover && v.volume)
-      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
+      .filter((v) => v.vid && v.title && v.cover)
+      .sort((lhs, rhs) => lhs.title!.localeCompare(rhs.title!)) as any,
     updatedAt,
     fetchedAt: new Date()
   };
