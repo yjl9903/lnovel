@@ -7,7 +7,14 @@ import { getFeedResponse, getOpmlResponse } from '../rss';
 
 import { FOLLOW_FEED_ID, FOLLOW_USER_ID } from './constants';
 import { consola, buildSite, normalizeDescription } from './utils';
-import { getNovel, getNovelVolume, getNovelChapter } from './handlers';
+import {
+  getNovel,
+  getNovelVolume,
+  getNovelChapter,
+  getNovelByDatabase,
+  getNovelVolumeByDatabase,
+  getNovelChapterByDatabase
+} from './handlers';
 
 export const app = new Hono<AppEnv>();
 
@@ -27,7 +34,15 @@ app.get('/', async (c: Context) => {
 
 app.get('/novel/:nid', async (c: Context) => {
   const nid = c.req.param('nid');
+
+  const db = await getNovelByDatabase(nid);
+  if (db) {
+    getNovel(c, nid);
+    return c.json({ ok: true, provider: Provider.bilinovel, data: db });
+  }
+
   const resp = await getNovel(c, nid);
+
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
@@ -37,7 +52,34 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
+  const db = await getNovelVolumeByDatabase(nid, vid);
+  if (db) {
+    getNovel(c, nid);
+    return c.json({ ok: true, provider: Provider.bilinovel, data: db });
+  }
+
   const resp = await getNovelVolume(c, nid, vid);
+
+  getNovel(c, nid);
+
+  return resp.ok
+    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
+    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+});
+
+app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
+  const nid = c.req.param('nid');
+  const cid = c.req.param('cid');
+
+  const db = await getNovelChapterByDatabase(nid, cid);
+  if (db) {
+    getNovel(c, nid);
+    return c.json({ ok: true, provider: Provider.bilinovel, data: db });
+  }
+
+  const resp = await getNovelChapter(c, nid, cid);
+
+  getNovel(c, nid);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
@@ -47,10 +89,14 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
 
-  const resp = await getNovel(c, nid);
+  const db = await getNovelByDatabase(nid);
+
+  const resp = db ? ({ ok: true, data: db } as const) : await getNovel(c, nid);
 
   if (resp.ok) {
     const { data } = resp;
+
+    getNovel(c, nid);
 
     return getFeedResponse(c, {
       title: data.name,
@@ -106,35 +152,32 @@ app.get('/novel/:nid/feed.opml', async (c: Context) => {
   }
 });
 
-app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
-  const nid = c.req.param('nid');
-  const cid = c.req.param('cid');
-
-  const resp = await getNovelChapter(c, nid, cid);
-
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
-});
-
 app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
-  const resp = await getNovelVolume(c, nid, vid);
+  const db = await getNovelVolumeByDatabase(nid, vid);
+
+  const resp = db ? ({ ok: true, data: db } as const) : await getNovelVolume(c, nid, vid);
 
   if (resp.ok) {
     const { data } = resp;
 
     const chapters = [];
     for (const chapter of data.chapters) {
-      const resp = await getNovelChapter(c, nid, '' + chapter.cid);
+      const db = await getNovelChapterByDatabase(nid, '' + chapter.cid);
+      const resp = db
+        ? ({ ok: true, data: db } as const)
+        : await getNovelChapter(c, nid, '' + chapter.cid);
+
       if (resp.ok) {
         chapters.push(resp.data!);
       } else {
         return c.text(`${resp.message}`, resp.status);
       }
     }
+
+    getNovel(c, nid);
 
     return getFeedResponse(c, {
       title: `${data.name}`,
@@ -170,6 +213,8 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
   if (resp.ok && novel.ok) {
     const { data } = resp;
     const title = data.title || `Chapter ${cid}`;
+
+    getNovel(c, nid);
 
     return getFeedResponse(c, {
       title,

@@ -16,6 +16,7 @@
     "postversion": "turbo run build"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cheerio": "^0.22.35",
     "@types/death": "^1.1.5",
     "@types/node": "^24.10.1",

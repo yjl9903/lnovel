@@ -15,26 +15,37 @@ export interface NovelPageResult {
   labels: string[];
   description: string;
   cover: string | undefined;
-  updatedAt: Date;
   volumes: Array<{
+    nid: number;
     vid: number;
     title: string;
     cover: string;
     volume: string;
   }>;
+  updatedAt: Date;
+  fetchedAt: Date;
 }
 
 export interface NovelVolumePageResult {
+  nid: number;
   vid: number;
   name: string;
   labels: string[];
   description: string;
   cover: string | undefined;
+  chapters: Array<{ nid: number; vid: number; cid: number; title: string }>;
   updatedAt: Date;
-  chapters: Array<{ cid: number; title: string }>;
+  fetchedAt: Date;
 }
 
-export interface NovelChaptersResult {}
+export interface NovelChaptersResult {
+  nid: number;
+  cid: number;
+  title: string;
+  content: string;
+  images: Array<{ src: string; alt: string | null | undefined }>;
+  fetchedAt: Date;
+}
 
 export async function fetchNovelPage(
   context: BrowserContext,
@@ -92,6 +103,7 @@ export async function fetchNovelPage(
       }
 
       return {
+        nid,
         vid,
         title,
         cover,
@@ -106,10 +118,11 @@ export async function fetchNovelPage(
     labels,
     description,
     cover,
-    updatedAt,
     volumes: vols
       .filter((v) => v.vid && v.title && v.cover && v.volume)
-      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any
+      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
+    updatedAt,
+    fetchedAt: new Date()
   };
 }
 
@@ -165,6 +178,8 @@ export async function fetchNovelVolumePage(
       const cid = cidMatch ? +cidMatch[1] : 0;
 
       return {
+        nid,
+        vid,
         cid,
         title
       };
@@ -172,13 +187,15 @@ export async function fetchNovelVolumePage(
   );
 
   return {
+    nid,
     vid,
     name,
     labels,
     description,
     cover,
+    chapters: chapters.filter((c) => c.cid && c.title) as any,
     updatedAt,
-    chapters: chapters.filter((c) => c.cid && c.title) as any
+    fetchedAt: new Date()
   };
 }
 
@@ -194,7 +211,7 @@ export async function fetchNovelChapters(
   nid: number,
   cid: number,
   options?: BilinovelFetchChapterOptions
-) {
+): Promise<NovelChaptersResult | undefined> {
   if (!nid || !cid) return undefined;
 
   const page = await context.newPage();
@@ -223,10 +240,12 @@ export async function fetchNovelChapters(
   }
 
   return {
+    nid,
     cid,
     title,
     content: contents.join(''),
-    images
+    images,
+    fetchedAt: new Date()
   };
 }
 

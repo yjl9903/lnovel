@@ -1,4 +1,5 @@
 import { type Context as HonoContext, Hono } from 'hono';
+import { type HttpBindings } from '@hono/node-server';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
 
@@ -12,7 +13,7 @@ export type AppVariables = {
 };
 
 export type AppEnv = {
-  Bindings: ServiceBindings;
+  Bindings: HttpBindings & ServiceBindings;
   Variables: AppVariables;
 };
 
