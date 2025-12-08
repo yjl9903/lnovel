@@ -37,6 +37,16 @@ export function getFeedString(options: FeedOptions): string {
     generator: 'lnovel'
   });
 
+  feed.addExtension({
+    name: 'follow_challenge',
+    objects: [
+      {
+        feedId: '220570508209242112',
+        userId: '41508082357911552'
+      }
+    ]
+  });
+
   options.items.forEach((item) => {
     feed.addItem({
       title: item.title,
