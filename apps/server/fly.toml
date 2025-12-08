@@ -45,3 +45,7 @@ memory = '1g'
 cpu_kind = 'shared'
 cpus = 1
 processes = ['server']
+
+[mounts]
+source = "sqlite"
+destination = "/data"
