@@ -13,10 +13,11 @@ import {
 import type { Context } from '../app';
 
 import { database } from '../database';
+import { buildSite } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContextWithCache } from '../browser';
 
-import { consola, buildSite } from './utils';
+import { consola } from './utils';
 
 const browser = launchBrowser();
 
