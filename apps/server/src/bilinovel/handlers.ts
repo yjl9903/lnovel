@@ -75,14 +75,23 @@ export const getNovel = memo(
 
           return await fetchNovelPage(context, +nid, {
             transformImgSrc(_url) {
-              const url = new URL(_url);
-              if (url.host === 'img3.readpai.com') {
-                return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+              try {
+                if (_url.startsWith('/files/')) {
+                  _url = 'https://www.linovelib.com' + _url;
+                }
+
+                const url = new URL(_url);
+                if (url.host === 'img3.readpai.com') {
+                  return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                }
+                if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                  return buildSite(c, `/bili${url.pathname}${url.search}`);
+                }
+                return _url;
+              } catch (error) {
+                consola.error('Transform img src', error);
+                return _url;
               }
-              if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                return buildSite(c, `/bili${url.pathname}${url.search}`);
-              }
-              return _url;
             }
           });
         }
@@ -128,14 +137,23 @@ export const getNovelVolume = memo(
 
           return await fetchNovelVolumePage(context, +nid, +vid, {
             transformImgSrc(_url) {
-              const url = new URL(_url);
-              if (url.host === 'img3.readpai.com') {
-                return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+              try {
+                if (_url.startsWith('/files/')) {
+                  _url = 'https://www.linovelib.com' + _url;
+                }
+
+                const url = new URL(_url);
+                if (url.host === 'img3.readpai.com') {
+                  return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                }
+                if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                  return buildSite(c, `/bili${url.pathname}${url.search}`);
+                }
+                return _url;
+              } catch (error) {
+                consola.error('Transform img src', error);
+                return _url;
               }
-              if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                return buildSite(c, `/bili${url.pathname}${url.search}`);
-              }
-              return _url;
             }
           });
         }

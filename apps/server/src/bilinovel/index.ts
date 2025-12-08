@@ -4,8 +4,8 @@ import type { AppEnv, Context } from '../app';
 
 import { Provider } from '../constants';
 import { getFeedResponse, getOpmlResponse } from '../rss';
+import { FOLLOW_USER_ID, getFoloFeedId, setFoloFeedId } from '../folo';
 
-import { FOLLOW_FEED_ID, FOLLOW_USER_ID } from './constants';
 import { consola, buildSite, normalizeDescription } from './utils';
 import {
   getNovel,
@@ -96,7 +96,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
   if (resp.ok) {
     const { data } = resp;
 
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
 
     return getFeedResponse(c, {
       title: data.name,
@@ -177,7 +177,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       }
     }
 
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
 
     return getFeedResponse(c, {
       title: `${data.name}`,
@@ -195,7 +195,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
         content: chapter.content
       })),
       follow: {
-        feedId: FOLLOW_FEED_ID.get(`/bili/novel/${nid}/vol/${vid}`),
+        feedId: await getFoloFeedId(c.req.url),
         userId: FOLLOW_USER_ID
       }
     });
@@ -214,7 +214,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
     const { data } = resp;
     const title = data.title || `Chapter ${cid}`;
 
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
 
     return getFeedResponse(c, {
       title,
@@ -235,6 +235,19 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
     return c.text(`${resp.message}`, resp.status);
   }
 });
+
+async function updateNovelAndFeedId(c: Context, nid: string) {
+  return new Promise<void>((res) => {
+    setTimeout(async () => {
+      try {
+        await Promise.all([getNovel(c, nid), setFoloFeedId(c.req.url)]);
+      } catch (error) {
+      } finally {
+        res();
+      }
+    }, 1000);
+  });
+}
 
 app.get('/files/*', async (c: Context) => {
   const pathname = new URL(c.req.url).pathname.replace(/^\/bili/, '');

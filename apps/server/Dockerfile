@@ -68,7 +68,7 @@ RUN apt-get update && \
 
 # Declare args
 ARG PORT APP_HOST
-ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} DATABASE_FILE=/data/sqlite.db
+ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} DATABASE_FILE=/data/sqlite.db FOLO=1
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE ${PORT}
