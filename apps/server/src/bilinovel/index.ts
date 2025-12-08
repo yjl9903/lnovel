@@ -3,10 +3,11 @@ import { Hono } from 'hono';
 import type { AppEnv, Context } from '../app';
 
 import { Provider } from '../constants';
+import { buildSite, getReqURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 import { FOLLOW_USER_ID, getFoloFeedId, setFoloFeedId } from '../folo';
 
-import { consola, buildSite, normalizeDescription } from './utils';
+import { consola, normalizeDescription } from './utils';
 import {
   getNovel,
   getNovelVolume,
@@ -195,7 +196,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
         content: chapter.content
       })),
       follow: {
-        feedId: await getFoloFeedId(c.req.url),
+        feedId: await getFoloFeedId(getReqURL(c)),
         userId: FOLLOW_USER_ID
       }
     });
@@ -240,7 +241,7 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
   return new Promise<void>((res) => {
     setTimeout(async () => {
       try {
-        await Promise.all([getNovel(c, nid), setFoloFeedId(c.req.url)]);
+        await Promise.all([getNovel(c, nid), setFoloFeedId(getReqURL(c))]);
       } catch (error) {
       } finally {
         res();
