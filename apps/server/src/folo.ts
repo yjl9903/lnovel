@@ -1,7 +1,10 @@
 import { eq } from 'drizzle-orm';
+import { createConsola } from 'consola';
 
 import { folos } from './schema';
 import { database } from './database';
+
+const consola = createConsola().withTag('folo');
 
 export const FOLLOW_USER_ID = '41508082357911552';
 
@@ -11,6 +14,7 @@ export async function getFoloFeedId(url: string) {
 
     const [resp] = await database.select().from(folos).where(eq(folos.url, url));
     if (resp) {
+      consola.log(`get folo feedId ${url} -> ${resp.feedId}`);
       return resp.feedId;
     }
   } catch {
@@ -32,6 +36,7 @@ export async function setFoloFeedId(url: string) {
       const feedId = body?.data?.feed?.id;
       if (feedId && typeof feedId === 'string') {
         await database.insert(folos).values({ url, feedId });
+        consola.log(`set folo feedId ${url} -> ${feedId}`);
         return feedId;
       }
     }
