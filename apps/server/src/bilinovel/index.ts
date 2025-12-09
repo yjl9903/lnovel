@@ -126,6 +126,24 @@ app.get('/wenku/feed.xml', async (c: Context) => {
   if (resp.ok) {
     const { data } = resp;
 
+    const items = await Promise.all(
+      data.items.map(async (item) => {
+        const rawFeedURL = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
+        const foloId = await getFoloFeedId(rawFeedURL);
+        const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
+
+        return {
+          title: item.title,
+          id: `/bili/novel/${item.nid}`,
+          link: `https://www.linovelib.com/novel/${item.nid}.html`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p><p>${item.description}</p>`,
+          image: item.cover,
+          date: item.updatedAt,
+          categories: item.tags
+        };
+      })
+    );
+
     return getFeedResponse(c, {
       title: formatWenkuFilterTitle(filter),
       description:
@@ -133,15 +151,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
       link: data.url,
       rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
       image: 'https://www.bilinovel.com/logo.png',
-      items: data.items.map((item) => ({
-        title: item.title,
-        id: `/bili/novel/${item.nid}`,
-        link: `https://www.linovelib.com/novel/${item.nid}.html`,
-        content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${buildSite(c, `/bili/novel/${item.nid}/feed.xml`)}\" target=\"_blank\">RSS 订阅</a></p><p>${item.description}</p>`,
-        image: item.cover,
-        date: item.updatedAt,
-        categories: item.tags
-      })),
+      items,
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
         userId: FOLLOW_USER_ID
