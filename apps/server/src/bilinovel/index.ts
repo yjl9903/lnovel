@@ -46,7 +46,7 @@ app.get('/novel/:nid', async (c: Context) => {
 
   const db = await getNovelByDatabase(nid);
   if (db) {
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
@@ -63,7 +63,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
 
   const db = await getNovelVolumeByDatabase(nid, vid);
   if (db) {
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
@@ -82,7 +82,7 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
 
   const db = await getNovelChapterByDatabase(nid, cid);
   if (db) {
-    getNovel(c, nid);
+    updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
@@ -257,8 +257,13 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
   return new Promise<void>((res) => {
     setTimeout(async () => {
       try {
-        await Promise.all([getNovel(c, nid), setFoloFeedId(getReqURL(c))]);
+        const url = new URL(getReqURL(c));
+        await Promise.all([
+          getNovel(c, nid),
+          url.pathname.endsWith('/feed.xml') ? setFoloFeedId(getReqURL(c)) : undefined
+        ]);
       } catch (error) {
+        consola.error('Update novel', error);
       } finally {
         res();
       }
