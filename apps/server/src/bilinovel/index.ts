@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { etag, RETAINED_304_HEADERS } from 'hono/etag';
 
 import type { AppEnv, Context } from '../app';
 
@@ -25,6 +26,13 @@ app.use('*', async (c: Context, next) => {
     c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   }
 });
+
+app.use(
+  '*',
+  etag({
+    retainedHeaders: ['X-Request-Id', 'X-Response-Timestamp', ...RETAINED_304_HEADERS]
+  })
+);
 
 app.get('/', async (c: Context) => {
   return c.json({
