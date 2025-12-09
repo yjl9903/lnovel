@@ -410,8 +410,11 @@ export const triggerUpdateNovel = memo(
       oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
       oldVolumes.length === novel.volumes.length
     ) {
+      consola.log(`Skip updating novel to database`, nid);
       return;
     }
+
+    consola.log(`Start updating novel to database`, nid);
 
     await database
       .insert(biliNovels)
@@ -422,6 +425,7 @@ export const triggerUpdateNovel = memo(
         cover: novel.cover,
         labels: novel.labels,
         updatedAt: novel.updatedAt,
+        done: false,
         fetchedAt: new Date()
       })
       .onConflictDoUpdate({
@@ -432,6 +436,7 @@ export const triggerUpdateNovel = memo(
           cover: novel.cover,
           labels: novel.labels,
           updatedAt: novel.updatedAt,
+          done: false,
           fetchedAt: new Date()
         }
       });
@@ -510,6 +515,10 @@ export const triggerUpdateNovel = memo(
 
     if (error === 0) {
       await database.update(biliNovels).set({ done: true }).where(eq(biliNovels.nid, +nid));
+
+      consola.log(`Finish updating novel to database`, nid);
+    } else {
+      consola.log(`Failed updating novel to database`, nid, error);
     }
   },
   (_, nid) => nid
