@@ -165,7 +165,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
     updateNovelAndFeedId(c, nid);
 
     const items = await Promise.all(
-      data.volumes.map(async (vol) => {
+      data.volumes.map(async (vol, index) => {
         const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
         const foloId = await getFoloFeedId(rawFeedURL);
         const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
@@ -176,7 +176,8 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
           link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
           content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p>`,
           image: vol.cover,
-          date: data.updatedAt,
+          // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
+          date: new Date(data.updatedAt.getTime() + 1000 * index),
           categories: data.labels
         };
       })
