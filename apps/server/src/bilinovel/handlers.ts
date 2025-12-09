@@ -410,11 +410,11 @@ export const triggerUpdateNovel = memo(
       oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
       oldVolumes.length === novel.volumes.length
     ) {
-      consola.log(`Skip updating novel to database`, nid);
+      consola.log(`Skip updating novel to database`, nid, novel.updatedAt.toISOString());
       return;
     }
 
-    consola.log(`Start updating novel to database`, nid);
+    consola.log(`Start updating novel to database`, nid, novel.updatedAt.toISOString());
 
     await database
       .insert(biliNovels)
@@ -516,9 +516,9 @@ export const triggerUpdateNovel = memo(
     if (error === 0) {
       await database.update(biliNovels).set({ done: true }).where(eq(biliNovels.nid, +nid));
 
-      consola.log(`Finish updating novel to database`, nid);
+      consola.log(`Finish updating novel to database`, nid, novel.updatedAt.toISOString());
     } else {
-      consola.log(`Failed updating novel to database`, nid, error);
+      consola.log(`Failed updating novel to database`, nid, novel.updatedAt.toISOString(), error);
     }
   },
   (_, nid) => nid
