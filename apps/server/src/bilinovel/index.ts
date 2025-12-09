@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { timeout } from 'hono/timeout';
+import { HTTPException } from 'hono/http-exception';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
 import { parseWenkuFilter } from 'bilinovel';
 
@@ -21,6 +23,15 @@ import {
 } from './handlers';
 
 export const app = new Hono<AppEnv>();
+
+app.use(
+  '*',
+  timeout(30 * 1000, (_context: Context) => {
+    return new HTTPException(500, {
+      message: `Request timeout after waiting 30 seconds. Please try again later.`
+    });
+  })
+);
 
 app.use('*', async (c: Context, next) => {
   await next();
