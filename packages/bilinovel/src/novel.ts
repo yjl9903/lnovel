@@ -158,7 +158,7 @@ export async function fetchNovelPage(
     cover,
     volumes: vols
       .filter((v) => v.vid && v.title && v.cover)
-      .sort((lhs, rhs) => lhs.title!.localeCompare(rhs.title!)) as any,
+      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
     updatedAt,
     fetchedAt: new Date()
   };
