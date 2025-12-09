@@ -14,7 +14,7 @@ export function buildSite(c: Context, path: string) {
   return new URL(path, origin).toString();
 }
 
-export function getReqURL(c: Context) {
+export function getFeedURL(c: Context) {
   try {
     const requestUrl = new URL(c.req.url);
 

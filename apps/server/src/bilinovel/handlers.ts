@@ -5,9 +5,11 @@ import {
   type NovelPageResult,
   type NovelVolumePageResult,
   type NovelChaptersResult,
+  type BilinovelFetchWenkuFilter,
   fetchNovelChapters,
   fetchNovelPage,
-  fetchNovelVolumePage
+  fetchNovelVolumePage,
+  fetchWenkuPage
 } from 'bilinovel';
 
 import type { Context } from '../app';
@@ -20,6 +22,11 @@ import { launchBrowser, runBrowserContextWithCache } from '../browser';
 import { consola } from './utils';
 
 const browser = launchBrowser();
+
+const wenkuCache = new LRUCache<string, Awaited<ReturnType<typeof fetchWenkuPage>> & {}>({
+  max: 1000,
+  ttl: 60 * 60 * 1000
+});
 
 const novelCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelPage>> & {}>({
   max: 1000,
@@ -63,6 +70,77 @@ function memo<F extends (...args: any[]) => Promise<any>>(
     }
   }) as F;
 }
+
+function getWenkuFilterKey(filter: BilinovelFetchWenkuFilter) {
+  const entries = Object.entries(filter).map(([k, v]) => `${k}=${v}`);
+  return entries.sort().join('&');
+}
+
+export const getWenku = memo(
+  async (c: Context, filter: BilinovelFetchWenkuFilter) => {
+    try {
+      const data = await runBrowserContextWithCache(
+        browser,
+        wenkuCache,
+        getWenkuFilterKey(filter),
+        async (context) => {
+          consola.log(`Fetch wenku page`, filter);
+
+          return await retryFn(
+            async () =>
+              await fetchWenkuPage(context, filter, {
+                transformImgSrc(_url) {
+                  try {
+                    if (_url.startsWith('/files/')) {
+                      _url = 'https://www.linovelib.com' + _url;
+                    }
+
+                    const url = new URL(_url);
+                    if (url.host === 'img3.readpai.com') {
+                      return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                    }
+                    if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                      return buildSite(c, `/bili${url.pathname}${url.search}`);
+                    }
+                    return _url;
+                  } catch (error) {
+                    consola.error('Transform img src', error, _url);
+                    return _url;
+                  }
+                }
+              }),
+            5
+          );
+        }
+      );
+
+      if (!data) {
+        return {
+          ok: false,
+          status: 404,
+          message: 'not found'
+        } as const;
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        data
+      } as const;
+    } catch (error) {
+      consola.error(error);
+
+      return {
+        ok: false,
+        status: 500 as const,
+        message: (error as any)?.message
+      } as const;
+    }
+  },
+  (_, filter) => {
+    return getWenkuFilterKey(filter);
+  }
+);
 
 export const getNovel = memo(
   async (c: Context, nid: string) => {

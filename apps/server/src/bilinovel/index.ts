@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
+import { parseWenkuFilter } from 'bilinovel';
 
 import type { AppEnv, Context } from '../app';
 
 import { Provider } from '../constants';
-import { buildSite, getReqURL } from '../utils';
+import { buildSite, getFeedURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 import { FOLLOW_USER_ID, getFoloFeedId, setFoloFeedId } from '../folo';
 
@@ -15,7 +16,8 @@ import {
   getNovelChapter,
   getNovelByDatabase,
   getNovelVolumeByDatabase,
-  getNovelChapterByDatabase
+  getNovelChapterByDatabase,
+  getWenku
 } from './handlers';
 
 export const app = new Hono<AppEnv>();
@@ -41,7 +43,15 @@ app.get('/', async (c: Context) => {
   });
 });
 
-app.get('/wenku', async (c: Context) => {});
+app.get('/wenku', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const filter = parseWenkuFilter(url.searchParams);
+  const resp = await getWenku(c, filter);
+
+  return resp.ok
+    ? c.json({ ok: true, provider: Provider.bilinovel, filter, data: resp.data })
+    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+});
 
 app.get('/novel/:nid', async (c: Context) => {
   const nid = c.req.param('nid');
@@ -97,7 +107,39 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
-app.get('/wenku/feed.xml', async (c: Context) => {});
+app.get('/wenku/feed.xml', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const filter = parseWenkuFilter(url.searchParams);
+  const resp = await getWenku(c, filter);
+
+  if (resp.ok) {
+    const { data } = resp;
+
+    return getFeedResponse(c, {
+      title: '哔哩轻小说',
+      description:
+        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫sf轻小说网站，提供轻小说在线阅读，TXT与电子书下载。',
+      link: data.url,
+      rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
+      image: 'https://www.bilinovel.com/logo.png',
+      items: data.items.map((item) => ({
+        title: item.title,
+        id: `/bili/novel/${item.nid}`,
+        link: `https://www.linovelib.com/novel/${item.nid}.html`,
+        content: `<p>${item.description}</p><p><a href=\"${buildSite(c, `/bili/novel/${item.nid}/feed.xml`)}\" target=\"_blank\">RSS 订阅</a></p>`,
+        image: item.cover,
+        date: item.updatedAt,
+        categories: item.tags
+      })),
+      follow: {
+        feedId: await getFoloFeedId(getFeedURL(c)),
+        userId: FOLLOW_USER_ID
+      }
+    });
+  } else {
+    return c.text(`${resp.message}`, resp.status);
+  }
+});
 
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
@@ -126,7 +168,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
         categories: data.labels
       })),
       follow: {
-        feedId: await getFoloFeedId(getReqURL(c)),
+        feedId: await getFoloFeedId(getFeedURL(c)),
         userId: FOLLOW_USER_ID
       }
     });
@@ -212,7 +254,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
         content: chapter.content
       })),
       follow: {
-        feedId: await getFoloFeedId(getReqURL(c)),
+        feedId: await getFoloFeedId(getFeedURL(c)),
         userId: FOLLOW_USER_ID
       }
     });
@@ -248,7 +290,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
         }
       ],
       follow: {
-        feedId: await getFoloFeedId(getReqURL(c)),
+        feedId: await getFoloFeedId(getFeedURL(c)),
         userId: FOLLOW_USER_ID
       }
     });
@@ -261,10 +303,10 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
   return new Promise<void>((res) => {
     setTimeout(async () => {
       try {
-        const url = new URL(getReqURL(c));
+        const url = new URL(getFeedURL(c));
         await Promise.all([
           getNovel(c, nid),
-          url.pathname.endsWith('/feed.xml') ? setFoloFeedId(getReqURL(c)) : undefined
+          url.pathname.endsWith('/feed.xml') ? setFoloFeedId(getFeedURL(c)) : undefined
         ]);
       } catch (error) {
         consola.error('Update novel', error);

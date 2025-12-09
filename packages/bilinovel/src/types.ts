@@ -3,14 +3,14 @@ export interface BilinovelFetchOptions {
    * @default 'https://www.linovelib.com/'
    */
   baseURL?: string;
-}
 
-export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {
   /**
    * <img src="..." />
    */
   transformImgSrc?: string | ((url: string) => string | undefined | null);
 }
+
+export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {}
 
 export interface BilinovelFetchNovelVolumeOptions extends BilinovelFetchOptions {
   /**
