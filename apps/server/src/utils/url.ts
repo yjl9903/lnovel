@@ -27,7 +27,8 @@ export function getFeedURL(c: Context) {
     requestUrl.protocol = proto;
     requestUrl.host = host;
 
-    // Remove ?ts=xxx
+    // Remove ?ts=xxx ?t=
+    requestUrl.searchParams.delete('t');
     requestUrl.searchParams.delete('ts');
 
     return requestUrl.toString();
