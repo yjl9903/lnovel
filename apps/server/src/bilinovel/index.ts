@@ -41,6 +41,8 @@ app.get('/', async (c: Context) => {
   });
 });
 
+app.get('/wenku', async (c: Context) => {});
+
 app.get('/novel/:nid', async (c: Context) => {
   const nid = c.req.param('nid');
 
@@ -95,6 +97,8 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
+app.get('/wenku/feed.xml', async (c: Context) => {});
+
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
 
@@ -110,13 +114,13 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
     return getFeedResponse(c, {
       title: data.name,
       description: normalizeDescription(data.description || data.name),
-      link: buildSite(c, `/bili/novel/${nid}`),
+      link: `https://www.linovelib.com/novel/${nid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
       image: data.cover,
       items: data.volumes.map((vol) => ({
         title: vol.title || vol.volume,
         id: `/bili/novel/${nid}/vol/${vol.vid}`,
-        link: buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}`),
+        link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
         image: vol.cover,
         date: data.updatedAt,
         categories: data.labels
@@ -195,13 +199,13 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
     return getFeedResponse(c, {
       title: `${data.name}`,
       description: normalizeDescription(data.description),
-      link: buildSite(c, `/bili/novel/${nid}/vol/${vid}`),
+      link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
       image: data.cover,
       items: chapters.map((chapter, index) => ({
         title: `${data.name} ${chapter.title}`,
         id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
-        link: buildSite(c, `/bili/novel/${nid}/chapter/${chapter.cid}`),
+        link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
         // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
         date: new Date(data.updatedAt.getTime() + 1000 * index),
         categories: data.labels,
@@ -232,13 +236,13 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
     return getFeedResponse(c, {
       title,
       description: normalizeDescription(title),
-      link: buildSite(c, `/bili/novel/${nid}/chapter/${cid}`),
+      link: `https://www.linovelib.com/novel/${nid}/${cid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/chapter/${cid}/feed.xml`),
       items: [
         {
           title,
           id: `/bili/novel/${nid}/chapter/${cid}`,
-          link: buildSite(c, `/bili/novel/${nid}/chapter/${cid}`),
+          link: `https://www.linovelib.com/novel/${nid}/${cid}.html`,
           date: new Date(novel.data.updatedAt),
           content: data.content
         }
