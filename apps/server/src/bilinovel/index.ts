@@ -137,7 +137,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
         title: item.title,
         id: `/bili/novel/${item.nid}`,
         link: `https://www.linovelib.com/novel/${item.nid}.html`,
-        content: `<p>${item.description}</p><p><a href=\"${buildSite(c, `/bili/novel/${item.nid}/feed.xml`)}\" target=\"_blank\">RSS 订阅</a></p>`,
+        content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${buildSite(c, `/bili/novel/${item.nid}/feed.xml`)}\" target=\"_blank\">RSS 订阅</a></p><p>${item.description}</p>`,
         image: item.cover,
         date: item.updatedAt,
         categories: item.tags
