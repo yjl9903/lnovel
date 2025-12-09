@@ -1,3 +1,3 @@
-export * from './fetch';
+export * from './novel';
 
 export * from './types';
