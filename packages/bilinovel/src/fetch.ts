@@ -121,6 +121,10 @@ export async function fetchNovelPage(
     );
     await page.goto(catalog.toString());
 
+    if (await isCloudflarePage(page)) {
+      throw new Error('blocked by cloudflare');
+    }
+
     vols = await Promise.all(
       (await page.locator('.volume-list > .volume').all()).map(async (locator) => {
         const href = await locator.locator('a').first().getAttribute('href');

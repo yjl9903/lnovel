@@ -1,6 +1,5 @@
 import { consola as globalConsola } from 'consola';
 
-import type { Context } from '../app';
 import { Provider } from '../constants';
 
 export const consola = globalConsola.withTag(Provider.bilinovel);
