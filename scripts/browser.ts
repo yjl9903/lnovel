@@ -47,7 +47,7 @@ await runBrowserContext(browser, async (ctx) => {
       console.log(chapter);
       const content = await fetchNovelChapters(ctx, nid, chapter.cid, {
         delay: 5000,
-        transformRuby: true
+        transformBbcode: true
       });
       if (content) {
         content.content = content.content.replaceAll('https://img3.readpai.com/4/4649/274117/', '');

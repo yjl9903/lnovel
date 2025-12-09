@@ -21,9 +21,9 @@ export interface BilinovelFetchNovelVolumeOptions extends BilinovelFetchOptions 
 
 export interface BilinovelFetchChapterOptions extends BilinovelFetchOptions {
   /**
-   * [ruby=tsuku]小[/ruby][ruby=chan]月[/ruby]
+   * BBCode 转 HTML
    */
-  transformRuby?: boolean;
+  transformBbcode?: boolean;
 
   /**
    * <img src="..." />

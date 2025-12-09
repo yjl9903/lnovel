@@ -354,8 +354,8 @@ export async function fetchNovelChapterPage(
 
   if (!content) return undefined;
 
-  if (options?.transformRuby) {
-    content = transformRubyTags(content);
+  if (options?.transformBbcode) {
+    content = transformBbcode(content);
   }
 
   let images = await Promise.all(
@@ -434,27 +434,50 @@ export async function fetchNovelChapterPage(
   }
 
   /**
-   * 将自定义的 ruby 标签转换为标准 HTML
-   * 输入格式: [ruby=reading]text[/ruby]
-   * 输出格式: <ruby>text<rt>reading</rt></ruby>
-   *
-   * @param content 包含自定义 ruby 标签的原始字符串
-   * @returns 转换后的 HTML 字符串
+   * 简单的 BBCode 转换为 HTML（包含 ruby 标签）
+   * 例如:
+   * [b]text[/b] -> <strong>text</strong>
+   * [ruby=reading]text[/ruby] -> <ruby>text<rt>reading</rt></ruby>
    */
-  function transformRubyTags(content: string): string {
-    // 正则表达式解释：
-    // \[ruby=    : 匹配字面量 "[ruby="
-    // ([^\]]+)   : 捕获组 1 (读音/注音)，匹配除了 "]" 以外的任意字符
-    // \]         : 匹配字面量 "]"
-    // (.*?)      : 捕获组 2 (正文)，非贪婪匹配任意字符
-    // \[\/ruby\] : 匹配字面量 "[/ruby]"
-    // g          : 全局匹配
-    const regex = /\[ruby=([^\]]+)\](.*?)\[\/ruby\]/g;
+  function transformBbcode(content: string): string {
+    // 一些常见标签的简易替换，非完整 BBCode 解析
+    const tags: Record<string, string> = {
+      b: 'strong',
+      i: 'em',
+      u: 'u',
+      s: 's',
+      sub: 'sub',
+      sup: 'sup',
+      quote: 'blockquote'
+    };
 
-    return content.replace(regex, (match, reading, baseText) => {
-      // 构造标准 HTML5 ruby 结构
-      // <ruby> 汉字 <rt> 注音 </rt> </ruby>
-      return `<ruby>${baseText}<rt>${reading}</rt></ruby>`;
+    for (const [bbTag, htmlTag] of Object.entries(tags)) {
+      const regex = new RegExp(`\\[${bbTag}\\]([\\s\\S]*?)\\[\\/${bbTag}\\]`, 'gi');
+      content = content.replace(regex, `<${htmlTag}>$1</${htmlTag}>`);
+    }
+
+    // [url=https://example.com]text[/url]
+    content = content.replace(/\[url=([^\]]+)\]([\s\S]*?)\[\/url\]/gi, (_match, href, text) => {
+      return `<a href="${href}">${text}</a>`;
     });
+
+    // [img]src[/img]
+    content = content.replace(/\[img\]([\s\S]*?)\[\/img\]/gi, (_match, src) => {
+      src = src.trim();
+      if (options?.transformImgSrc) {
+        src = applyTransformImgSrc(src, options.transformImgSrc);
+      }
+      return `<img src="${src}" />`;
+    });
+
+    // [ruby=reading]text[/ruby]
+    content = content.replace(
+      /\[ruby=([^\]]+)\]([\s\S]*?)\[\/ruby\]/gi,
+      (_match, reading, text) => {
+        return `<ruby>${text}<rt>${reading}</rt></ruby>`;
+      }
+    );
+
+    return content;
   }
 }

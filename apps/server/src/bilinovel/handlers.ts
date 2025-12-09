@@ -207,7 +207,7 @@ export const getNovelChapter = memo(
           return await retryFn(
             async () =>
               await fetchNovelChapters(context, +nid, +cid, {
-                transformRuby: true,
+                transformBbcode: true,
                 transformImgSrc: buildSite(c, '/bili/img3/')
               }),
             5
