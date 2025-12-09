@@ -9,7 +9,7 @@ import type { AppEnv, Context } from '../app';
 import { Provider } from '../constants';
 import { buildSite, getFeedURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
-import { FOLLOW_USER_ID, getFoloFeedId, setFoloFeedId } from '../folo';
+import { FOLLOW_USER_ID, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
 import { consola, normalizeDescription } from './utils';
 import {
@@ -164,20 +164,31 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
 
     updateNovelAndFeedId(c, nid);
 
+    const items = await Promise.all(
+      data.volumes.map(async (vol) => {
+        const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
+        const foloId = await getFoloFeedId(rawFeedURL);
+        const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
+
+        return {
+          title: vol.title || vol.volume,
+          id: `/bili/novel/${nid}/vol/${vol.vid}`,
+          link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p>`,
+          image: vol.cover,
+          date: data.updatedAt,
+          categories: data.labels
+        };
+      })
+    );
+
     return getFeedResponse(c, {
       title: data.name,
       description: normalizeDescription(data.description || data.name),
       link: `https://www.linovelib.com/novel/${nid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
       image: data.cover,
-      items: data.volumes.map((vol) => ({
-        title: vol.title || vol.volume,
-        id: `/bili/novel/${nid}/vol/${vol.vid}`,
-        link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
-        image: vol.cover,
-        date: data.updatedAt,
-        categories: data.labels
-      })),
+      items,
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
         userId: FOLLOW_USER_ID

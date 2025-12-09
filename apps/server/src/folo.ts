@@ -8,6 +8,10 @@ const consola = createConsola().withTag('folo');
 
 export const FOLLOW_USER_ID = '41508082357911552';
 
+export function getFoloShareURL(feedId: string) {
+  return `https://app.folo.is/share/feeds/${feedId}`;
+}
+
 export async function getFoloFeedId(url: string) {
   try {
     if (!process.env.FOLO) return undefined;
