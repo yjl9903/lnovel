@@ -1,4 +1,4 @@
-import { Context } from '../app';
+import type { Context } from '../app';
 
 export function buildSite(c: Context, path: string) {
   const requestUrl = new URL(c.req.url);
@@ -26,6 +26,9 @@ export function getReqURL(c: Context) {
 
     requestUrl.protocol = proto;
     requestUrl.host = host;
+
+    // Remove ?ts=xxx
+    requestUrl.searchParams.delete('ts');
 
     return requestUrl.toString();
   } catch {
