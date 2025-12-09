@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
-import { parseWenkuFilter } from 'bilinovel';
+import { formatWenkuFilterTitle, parseWenkuFilter } from 'bilinovel';
 
 import type { AppEnv, Context } from '../app';
 
@@ -127,9 +127,9 @@ app.get('/wenku/feed.xml', async (c: Context) => {
     const { data } = resp;
 
     return getFeedResponse(c, {
-      title: '哔哩轻小说',
+      title: formatWenkuFilterTitle(filter),
       description:
-        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫sf轻小说网站，提供轻小说在线阅读，TXT与电子书下载。',
+        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
       link: data.url,
       rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
       image: 'https://www.bilinovel.com/logo.png',

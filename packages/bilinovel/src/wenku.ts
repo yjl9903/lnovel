@@ -161,6 +161,131 @@ export type WenkuInitial =
   | keyof typeof WENKU_INITIAL
   | (typeof WENKU_INITIAL)[keyof typeof WENKU_INITIAL];
 
+const WENKU_REGION_LABELS: Record<keyof typeof WENKU_REGION, string> = {
+  all: '不限',
+  japan: '日本轻小说',
+  chinese: '华文轻小说',
+  web: 'Web 轻小说',
+  comic: '轻改漫画',
+  korea: '韩国轻小说'
+};
+
+const WENKU_SORT_LABELS: Record<keyof typeof WENKU_SORT, string> = {
+  lastUpdate: '最新更新',
+  postDate: '最新发布',
+  weekVisit: '周点击',
+  monthVisit: '月点击',
+  weekVote: '周推荐',
+  monthVote: '月推荐',
+  weekFlower: '周鲜花',
+  monthFlower: '月鲜花',
+  favorites: '最多收藏'
+};
+
+const WENKU_TAG_LABELS: Record<keyof typeof WENKU_TAG, string> = {
+  all: '不限',
+  romance: '恋爱',
+  harem: '后宫',
+  campus: '校园',
+  yuri: '百合',
+  reincarnation: '转生',
+  isekai: '异世界',
+  fantasy: '奇幻',
+  adventure: '冒险',
+  comedy: '欢乐向',
+  femalePerspective: '女性视角',
+  opProtagonist: '龙傲天',
+  magic: '魔法',
+  youth: '青春',
+  genderBender: '性转',
+  yandere: '病娇',
+  littleSister: '妹妹',
+  childhoodFriend: '青梅竹马',
+  battle: '战斗',
+  ntr: 'NTR',
+  nonHuman: '人外',
+  ojousama: '大小姐',
+  dark: '黑暗',
+  suspense: '悬疑',
+  sciFi: '科幻',
+  otokonoko: '伪娘',
+  war: '战争',
+  loli: '萝莉',
+  revenge: '复仇',
+  mindGame: '斗智',
+  superpower: '异能',
+  grotesque: '猎奇',
+  lightLiterature: '轻文学',
+  workplace: '职场',
+  management: '经营',
+  jk: 'JK',
+  mecha: '机战',
+  daughter: '女儿',
+  apocalypse: '末世',
+  crime: '犯罪',
+  travel: '旅行',
+  thriller: '惊悚',
+  healing: '治愈',
+  mystery: '推理',
+  japaneseLiterature: '日本文学',
+  game: '游戏',
+  danmei: '耽美',
+  gourmet: '美食',
+  ensembleCast: '群像',
+  battleRoyale: '大逃杀',
+  music: '音乐',
+  fighting: '格斗',
+  hotBlood: '热血',
+  warm: '温馨',
+  imaginative: '脑洞',
+  villain: '恶役',
+  jc: 'JC',
+  spy: '谍战',
+  sports: '竞技',
+  otakuCulture: '宅文化',
+  doujin: '同人'
+};
+
+const WENKU_PROGRESS_LABELS: Record<keyof typeof WENKU_PROGRESS, string> = {
+  all: '不限',
+  newUpload: '新书上传',
+  developing: '情节展开',
+  exciting: '精彩纷呈',
+  closing: '接近尾声',
+  completed: '已经完本'
+};
+
+const WENKU_ANIMATION_LABELS: Record<keyof typeof WENKU_ANIMATION, string> = {
+  all: '不限',
+  animated: '已动画化',
+  notAnimated: '未动画化'
+};
+
+const WENKU_WORD_COUNT_LABELS: Record<keyof typeof WENKU_WORD_COUNT, string> = {
+  all: '不限',
+  under300k: '30万字以下',
+  between300kAnd500k: '30-50万字',
+  between500kAnd1m: '50-100万字',
+  between1mAnd2m: '100-200万字',
+  above2m: '200万字以上'
+};
+
+const WENKU_UPDATED_WITHIN_LABELS: Record<keyof typeof WENKU_UPDATED_WITHIN, string> = {
+  all: '不限',
+  threeDays: '三日内更新',
+  sevenDays: '七日内更新',
+  halfMonth: '半月内更新',
+  oneMonth: '一月内更新'
+};
+
+const WENKU_CHANNEL_LABELS: Record<keyof typeof WENKU_CHANNEL, string> = {
+  all: '不限'
+};
+
+const WENKU_INITIAL_LABELS: Record<keyof typeof WENKU_INITIAL, string> = {
+  all: '不限'
+};
+
 export interface BilinovelFetchWenkuFilter {
   /**
    * 自定义路径, 优先使用; 例如 `lastupdate_0_0_0_0_0_0_0_1_0.html`
@@ -383,6 +508,91 @@ export function parseWenkuFilter(input: WenkuFilterQueryInput): BilinovelFetchWe
   return filter;
 }
 
+export function formatWenkuFilterTitle(filter: BilinovelFetchWenkuFilter): string {
+  const parsedFromPath = filter.path ? parseWenkuPathFilter(filter.path) : undefined;
+  if (filter.path && !parsedFromPath) return filter.path;
+
+  const target = parsedFromPath ? { ...filter, ...parsedFromPath } : filter;
+
+  const sortKey = resolveMappedKey(WENKU_SORT, target.sort, 'lastUpdate');
+  const tagKey = resolveMappedKey(WENKU_TAG, target.tag, 'all');
+  const progressKey = resolveMappedKey(WENKU_PROGRESS, target.progress, 'all');
+  const animationKey = resolveMappedKey(WENKU_ANIMATION, target.animation, 'all');
+  const regionKey = resolveMappedKey(WENKU_REGION, target.region, 'all');
+  const channelKey = resolveMappedKey(WENKU_CHANNEL, target.channel, 'all');
+  const initialKey = resolveMappedKey(WENKU_INITIAL, target.initial, 'all');
+  const wordCountKey = resolveMappedKey(WENKU_WORD_COUNT, target.wordCount, 'all');
+  const updatedWithinKey = resolveMappedKey(WENKU_UPDATED_WITHIN, target.updatedWithin, 'all');
+
+  const parts = [WENKU_SORT_LABELS[sortKey] ?? String(sortKey)];
+
+  if (tagKey !== 'all') parts.push(`${WENKU_TAG_LABELS[tagKey]}`);
+  if (animationKey !== 'all') parts.push(`${WENKU_ANIMATION_LABELS[animationKey]}`);
+  if (channelKey !== 'all') parts.push(`${WENKU_CHANNEL_LABELS[channelKey]}`);
+  if (initialKey !== 'all') parts.push(`${WENKU_INITIAL_LABELS[initialKey]}`);
+  if (wordCountKey !== 'all') parts.push(`${WENKU_WORD_COUNT_LABELS[wordCountKey]}`);
+  if (progressKey !== 'all') parts.push(`${WENKU_PROGRESS_LABELS[progressKey]}`);
+  if (updatedWithinKey !== 'all') parts.push(`${WENKU_UPDATED_WITHIN_LABELS[updatedWithinKey]}`);
+
+  if (regionKey !== 'all') parts.push(`${WENKU_REGION_LABELS[regionKey]}`);
+  else parts.push('轻小说');
+
+  return '哔哩轻小说 ' + parts.join(' · ');
+}
+
+function parseWenkuPathFilter(path: string): BilinovelFetchWenkuFilter | undefined {
+  let input = path.trim();
+  if (!input) return undefined;
+
+  const queryIndex = input.indexOf('?');
+  if (queryIndex >= 0) {
+    input = input.slice(0, queryIndex);
+  }
+
+  try {
+    const url = new URL(input, input.includes('://') ? undefined : 'https://example.com');
+    input = url.pathname;
+  } catch {
+    // ignore invalid url
+  }
+
+  input = input.replace(/^\/+/, '').replace(/\.html?$/, '');
+  if (input.startsWith('wenku/')) {
+    input = input.slice('wenku/'.length);
+  }
+
+  const parts = input.split('_');
+  if (parts.length !== 10 || !parts[0]) return undefined;
+
+  const [sort, tag, progress, animation, region, channel, initial, wordCount, page, updatedWithin] =
+    parts;
+
+  const parseNumber = (value: string) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : undefined;
+  };
+
+  const parsedPage = parsePositiveInteger(page);
+
+  const parsed: BilinovelFetchWenkuFilter = {
+    sort: sort as WenkuSort,
+    tag: (parseNumber(tag) ?? tag) as WenkuTag,
+    progress: (parseNumber(progress) ?? progress) as WenkuProgress,
+    animation: (parseNumber(animation) ?? animation) as WenkuAnimation,
+    region: (parseNumber(region) ?? region) as WenkuRegion,
+    channel: (parseNumber(channel) ?? channel) as WenkuChannel,
+    initial: (parseNumber(initial) ?? initial) as WenkuInitial,
+    wordCount: (parseNumber(wordCount) ?? wordCount) as WenkuWordCount,
+    updatedWithin: (parseNumber(updatedWithin) ?? updatedWithin) as WenkuUpdatedWithin
+  };
+
+  if (parsedPage !== undefined) {
+    parsed.page = parsedPage;
+  }
+
+  return parsed;
+}
+
 function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFetchOptions) {
   const baseURL = options?.baseURL || 'https://www.linovelib.com/';
 
@@ -408,6 +618,19 @@ function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFet
   ];
 
   return new URL(`/wenku/${sort}_${segments.join('_')}.html`, baseURL);
+}
+
+function resolveMappedKey<T extends Record<string, number | string>>(
+  map: T,
+  value: keyof T | T[keyof T] | undefined,
+  fallback: keyof T
+): keyof T {
+  if (value === undefined) return fallback;
+  if (Object.prototype.hasOwnProperty.call(map, value as keyof T)) {
+    return value as keyof T;
+  }
+  const matched = (Object.keys(map) as Array<keyof T>).find((key) => map[key] === value);
+  return matched ?? fallback;
 }
 
 function resolveMappedValue<T extends Record<string, number | string>>(
