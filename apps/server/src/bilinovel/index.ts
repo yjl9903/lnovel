@@ -193,6 +193,8 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       })
     );
 
+    setFoloFeedId(getFeedURL(c));
+
     return getFeedResponse(c, {
       title: data.name,
       description: normalizeDescription(data.description || data.name),
