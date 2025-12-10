@@ -132,13 +132,15 @@ app.get('/wenku/feed.xml', async (c: Context) => {
         const foloId = await getFoloFeedId(rawFeedURL);
         const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
 
+        const novel = await getNovelByDatabase('' + item.nid);
+
         return {
-          title: item.title,
+          title: novel?.name || item.title,
           id: `/bili/novel/${item.nid}`,
           link: `https://www.linovelib.com/novel/${item.nid}.html`,
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p><p>${item.description}</p>`,
-          image: item.cover,
-          date: item.updatedAt,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p><p>${novel?.description || item.description}</p>`,
+          image: novel?.cover || item.cover,
+          date: novel?.updatedAt || item.updatedAt,
           categories: item.tags
         };
       })
