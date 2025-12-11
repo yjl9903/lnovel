@@ -146,6 +146,8 @@ app.get('/wenku/feed.xml', async (c: Context) => {
       })
     );
 
+    setFoloFeedId(getFeedURL(c));
+
     return getFeedResponse(c, {
       title: formatWenkuFilterTitle(filter),
       description:
@@ -194,8 +196,6 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
         };
       })
     );
-
-    setFoloFeedId(getFeedURL(c));
 
     return getFeedResponse(c, {
       title: data.name,
