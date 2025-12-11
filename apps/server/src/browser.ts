@@ -6,10 +6,14 @@ import type {
   ConnectOverCDPOptions
 } from 'playwright';
 
+import { createConsola } from 'consola';
+
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { chromium, devices } from 'playwright-extra';
 import pLimit from 'p-limit';
 import { LRUCache } from 'lru-cache';
+
+const consola = createConsola().withTag('browser');
 
 chromium.use(stealth());
 
@@ -79,17 +83,35 @@ export async function runBrowserContextWithCache<T extends {}>(
         ...options
       });
 
-      try {
-        const result = await fn(context);
-        if (result !== undefined && result !== null) {
-          cache.set(key, result);
+      const MAX_RETRY = 5;
+
+      let error: unknown;
+      let delay = 500;
+
+      for (let turn = 0; turn < MAX_RETRY; turn++) {
+        try {
+          const result = await fn(context);
+          if (result !== undefined && result !== null) {
+            cache.set(key, result);
+          }
+          await context.close().catch(() => {});
+          res(result);
+          return;
+        } catch (_error) {
+          error = _error;
+          if (error instanceof Error && error.message.includes('Request timeout')) {
+            consola.error(`Retry ${key} ${turn + 1} / ${MAX_RETRY}`);
+            consola.error(error);
+            delay = Math.min(delay * 2, 30 * 1000);
+            await new Promise((res) => setTimeout(res, delay));
+            continue;
+          }
+          break;
         }
-        res(result);
-      } catch (error) {
-        rej(error);
-      } finally {
-        await context.close().catch(() => {});
       }
+
+      await context.close().catch(() => {});
+      rej(error ? error : new Error('failed after retry'));
     });
   });
 }

@@ -26,7 +26,32 @@ export const app = new Hono<AppEnv>();
 
 app.use(
   '*',
-  timeout(30 * 1000, (_context: Context) => {
+  timeout(30 * 1000, (c: Context) => {
+    const url = new URL(c.req.url);
+
+    if (url.pathname.endsWith('/feed.xml')) {
+      return new HTTPException(500, {
+        res: new Response(
+          `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lnovel</title>
+</head>
+<body>
+  <p>Request timeout after waiting 30 seconds. Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
+</body>
+</html>`,
+          {
+            headers: {
+              'Content-Type': 'text/html'
+            }
+          }
+        )
+      });
+    }
+
     return new HTTPException(500, {
       message: `Request timeout after waiting 30 seconds. Please try again later.`
     });
