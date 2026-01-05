@@ -152,26 +152,36 @@ app.get('/wenku/feed.xml', async (c: Context) => {
     const { data } = resp;
 
     const items = await Promise.all(
-      data.items.map(async (item) => {
-        const rawFeedURL = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
+      data.items.map(async (rawItem) => {
+        const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
         const foloId = await getFoloFeedId(rawFeedURL);
-        const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
+        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+        const feedUrl = rawFeedURL;
 
-        const novel = await getNovelByDatabase('' + item.nid);
+        const dbItem = await getNovelByDatabase('' + rawItem.nid);
 
         return {
-          title: novel?.name || item.title,
-          id: `/bili/novel/${item.nid}`,
-          link: `https://www.linovelib.com/novel/${item.nid}.html`,
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${item.nid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p><p>${novel?.description || item.description}</p>`,
-          image: novel?.cover || item.cover,
-          date: novel?.updatedAt || item.updatedAt,
-          categories: item.tags
+          title: dbItem?.name || rawItem.title,
+          id: `/bili/novel/${rawItem.nid}`,
+          link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
+<p>${dbItem?.description || rawItem.description}</p>
+<p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
+          image: dbItem?.cover || rawItem.cover,
+          date: dbItem?.updatedAt || rawItem.updatedAt,
+          categories: rawItem.tags
         };
       })
     );
 
     setFoloFeedId(getFeedURL(c));
+
+    // 延迟拉取所有 novel
+    setTimeout(() => {
+      for (const item of data.items) {
+        getNovel(c, '' + item.nid);
+      }
+    });
 
     return getFeedResponse(c, {
       title: formatWenkuFilterTitle(filter),
