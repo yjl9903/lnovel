@@ -210,13 +210,14 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       data.volumes.map(async (vol, index) => {
         const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
         const foloId = await getFoloFeedId(rawFeedURL);
-        const feedURL = foloId ? getFoloShareURL(foloId) : rawFeedURL;
+        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+        const feedUrl = rawFeedURL;
 
         return {
           title: vol.title || vol.volume,
           id: `/bili/novel/${nid}/vol/${vol.vid}`,
           link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedURL}\" target=\"_blank\">RSS 订阅</a></p>`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p><p><img src="${vol.cover}" alt="cover" /></p>`,
           image: vol.cover,
           // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
           date: new Date(data.updatedAt.getTime() + 1000 * index),
