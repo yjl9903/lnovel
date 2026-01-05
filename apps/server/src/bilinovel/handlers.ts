@@ -15,7 +15,7 @@ import {
 import type { Context } from '../app';
 
 import { database } from '../database';
-import { buildSite, retryFn } from '../utils';
+import { buildSite, retryFn, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContextWithCache } from '../browser';
 
@@ -117,6 +117,14 @@ export const getWenku = memo(
             filter,
             resp.items.map((item) => ({ title: item.title, nid: item.nid }))
           );
+          
+          // 延迟拉取所有 novel
+          setTimeout(async () => {
+            for (const item of resp.items) {
+              await getNovel(c, '' + item.nid);
+              await sleep(30 * 1000 + 60 * 1000 * Math.random());
+            }
+          });
 
           return resp;
         }

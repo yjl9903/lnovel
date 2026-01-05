@@ -7,7 +7,7 @@ import { formatWenkuFilterTitle, parseWenkuFilter } from 'bilinovel';
 import type { AppEnv, Context } from '../app';
 
 import { Provider } from '../constants';
-import { buildSite, getFeedURL, sleep } from '../utils';
+import { buildSite, getFeedURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 import { FOLLOW_USER_ID, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
@@ -175,14 +175,6 @@ app.get('/wenku/feed.xml', async (c: Context) => {
     );
 
     setFoloFeedId(getFeedURL(c));
-
-    // 延迟拉取所有 novel
-    setTimeout(async () => {
-      for (const item of data.items) {
-        await getNovel(c, '' + item.nid);
-        await sleep(30 * 1000 + 60 * 1000 * Math.random())
-      }
-    });
 
     return getFeedResponse(c, {
       title: formatWenkuFilterTitle(filter),
