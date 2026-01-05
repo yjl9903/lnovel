@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
-import { formatWenkuFilterTitle, parseWenkuFilter } from 'bilinovel';
+import { formatTopFilterTitle, formatWenkuFilterTitle, parseTopFilter, parseWenkuFilter } from 'bilinovel';
 
 import type { AppEnv, Context } from '../app';
 
@@ -19,7 +19,8 @@ import {
   getNovelByDatabase,
   getNovelVolumeByDatabase,
   getNovelChapterByDatabase,
-  getWenku
+  getWenku,
+  getTop
 } from './handlers';
 
 export const app = new Hono<AppEnv>();
@@ -83,6 +84,16 @@ app.get('/wenku', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
   const resp = await getWenku(c, filter);
+
+  return resp.ok
+    ? c.json({ ok: true, provider: Provider.bilinovel, filter, data: resp.data })
+    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+});
+
+app.get('/top/:sort', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const filter = parseTopFilter(url);
+  const resp = await getTop(c, filter);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, filter, data: resp.data })
@@ -182,6 +193,56 @@ app.get('/wenku/feed.xml', async (c: Context) => {
         '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
       link: data.url,
       rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
+      image: 'https://www.bilinovel.com/logo.png',
+      items,
+      follow: {
+        feedId: await getFoloFeedId(getFeedURL(c)),
+        userId: FOLLOW_USER_ID
+      }
+    });
+  } else {
+    return c.text(`${resp.message}`, resp.status);
+  }
+});
+
+app.get('/top/:sort/feed.xml', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const filter = parseTopFilter(url);
+  const resp = await getTop(c, filter);
+
+  if (resp.ok) {
+    const { data } = resp;
+
+    const items = await Promise.all(
+      data.items.map(async (rawItem) => {
+        const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
+        const foloId = await getFoloFeedId(rawFeedURL);
+        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+        const feedUrl = rawFeedURL;
+
+        const dbItem = await getNovelByDatabase('' + rawItem.nid);
+
+        return {
+          title: dbItem?.name || rawItem.title,
+          id: `/bili/novel/${rawItem.nid}`,
+          link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
+<p>${dbItem?.description || rawItem.description}</p>
+<p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
+          image: dbItem?.cover || rawItem.cover,
+          date: dbItem?.updatedAt || rawItem.updatedAt,
+        };
+      })
+    );
+
+    setFoloFeedId(getFeedURL(c));
+
+    return getFeedResponse(c, {
+      title: formatTopFilterTitle(filter),
+      description:
+        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
+      link: data.url,
+      rssLink: buildSite(c, `/top/${filter.sort}/feed.xml${url.search}`),
       image: 'https://www.bilinovel.com/logo.png',
       items,
       follow: {
