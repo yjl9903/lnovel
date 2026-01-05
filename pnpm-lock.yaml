@@ -55,10 +55,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 1.19.7
-        version: 1.19.7(hono@4.10.7)
+        version: 1.19.7(hono@4.11.3)
       '@hono/zod-validator':
-        specifier: 0.7.5
-        version: 0.7.5(hono@4.10.7)(zod@4.1.13)
+        specifier: 0.7.6
+        version: 0.7.6(hono@4.11.3)(zod@4.1.13)
       '@playwright/browser-chromium':
         specifier: 1.57.0
         version: 1.57.0
@@ -87,8 +87,8 @@ importers:
         specifier: 5.1.0
         version: 5.1.0
       hono:
-        specifier: 4.10.7
-        version: 4.10.7
+        specifier: 4.11.3
+        version: 4.11.3
       lru-cache:
         specifier: 11.2.4
         version: 11.2.4
@@ -533,8 +533,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/zod-validator@0.7.5':
-    resolution: {integrity: sha512-n4l4hutkfYU07PzRUHBOVzUEn38VSfrh+UVE5d0w4lyfWDOEhzxIupqo5iakRiJL44c3vTuFJBvcmUl8b9agIA==}
+  '@hono/zod-validator@0.7.6':
+    resolution: {integrity: sha512-Io1B6d011Gj1KknV4rXYz4le5+5EubcWEU/speUjuw9XMMIaP3n78yXLhjd2A3PXaXaUwEAluOiAyLqhBEJgsw==}
     peerDependencies:
       hono: '>=3.9.0'
       zod: ^3.25.0 || ^4.0.0
@@ -1513,8 +1513,8 @@ packages:
   help-me@5.0.0:
     resolution: {integrity: sha512-7xgomUX6ADmcYzFik0HzAxh/73YlKR9bmFzf51CZwR+b6YtzU2m0u49hQCqV6SvlqIqsaxovfwdvbnsw3b/zpg==}
 
-  hono@4.10.7:
-    resolution: {integrity: sha512-icXIITfw/07Q88nLSkB9aiUrd8rYzSweK681Kjo/TSggaGbOX4RRyxxm71v+3PC8C/j+4rlxGeoTRxQDkaJkUw==}
+  hono@4.11.3:
+    resolution: {integrity: sha512-PmQi306+M/ct/m5s66Hrg+adPnkD5jiO6IjA7WhWw0gSBSo1EcRegwuI1deZ+wd5pzCGynCcn2DprnE4/yEV4w==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -2832,13 +2832,13 @@ snapshots:
   '@esbuild/win32-x64@0.25.12':
     optional: true
 
-  '@hono/node-server@1.19.7(hono@4.10.7)':
+  '@hono/node-server@1.19.7(hono@4.11.3)':
     dependencies:
-      hono: 4.10.7
+      hono: 4.11.3
 
-  '@hono/zod-validator@0.7.5(hono@4.10.7)(zod@4.1.13)':
+  '@hono/zod-validator@0.7.6(hono@4.11.3)(zod@4.1.13)':
     dependencies:
-      hono: 4.10.7
+      hono: 4.11.3
       zod: 4.1.13
 
   '@jridgewell/gen-mapping@0.3.13':
@@ -3726,7 +3726,7 @@ snapshots:
 
   help-me@5.0.0: {}
 
-  hono@4.10.7: {}
+  hono@4.11.3: {}
 
   hookable@5.5.3: {}
 
