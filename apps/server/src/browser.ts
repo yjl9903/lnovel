@@ -115,3 +115,16 @@ export async function runBrowserContextWithCache<T extends {}>(
     });
   });
 }
+
+export async function waitBrowserIdle(threshold: number = 0) {
+  return new Promise<void>((res) => {
+    const waiting = () => {
+      if (limit.pendingCount <= threshold) {
+        res();
+      } else {
+        setTimeout(waiting, 1000);
+      }
+    };
+    waiting();
+  });
+}

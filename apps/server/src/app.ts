@@ -60,7 +60,7 @@ export function createApp() {
 
   app.onError((err, c) => {
     if (err instanceof HTTPException) {
-      return err.getResponse()
+      return err.getResponse();
     } else {
       consola.error('Unhandled error', err);
 
@@ -72,7 +72,6 @@ export function createApp() {
         500
       );
     }
-
   });
 
   app.get('/', (c) =>

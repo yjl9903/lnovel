@@ -17,7 +17,7 @@ import type { Context } from '../app';
 import { database } from '../database';
 import { buildSite, retryFn, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
-import { launchBrowser, runBrowserContextWithCache } from '../browser';
+import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../browser';
 
 import { consola } from './utils';
 
@@ -117,14 +117,15 @@ export const getWenku = memo(
             filter,
             resp.items.map((item) => ({ title: item.title, nid: item.nid }))
           );
-          
+
           // 延迟拉取所有 novel
           setTimeout(async () => {
             for (const item of resp.items) {
+              await waitBrowserIdle();
               await getNovel(c, '' + item.nid);
               await sleep(30 * 1000 + 60 * 1000 * Math.random());
             }
-          });
+          }, 1000);
 
           return resp;
         }
@@ -477,6 +478,8 @@ export const triggerUpdateNovel = memo(
     let error = 0;
 
     for (const vol of novel.volumes) {
+      await waitBrowserIdle(5);
+
       await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
 
       const resp = await getNovelVolume(c, nid, '' + vol.vid);
