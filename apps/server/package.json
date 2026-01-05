@@ -58,7 +58,7 @@
     "puppeteer-extra-plugin-stealth": "2.11.2",
     "undici": "7.16.0",
     "unstorage": "1.17.3",
-    "zod": "4.1.13"
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "drizzle-kit": "0.31.8"
