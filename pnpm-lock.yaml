@@ -105,8 +105,8 @@ importers:
         specifier: 2.11.2
         version: 2.11.2(playwright-extra@4.3.6(playwright-core@1.57.0)(playwright@1.57.0))
       undici:
-        specifier: 7.17.0
-        version: 7.17.0
+        specifier: 7.18.0
+        version: 7.18.0
       unstorage:
         specifier: 1.17.3
         version: 1.17.3
@@ -2643,8 +2643,8 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@7.17.0:
-    resolution: {integrity: sha512-JMcHKwIp6E5xjyHQr4mK5xcvo6YiMGkE2Pwo06GFLGVh/U22jjFIVG30KiZhD3/yNEgPJKL0iWkwBiG0GF0Ccw==}
+  undici@7.18.0:
+    resolution: {integrity: sha512-CfPufgPFHCYu0W4h1NiKW9+tNJ39o3kWm7Cm29ET1enSJx+AERfz7A2wAr26aY0SZbYzZlTBQtcHy15o60VZfQ==}
     engines: {node: '>=20.18.1'}
 
   universalify@2.0.1:
@@ -5021,7 +5021,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@7.17.0: {}
+  undici@7.18.0: {}
 
   universalify@2.0.1: {}
 
