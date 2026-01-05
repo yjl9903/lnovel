@@ -11,7 +11,7 @@ dockerfile = 'Dockerfile'
 
 [build.args]
 NODE_VERSION = '24.11.0'
-PNPM_VERSION = '10.23.0'
+PNPM_VERSION = '10.27.0'
 APP_HOST = 'lnvoel.animes.garden'
 
 [processes]
