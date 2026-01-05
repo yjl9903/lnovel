@@ -5,6 +5,7 @@ import { prettyJSON } from 'hono/pretty-json';
 import { createConsola } from 'consola';
 
 import { app as bilinovel } from './bilinovel';
+import { HTTPException } from 'hono/http-exception';
 
 const consola = createConsola().withTag('server');
 
@@ -58,15 +59,20 @@ export function createApp() {
   });
 
   app.onError((err, c) => {
-    console.error('Unhandled error', err);
+    if (err instanceof HTTPException) {
+      return err.getResponse()
+    } else {
+      consola.error('Unhandled error', err);
 
-    return c.json(
-      {
-        ok: false,
-        message: 'Internal Server Error'
-      },
-      500
-    );
+      return c.json(
+        {
+          ok: false,
+          message: 'Internal Server Error'
+        },
+        500
+      );
+    }
+
   });
 
   app.get('/', (c) =>
