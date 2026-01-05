@@ -2,8 +2,11 @@ import { type Context as HonoContext, Hono } from 'hono';
 import { type HttpBindings } from '@hono/node-server';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
+import { createConsola } from 'consola';
 
 import { app as bilinovel } from './bilinovel';
+
+const consola = createConsola().withTag('server');
 
 export type ServiceBindings = {};
 
@@ -35,7 +38,13 @@ export function createApp() {
     );
   });
 
-  app.use('*', logger());
+  app.use(
+    '*',
+    logger((str, ...rest) => {
+      consola.log(str, ...rest);
+    })
+  );
+
   app.use('*', prettyJSON({ space: 2 }));
 
   app.notFound((c) => {
