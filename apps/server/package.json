@@ -47,7 +47,7 @@
     "breadc": "0.9.7",
     "consola": "3.4.2",
     "dotenv": "17.2.3",
-    "drizzle-orm": "0.45.0",
+    "drizzle-orm": "0.45.1",
     "fast-xml-parser": "5.3.2",
     "feed": "5.1.0",
     "hono": "4.11.3",
