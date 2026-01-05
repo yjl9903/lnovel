@@ -113,15 +113,17 @@ export async function fetchNovelPage(
   );
 
   if (vols.length === 0) {
-    await sleep(1000);
+    await sleep(1000 + 1000 * Math.random());
 
     const catalog = new URL(
       `/novel/${nid}/catalog`,
       options?.baseURL || 'https://www.linovelib.com/'
     );
+
     await page.goto(catalog.toString());
 
     if (await isCloudflarePage(page)) {
+      await sleep(10 * 1000 * Math.random());
       throw new Error('blocked by cloudflare');
     }
 

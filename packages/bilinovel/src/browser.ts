@@ -30,5 +30,7 @@ export async function blockRoutes(page: Page, list = BLOCK_LIST) {
 }
 
 export async function isCloudflarePage(page: Page) {
-  return (await page.locator('#cf-wrapper').count()) > 0;
+  return (
+    (await page.locator('#cf-wrapper').count()) > 0 || (await page.locator('.ray-id').count()) > 0
+  );
 }

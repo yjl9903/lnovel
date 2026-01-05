@@ -2,7 +2,12 @@ import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
-import { formatTopFilterTitle, formatWenkuFilterTitle, parseTopFilter, parseWenkuFilter } from 'bilinovel';
+import {
+  formatTopFilterTitle,
+  formatWenkuFilterTitle,
+  parseTopFilter,
+  parseWenkuFilter
+} from 'bilinovel';
 
 import type { AppEnv, Context } from '../app';
 
@@ -230,7 +235,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
 <p>${dbItem?.description || rawItem.description}</p>
 <p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
           image: dbItem?.cover || rawItem.cover,
-          date: dbItem?.updatedAt || rawItem.updatedAt,
+          date: dbItem?.updatedAt || rawItem.updatedAt
         };
       })
     );

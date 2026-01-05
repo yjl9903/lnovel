@@ -157,7 +157,7 @@ export async function fetchTopPage(
 
   const items = novels.filter((item) => item.nid && item.title && item.updatedAt);
 
-  const currentPage = filter.page ??  1;
+  const currentPage = filter.page ?? 1;
 
   return {
     url: target.toString(),
@@ -171,7 +171,7 @@ export async function fetchTopPage(
 }
 
 export function parseTopFilter(input: URL): BilinovelFetchTopFilter {
-  const searchParams = input.searchParams
+  const searchParams = input.searchParams;
   const filter: BilinovelFetchTopFilter = {};
 
   const sort = parseMappedParam(TOP_SORT, input.pathname.split('/').at(-1));
