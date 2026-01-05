@@ -23,7 +23,7 @@ export async function retryFn<T>(
   throw e;
 }
 
-function sleep(timeout?: number) {
+export function sleep(timeout?: number) {
   return new Promise<void>((res) => {
     setTimeout(() => res(), timeout);
   });
