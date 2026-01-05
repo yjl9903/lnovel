@@ -84,9 +84,9 @@ export const getWenku = memo(
         wenkuCache,
         getWenkuFilterKey(filter),
         async (context) => {
-          consola.log(`Fetch wenku page`, filter);
+          consola.log(`Start fetching wenku page`, filter);
 
-          return await retryFn(
+          const resp = await retryFn(
             async () =>
               await fetchWenkuPage(context, filter, {
                 transformImgSrc(_url) {
@@ -111,6 +111,14 @@ export const getWenku = memo(
               }),
             5
           );
+
+          consola.log(
+            `Finish fetching wenku page`,
+            filter,
+            resp.items.map((item) => ({ title: item.title, nid: item.nid }))
+          );
+
+          return resp;
         }
       );
 
@@ -150,9 +158,9 @@ export const getNovel = memo(
         novelCache,
         `${nid}`,
         async (context) => {
-          consola.log(`Fetch novel page`, nid);
+          consola.log(`Start fetching novel page`, nid);
 
-          return await retryFn(
+          const resp = await retryFn(
             async () =>
               await fetchNovelPage(context, +nid, {
                 transformImgSrc(_url) {
@@ -177,6 +185,10 @@ export const getNovel = memo(
               }),
             5
           );
+
+          consola.log(`Finish fetching novel page`, nid, resp?.name);
+
+          return resp;
         }
       );
 
@@ -216,9 +228,9 @@ export const getNovelVolume = memo(
         volCache,
         `${nid}/vol_${vid}`,
         async (context) => {
-          consola.log(`Fetch novel volume page`, nid, vid);
+          consola.log(`Start fetching novel volume page`, nid, vid);
 
-          return await retryFn(
+          const resp = await retryFn(
             async () =>
               await fetchNovelVolumePage(context, +nid, +vid, {
                 transformImgSrc(_url) {
@@ -243,6 +255,10 @@ export const getNovelVolume = memo(
               }),
             5
           );
+
+          consola.log(`Finish fetching novel volume page`, nid, vid, resp?.name);
+
+          return resp;
         }
       );
 
@@ -280,9 +296,9 @@ export const getNovelChapter = memo(
         chapterCache,
         `${nid}/${cid}`,
         async (context) => {
-          consola.log(`Fetch novel chapter page`, nid, cid);
+          consola.log(`Start fetching novel chapter page`, nid, cid);
 
-          return await retryFn(
+          const resp = await retryFn(
             async () =>
               await fetchNovelChapters(context, +nid, +cid, {
                 transformBbcode: true,
@@ -290,6 +306,10 @@ export const getNovelChapter = memo(
               }),
             5
           );
+
+          consola.log(`Finish fetching novel chapter page`, nid, cid, resp?.title);
+
+          return resp;
         }
       );
 
@@ -410,11 +430,16 @@ export const triggerUpdateNovel = memo(
       oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
       oldVolumes.length === novel.volumes.length
     ) {
-      consola.log(`Skip updating novel to database`, nid, novel.updatedAt.toISOString());
+      consola.log(
+        `Skip updating novel to database`,
+        nid,
+        novel.name,
+        novel.updatedAt.toISOString()
+      );
       return;
     }
 
-    consola.log(`Start updating novel to database`, nid, novel.updatedAt.toISOString());
+    consola.log(`Start updating novel to database`, nid, novel.name, novel.updatedAt.toISOString());
 
     await database
       .insert(biliNovels)
@@ -516,9 +541,20 @@ export const triggerUpdateNovel = memo(
     if (error === 0) {
       await database.update(biliNovels).set({ done: true }).where(eq(biliNovels.nid, +nid));
 
-      consola.log(`Finish updating novel to database`, nid, novel.updatedAt.toISOString());
+      consola.log(
+        `Finish updating novel to database`,
+        nid,
+        novel.name,
+        novel.updatedAt.toISOString()
+      );
     } else {
-      consola.log(`Failed updating novel to database`, nid, novel.updatedAt.toISOString(), error);
+      consola.log(
+        `Failed updating novel to database`,
+        nid,
+        novel.name,
+        novel.updatedAt.toISOString(),
+        error
+      );
     }
   },
   (_, nid) => nid
