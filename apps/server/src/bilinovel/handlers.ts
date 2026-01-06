@@ -139,12 +139,10 @@ export const getWenku = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              for (const item of resp.items) {
-                await waitBrowserIdle();
-                await getNovel(c, '' + item.nid);
-                await setFoloFeedId(buildSite(c, `/bili/novel/${item.nid}/feed.xml`))
-                await sleep(30 * 1000 + 60 * 1000 * Math.random());
-              }
+              await triggerUpdateNovels(
+                c,
+                resp.items.map((item) => item.nid)
+              );
             }, 1000);
 
             return resp;
@@ -228,11 +226,10 @@ export const getTop = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              for (const item of resp.items) {
-                await waitBrowserIdle();
-                await getNovel(c, '' + item.nid);
-                await sleep(30 * 1000 + 60 * 1000 * Math.random());
-              }
+              await triggerUpdateNovels(
+                c,
+                resp.items.map((item) => item.nid)
+              );
             }, 1000);
 
             return resp;
@@ -274,6 +271,20 @@ export const getTop = memo(
     return getTopFilterKey(filter);
   }
 );
+
+async function triggerUpdateNovels(c: Context, nids: number[]) {
+  for (const nid of nids) {
+    await waitBrowserIdle();
+    const novel = await getNovel(c, '' + nid);
+    if (novel.data) {
+      await setFoloFeedId(buildSite(c, `/bili/novel/${nid}/feed.xml`));
+      for (const vol of novel.data.volumes) {
+        await setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`));
+      }
+    }
+    await sleep(30 * 1000 + 60 * 1000 * Math.random());
+  }
+}
 
 export const getNovel = memo(
   async (c: Context, nid: string) => {
