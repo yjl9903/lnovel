@@ -6,12 +6,15 @@ import type {
   ConnectOverCDPOptions
 } from 'playwright';
 
-import { createConsola } from 'consola';
-
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { chromium, devices } from 'playwright-extra';
 import pLimit from 'p-limit';
 import { LRUCache } from 'lru-cache';
+import { createConsola } from 'consola';
+
+import { CloudflareError } from 'bilinovel';
+
+import { type RetryOptions, sleep } from './utils';
 
 const limit = pLimit(1);
 
@@ -55,8 +58,10 @@ export async function runBrowserContext<T>(
       const context = await browser.newContext({
         locale: 'zh-CN',
         timezoneId: 'Asia/Shanghai',
-        ...devices['iPad Pro 11'],
-        ...options
+        ...devices['Desktop Chrome HiDPI'],
+        ...options,
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
       });
 
       try {
@@ -76,7 +81,10 @@ export async function runBrowserContextWithCache<T extends {}>(
   cache: LRUCache<string, Awaited<T>>,
   key: string,
   fn: (context: BrowserContext) => Promise<Awaited<T> | null | undefined>,
-  options?: BrowserContextOptions | undefined
+  options: {
+    context?: BrowserContextOptions | undefined;
+    maxRetry?: number;
+  } = {}
 ) {
   const result = await cache.get(key);
   if (result !== undefined && result !== null) return result;
@@ -85,17 +93,24 @@ export async function runBrowserContextWithCache<T extends {}>(
 
   return new Promise<Awaited<T> | null | undefined>(async (res, rej) => {
     await limit(async () => {
-      const context = await browser.newContext({
+      let context = await browser.newContext({
         locale: 'zh-CN',
         timezoneId: 'Asia/Shanghai',
-        ...devices['iPhone 13 Pro Max'],
-        ...options
+        ...devices['Desktop Chrome HiDPI'],
+        ...options.context,
+        userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
       });
 
-      const MAX_RETRY = 5;
+      const MAX_RETRY = options.maxRetry
+        ? options.maxRetry < 0
+          ? Number.MAX_SAFE_INTEGER
+          : options.maxRetry
+        : 1;
 
       let error: unknown;
       let delay = 500;
+      let hacked = false;
 
       for (let turn = 0; turn < MAX_RETRY; turn++) {
         try {
@@ -103,23 +118,92 @@ export async function runBrowserContextWithCache<T extends {}>(
           if (result !== undefined && result !== null) {
             cache.set(key, result);
           }
+
           await context.close().catch(() => {});
           res(result);
+
           return;
         } catch (_error) {
           error = _error;
-          if (error instanceof Error && error.message.includes('Request timeout')) {
-            consola.error(`Retry ${key} ${turn + 1} / ${MAX_RETRY}`);
-            consola.error(error);
-            delay = Math.min(delay * 2, 30 * 1000);
-            await new Promise((res) => setTimeout(res, delay));
-            continue;
+
+          const FLARESOLVERR_URL = process.env.FLARESOLVERR_URL;
+          if (
+            error instanceof CloudflareError &&
+            FLARESOLVERR_URL &&
+            (!hacked || turn + 1 < MAX_RETRY)
+          ) {
+            try {
+              consola.log('Proxy to flaresolverr', error.url.toString());
+
+              if (!hacked) {
+                hacked = true;
+                turn -= 1;
+              }
+
+              const resp = await fetch(FLARESOLVERR_URL, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  cmd: 'request.get',
+                  url: error.url.toString(),
+                  maxTimeout: 30 * 1000
+                })
+              });
+              if (resp.ok) {
+                const data: any = await resp.json();
+                const { status, solution } = data;
+                if (status === 'ok' && solution) {
+                  consola.log('Receive from flaresolverr', {
+                    url: solution.url,
+                    status: solution.status,
+                    cookies: solution.cookies,
+                    userAgent: solution.userAgent
+                  });
+
+                  await context.close().catch(() => {});
+
+                  context = await browser.newContext({
+                    locale: 'zh-CN',
+                    timezoneId: 'Asia/Shanghai',
+                    ...devices['Desktop Chrome HiDPI'],
+                    ...options.context,
+                    userAgent: solution.userAgent
+                  });
+
+                  await context.addCookies(
+                    solution.cookies.map((cookie: any) => ({
+                      name: cookie.name,
+                      value: cookie.value,
+                      domain: cookie.domain,
+                      path: cookie.path,
+                      expires: cookie.expiry,
+                      httpOnly: cookie.httpOnly,
+                      secure: cookie.secure,
+                      sameSite: cookie.sameSite
+                    }))
+                  );
+                }
+              } else {
+                consola.error('Receive from flaresolverr', resp);
+              }
+            } catch (error) {
+              consola.error('Receive from flaresolverr', error);
+            }
           }
-          break;
+
+          if (turn + 1 < MAX_RETRY) {
+            consola.error(`Retry ${turn + 1} / ${MAX_RETRY}, due to:`, error);
+
+            await sleep(delay);
+            delay = Math.min(delay * 2, 30 * 1000);
+          }
         }
       }
 
       await context.close().catch(() => {});
+
       rej(error ? error : new Error('failed after retry'));
     });
   });

@@ -1,7 +1,4 @@
 import { Page } from 'playwright';
-// import fs from 'fs';
-
-import { sleep } from './utils';
 
 // --- 定义需要屏蔽的关键词列表 ---
 export const BLOCK_LIST = [
@@ -35,47 +32,7 @@ export async function blockRoutes(page: Page, list = BLOCK_LIST) {
 export async function isCloudflarePage(page: Page) {
   if ((await page.locator('#cf-wrapper').count()) > 0) return true;
 
-  if ((await page.locator('.ray-id').count()) > 0) {
-    // console.log('开始质询');
-
-    // 等待页面稍微稳定
-    await page.waitForTimeout(3000);
-
-    // console.log('等待结束');
-
-    let retries = 0;
-    while (retries < 5 && (await page.locator('.ray-id').count()) > 0) {
-      retries++;
-
-      // fs.writeFileSync('test1.png', await page.screenshot());
-
-      // console.log('开始点击');
-
-      const box = await page.locator('.main-content > div:first-of-type').boundingBox();
-
-      if (box) {
-        const offsetX = box.x + 75;
-        const offsetY = box.y + box.height / 2;
-        await page.mouse.click(offsetX, offsetY);
-
-        // console.log('点击 mouse', offsetX, offsetY);
-
-        // fs.writeFileSync('test2.png', await page.screenshot());
-
-        // console.log('再次等待');
-
-        // 等待页面稍微稳定
-        await page.waitForLoadState('networkidle').catch(() => {});
-        await sleep(1000 + 1000 * Math.random());
-
-        // fs.writeFileSync('test3.png', await page.screenshot());
-
-        // console.log('等待结束');
-      }
-    }
-
-    return true;
-  }
+  if ((await page.locator('.ray-id').count()) > 0) return true;
 
   return false;
 }

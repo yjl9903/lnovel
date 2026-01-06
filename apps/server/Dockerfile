@@ -69,9 +69,10 @@ RUN apt-get update && \
 # Declare args
 ARG PORT APP_HOST
 ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} \
+    FOLO=1 \
     DATABASE_FILE=/data/sqlite.db \
     CHROMIUM_USER_DIR=/data/profile \
-    FOLO=1
+    FLARESOLVERR_URL=http://flaresolverr-production.flycast/v1
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE ${PORT}

@@ -2,6 +2,18 @@
 
 [![version](https://img.shields.io/npm/v/lnovel?color=rgb%2850%2C203%2C86%29&label=lnovel)](https://www.npmjs.com/package/lnovel) [![CI](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml/badge.svg)](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml)
 
+## Environment
+
+```env
+HOST=0.0.0.0
+PORT=3000
+
+FOLO=1
+CHROMIUM_USER_DIR=./.profile
+DATABASE_FILE=./db.sqlite
+FLARESOLVERR_URL=...
+```
+
 ## Credits
 
 + [轻小说文库](https://www.wenku8.net/)

@@ -6,6 +6,7 @@ import type {
   BilinovelFetchChapterOptions
 } from './types';
 
+import { CloudflareError } from './error';
 import { blockRoutes, isCloudflarePage } from './browser';
 import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
 
@@ -60,7 +61,7 @@ export async function fetchNovelPage(
   await page.goto(novelURL.toString());
 
   if (await isCloudflarePage(page)) {
-    throw new Error(`"${novelURL.toString()}" was blocked by cloudflare`);
+    throw new CloudflareError(novelURL);
   }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
@@ -123,8 +124,7 @@ export async function fetchNovelPage(
     await page.goto(catalogURL.toString());
 
     if (await isCloudflarePage(page)) {
-      await sleep(10 * 1000 * Math.random());
-      throw new Error(`"${catalogURL.toString()}" was blocked by cloudflare`);
+      throw new CloudflareError(catalogURL);
     }
 
     vols = await Promise.all(
@@ -185,7 +185,7 @@ export async function fetchNovelVolumePage(
   await page.goto(novelURL.toString());
 
   if (await isCloudflarePage(page)) {
-    throw new Error(`"${novelURL.toString()}" was blocked by cloudflare`);
+    throw new CloudflareError(novelURL);
   }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
@@ -304,7 +304,7 @@ export async function fetchNovelChapterPage(
   await page.goto(novelURL.toString());
 
   if (await isCloudflarePage(page)) {
-    throw new Error(`"${novelURL.toString()}" was blocked by cloudflare`);
+    throw new CloudflareError(novelURL);
   }
 
   const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();

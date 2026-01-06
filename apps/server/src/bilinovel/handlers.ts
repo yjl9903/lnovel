@@ -17,7 +17,7 @@ import {
 import type { Context } from '../app';
 
 import { database } from '../database';
-import { buildSite, retryFn, sleep } from '../utils';
+import { buildSite, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../browser';
 
@@ -108,34 +108,27 @@ export const getWenku = memo(
           try {
             consola.log(`Start fetching wenku page`, filter);
 
-            const resp = await retryFn(
-              async () =>
-                await fetchWenkuPage(context, filter, {
-                  transformImgSrc(_url) {
-                    try {
-                      if (_url.startsWith('/files/')) {
-                        _url = 'https://www.linovelib.com' + _url;
-                      }
-
-                      const url = new URL(_url);
-                      if (url.host === 'img3.readpai.com') {
-                        return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
-                      }
-                      if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                        return buildSite(c, `/bili${url.pathname}${url.search}`);
-                      }
-                      return _url;
-                    } catch (error) {
-                      consola.error('Transform img src', error, _url);
-                      return _url;
-                    }
+            const resp = await fetchWenkuPage(context, filter, {
+              transformImgSrc(_url) {
+                try {
+                  if (_url.startsWith('/files/')) {
+                    _url = 'https://www.linovelib.com' + _url;
                   }
-                }),
-              MAX_RETRY,
-              {
-                logger: consola
+
+                  const url = new URL(_url);
+                  if (url.host === 'img3.readpai.com') {
+                    return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                  }
+                  if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                    return buildSite(c, `/bili${url.pathname}${url.search}`);
+                  }
+                  return _url;
+                } catch (error) {
+                  consola.error('Transform img src', error, _url);
+                  return _url;
+                }
               }
-            );
+            });
 
             consola.log(
               `Finish fetching wenku page`,
@@ -158,6 +151,9 @@ export const getWenku = memo(
 
             throw error;
           }
+        },
+        {
+          maxRetry: MAX_RETRY
         }
       );
 
@@ -200,34 +196,27 @@ export const getTop = memo(
           try {
             consola.log(`Start fetching top page`, filter);
 
-            const resp = await retryFn(
-              async () =>
-                await fetchTopPage(context, filter, {
-                  transformImgSrc(_url) {
-                    try {
-                      if (_url.startsWith('/files/')) {
-                        _url = 'https://www.linovelib.com' + _url;
-                      }
-
-                      const url = new URL(_url);
-                      if (url.host === 'img3.readpai.com') {
-                        return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
-                      }
-                      if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                        return buildSite(c, `/bili${url.pathname}${url.search}`);
-                      }
-                      return _url;
-                    } catch (error) {
-                      consola.error('Transform img src', error, _url);
-                      return _url;
-                    }
+            const resp = await fetchTopPage(context, filter, {
+              transformImgSrc(_url) {
+                try {
+                  if (_url.startsWith('/files/')) {
+                    _url = 'https://www.linovelib.com' + _url;
                   }
-                }),
-              MAX_RETRY,
-              {
-                logger: consola
+
+                  const url = new URL(_url);
+                  if (url.host === 'img3.readpai.com') {
+                    return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                  }
+                  if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                    return buildSite(c, `/bili${url.pathname}${url.search}`);
+                  }
+                  return _url;
+                } catch (error) {
+                  consola.error('Transform img src', error, _url);
+                  return _url;
+                }
               }
-            );
+            });
 
             consola.log(
               `Finish fetching top page`,
@@ -250,6 +239,9 @@ export const getTop = memo(
 
             throw error;
           }
+        },
+        {
+          maxRetry: MAX_RETRY
         }
       );
 
@@ -292,34 +284,27 @@ export const getNovel = memo(
           try {
             consola.log(`Start fetching novel page`, `nid:${nid}`);
 
-            const resp = await retryFn(
-              async () =>
-                await fetchNovelPage(context, +nid, {
-                  transformImgSrc(_url) {
-                    try {
-                      if (_url.startsWith('/files/')) {
-                        _url = 'https://www.linovelib.com' + _url;
-                      }
-
-                      const url = new URL(_url);
-                      if (url.host === 'img3.readpai.com') {
-                        return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
-                      }
-                      if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                        return buildSite(c, `/bili${url.pathname}${url.search}`);
-                      }
-                      return _url;
-                    } catch (error) {
-                      consola.error('Transform img src', error, _url);
-                      return _url;
-                    }
+            const resp = await fetchNovelPage(context, +nid, {
+              transformImgSrc(_url) {
+                try {
+                  if (_url.startsWith('/files/')) {
+                    _url = 'https://www.linovelib.com' + _url;
                   }
-                }),
-              MAX_RETRY,
-              {
-                logger: consola
+
+                  const url = new URL(_url);
+                  if (url.host === 'img3.readpai.com') {
+                    return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                  }
+                  if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                    return buildSite(c, `/bili${url.pathname}${url.search}`);
+                  }
+                  return _url;
+                } catch (error) {
+                  consola.error('Transform img src', error, _url);
+                  return _url;
+                }
               }
-            );
+            });
 
             consola.log(`Finish fetching novel page`, `nid:${nid}`, resp?.name);
 
@@ -329,6 +314,9 @@ export const getNovel = memo(
 
             throw error;
           }
+        },
+        {
+          maxRetry: MAX_RETRY
         }
       );
 
@@ -371,34 +359,27 @@ export const getNovelVolume = memo(
           try {
             consola.log(`Start fetching novel volume page`, `nid:${nid}`, `vid:${vid}`);
 
-            const resp = await retryFn(
-              async () =>
-                await fetchNovelVolumePage(context, +nid, +vid, {
-                  transformImgSrc(_url) {
-                    try {
-                      if (_url.startsWith('/files/')) {
-                        _url = 'https://www.linovelib.com' + _url;
-                      }
-
-                      const url = new URL(_url);
-                      if (url.host === 'img3.readpai.com') {
-                        return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
-                      }
-                      if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
-                        return buildSite(c, `/bili${url.pathname}${url.search}`);
-                      }
-                      return _url;
-                    } catch (error) {
-                      consola.error('Transform img src', error, _url);
-                      return _url;
-                    }
+            const resp = await fetchNovelVolumePage(context, +nid, +vid, {
+              transformImgSrc(_url) {
+                try {
+                  if (_url.startsWith('/files/')) {
+                    _url = 'https://www.linovelib.com' + _url;
                   }
-                }),
-              MAX_RETRY,
-              {
-                logger: consola
+
+                  const url = new URL(_url);
+                  if (url.host === 'img3.readpai.com') {
+                    return buildSite(c, `/bili/img3${url.pathname}${url.search}`);
+                  }
+                  if (url.host === 'www.linovelib.com' && url.pathname.startsWith('/files/')) {
+                    return buildSite(c, `/bili${url.pathname}${url.search}`);
+                  }
+                  return _url;
+                } catch (error) {
+                  consola.error('Transform img src', error, _url);
+                  return _url;
+                }
               }
-            );
+            });
 
             consola.log(
               `Finish fetching novel volume page`,
@@ -413,6 +394,9 @@ export const getNovelVolume = memo(
 
             throw error;
           }
+        },
+        {
+          maxRetry: MAX_RETRY
         }
       );
 
@@ -453,17 +437,10 @@ export const getNovelChapter = memo(
           try {
             consola.log(`Start fetching novel chapter page`, `nid:${nid}`, `cid:${cid}`);
 
-            const resp = await retryFn(
-              async () =>
-                await fetchNovelChapters(context, +nid, +cid, {
-                  transformBbcode: true,
-                  transformImgSrc: buildSite(c, '/bili/img3/')
-                }),
-              MAX_RETRY,
-              {
-                logger: consola
-              }
-            );
+            const resp = await fetchNovelChapters(context, +nid, +cid, {
+              transformBbcode: true,
+              transformImgSrc: buildSite(c, '/bili/img3/')
+            });
 
             consola.log(
               `Finish fetching novel chapter page`,
@@ -478,6 +455,9 @@ export const getNovelChapter = memo(
 
             throw error;
           }
+        },
+        {
+          maxRetry: MAX_RETRY
         }
       );
 
