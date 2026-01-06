@@ -36,37 +36,42 @@ export async function isCloudflarePage(page: Page) {
   if ((await page.locator('#cf-wrapper').count()) > 0) return true;
 
   if ((await page.locator('.ray-id').count()) > 0) {
-    console.log('开始质询');
+    // console.log('开始质询');
+
     // 等待页面稍微稳定
     await page.waitForTimeout(3000);
 
     // console.log('等待结束');
 
-    // fs.writeFileSync('test1.png', await page.screenshot());
+    let retries = 0;
+    while (retries < 5 && (await page.locator('.ray-id').count()) > 0) {
+      retries++;
 
-    const box = await page.locator('.main-content > div:first-of-type').boundingBox();
+      // fs.writeFileSync('test1.png', await page.screenshot());
 
-    console.log('找到 box', box);
-    if (box) {
-      const offsetX = box.x + 75;
-      const offsetY = box.y + box.height / 2;
-      await page.mouse.click(offsetX, offsetY);
+      // console.log('开始点击');
 
-      // console.log('点击 mouse', offsetX, offsetY);
+      const box = await page.locator('.main-content > div:first-of-type').boundingBox();
 
-      // fs.writeFileSync('test2.png', await page.screenshot());
+      if (box) {
+        const offsetX = box.x + 75;
+        const offsetY = box.y + box.height / 2;
+        await page.mouse.click(offsetX, offsetY);
 
-      // console.log('再次等待');
+        // console.log('点击 mouse', offsetX, offsetY);
 
-      // 等待页面稍微稳定
-      await page.waitForLoadState('networkidle').catch(() => {});
-      await sleep(1000 + 1000 * Math.random());
+        // fs.writeFileSync('test2.png', await page.screenshot());
 
-      // fs.writeFileSync('test3.png', await page.screenshot());
+        // console.log('再次等待');
 
-      // console.log('等待结束');
+        // 等待页面稍微稳定
+        await page.waitForLoadState('networkidle').catch(() => {});
+        await sleep(1000 + 1000 * Math.random());
 
-      return (await page.locator('.ray-id').count()) > 0;
+        // fs.writeFileSync('test3.png', await page.screenshot());
+
+        // console.log('等待结束');
+      }
     }
 
     return true;

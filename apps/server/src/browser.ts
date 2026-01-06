@@ -19,8 +19,17 @@ const consola = createConsola().withTag('browser');
 
 chromium.use(stealth());
 
-export function launchBrowser(options?: LaunchOptions | undefined) {
-  return chromium.launch(options);
+export async function launchBrowser(options?: LaunchOptions | undefined) {
+  if (process.env.CHROMIUM_USER_DIR) {
+    const ctx = await chromium.launchPersistentContext(process.env.CHROMIUM_USER_DIR, options);
+    const browser = ctx.browser();
+    if (browser) {
+      return browser;
+    } else {
+      await ctx.close().catch(() => {});
+    }
+  }
+  return await chromium.launch(options);
 }
 
 export function connectBrowserOverCDP(
