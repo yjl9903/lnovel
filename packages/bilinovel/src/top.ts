@@ -86,7 +86,7 @@ export async function fetchTopPage(
   await page.goto(target.toString());
 
   if (await isCloudflarePage(page)) {
-    throw new Error('blocked by cloudflare');
+    throw new Error(`"${target.toString()}" was blocked by cloudflare`);
   }
 
   const rawTitle =

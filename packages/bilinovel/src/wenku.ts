@@ -388,7 +388,7 @@ export async function fetchWenkuPage(
   await page.goto(target.toString());
 
   if (await isCloudflarePage(page)) {
-    throw new Error('blocked by cloudflare');
+    throw new Error(`"${target.toString()}" was blocked by cloudflare`);
   }
 
   const novels = await Promise.all(

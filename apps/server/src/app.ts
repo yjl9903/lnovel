@@ -7,7 +7,7 @@ import { createConsola } from 'consola';
 import { app as bilinovel } from './bilinovel';
 import { HTTPException } from 'hono/http-exception';
 
-const consola = createConsola().withTag('server');
+export const consola = createConsola().withTag('server');
 
 export type ServiceBindings = {};
 

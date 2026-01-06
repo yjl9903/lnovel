@@ -1,7 +1,14 @@
+import type { ConsolaInstance } from 'consola';
+
+export interface RetryOptions {
+  logger?: ConsolaInstance;
+  signal?: AbortSignal;
+}
+
 export async function retryFn<T>(
-  fn: () => Promise<T>,
+  fn: (options: RetryOptions) => Promise<T>,
   count: number,
-  signal?: AbortSignal
+  options: RetryOptions = {}
 ): Promise<T> {
   if (count < 0) {
     count = Number.MAX_SAFE_INTEGER;
@@ -10,12 +17,17 @@ export async function retryFn<T>(
   let e: any;
   for (let i = 0; i <= count; i++) {
     try {
-      return await fn();
+      return await fn(options);
     } catch (err) {
       e = err;
-      if (signal?.aborted) {
+      if (options?.signal?.aborted) {
         break;
       }
+
+      if (options.logger && i < count) {
+        options.logger.error(`Retry ${i + 1} / ${count}, due to`, err);
+      }
+
       await sleep(delay);
       delay = Math.min(delay * 2, 30 * 1000);
     }

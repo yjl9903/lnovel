@@ -1,10 +1,9 @@
 import path from 'node:path';
 
-import { consola } from 'consola';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 
-import { createApp } from './app';
+import { createApp, consola } from './app';
 
 export interface ListenOptions {
   host?: string;
@@ -25,14 +24,14 @@ export function startServer(app: ReturnType<typeof createApp>, options: ListenOp
       port
     },
     (info) => {
-      consola.withTag('server').info(`Start listening on http://${info.address}:${info.port}`);
+      consola.log(`Start listening on http://${info.address}:${info.port}`);
     }
   );
 
   return new Promise<void>((res) => {
     server.addListener('close', () => res());
     server.addListener('error', (err) => {
-      consola.withTag('server').error(err);
+      consola.error(err);
       process.exit(1);
     });
   });
