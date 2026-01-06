@@ -23,6 +23,8 @@ import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../b
 
 import { consola } from './utils';
 
+const MAX_RETRY = 1;
+
 const browser = launchBrowser({
   headless: true,
   args: [
@@ -129,7 +131,7 @@ export const getWenku = memo(
                     }
                   }
                 }),
-              5,
+              MAX_RETRY,
               {
                 logger: consola
               }
@@ -221,7 +223,7 @@ export const getTop = memo(
                     }
                   }
                 }),
-              5,
+              MAX_RETRY,
               {
                 logger: consola
               }
@@ -313,7 +315,7 @@ export const getNovel = memo(
                     }
                   }
                 }),
-              5,
+              MAX_RETRY,
               {
                 logger: consola
               }
@@ -392,7 +394,7 @@ export const getNovelVolume = memo(
                     }
                   }
                 }),
-              5,
+              MAX_RETRY,
               {
                 logger: consola
               }
@@ -457,7 +459,7 @@ export const getNovelChapter = memo(
                   transformBbcode: true,
                   transformImgSrc: buildSite(c, '/bili/img3/')
                 }),
-              5,
+              MAX_RETRY,
               {
                 logger: consola
               }
