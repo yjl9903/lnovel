@@ -22,6 +22,7 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../browser';
 
 import { consola } from './utils';
+import { setFoloFeedId } from '../folo';
 
 const MAX_RETRY = 1;
 
@@ -141,6 +142,7 @@ export const getWenku = memo(
               for (const item of resp.items) {
                 await waitBrowserIdle();
                 await getNovel(c, '' + item.nid);
+                await setFoloFeedId(buildSite(c, `/bili/novel/${item.nid}/feed.xml`))
                 await sleep(30 * 1000 + 60 * 1000 * Math.random());
               }
             }, 1000);
