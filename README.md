@@ -1,33 +1,23 @@
 # 📚 lnovel
 
-[![version](https://img.shields.io/npm/v/lnovel?color=rgb%2850%2C203%2C86%29&label=lnovel)](https://www.npmjs.com/package/lnovel) [![CI](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml/badge.svg)](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml)
+[![version](https://img.shields.io/npm/v/lnovel?color=rgb%2850%2C203%2C86%29&label=lnovel)](https://www.npmjs.com/package/lnovel)
+[![CI](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml/badge.svg)](https://github.com/yjl9903/lnovel/actions/workflows/ci.yml)
 
-Scrapes light novels from various websites and converts them into EPUB format e-books powered by [epubook](https://github.com/yjl9903/epubook).
-
-Supported platforms:
-
-+ [x] [轻小说文库](https://www.wenku8.net/)
-+ [ ] ...
-
-[![asciicast](https://asciinema.org/a/Cw6k3mFev3Ygs8AHuL9FODVZq.svg)](https://asciinema.org/a/Cw6k3mFev3Ygs8AHuL9FODVZq)
-
-> You can find generated epub demo [here](./assets/)
-
-## Installation
-
-```bash
-npm i -g lnovel
-```
+从哔哩轻小说、轻小说文库等站点抓取轻小说.
 
 ## Usage
 
-```bash
-lnovel 关于邻家的天使大人不知不觉把我惯成了废人这档子事 -y
-```
+你可以直接使用 RSS 订阅.
+
++ [哔哩轻小说月点击榜](https://app.folo.is/share/feeds/231049696759276544)
++ [哔哩轻小说 最新更新 · 日本轻小说](https://app.folo.is/share/feeds/221271104769934336)
++ [玩乐关系 第一卷](https://app.folo.is/share/feeds/221261512296504320)
++ [玩乐关系 第二卷](https://app.folo.is/share/feeds/221261641856653312)
 
 ## Credits
 
 + [轻小说文库](https://www.wenku8.net/)
++ [哔哩轻小说](https://www.linovelib.com/)
 + [Messiahhh/wenku8-downloader](https://github.com/Messiahhh/wenku8-downloader): 轻小说文库的命令行小说下载器
 
 ## License
