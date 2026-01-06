@@ -23,7 +23,14 @@ import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../b
 
 import { consola } from './utils';
 
-const browser = launchBrowser();
+const browser = launchBrowser({
+  headless: true,
+  args: [
+    '--disable-blink-features=AutomationControlled',
+    '--no-sandbox',
+    '--disable-setuid-sandbox'
+  ]
+});
 
 const wenkuCache = new LRUCache<string, Awaited<ReturnType<typeof fetchWenkuPage>> & {}>({
   max: 1000,

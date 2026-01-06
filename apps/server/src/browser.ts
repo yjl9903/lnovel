@@ -13,6 +13,8 @@ import { chromium, devices } from 'playwright-extra';
 import pLimit from 'p-limit';
 import { LRUCache } from 'lru-cache';
 
+const limit = pLimit(1);
+
 const consola = createConsola().withTag('browser');
 
 chromium.use(stealth());
@@ -32,8 +34,6 @@ export function connectBrowserOverCDP(
   return chromium.connectOverCDP(wsEndpointOrOptions, wsOptions);
 }
 
-const limit = pLimit(1);
-
 export async function runBrowserContext<T>(
   browserPromise: Browser | Promise<Browser>,
   fn: (context: BrowserContext) => Promise<T>,
@@ -46,7 +46,7 @@ export async function runBrowserContext<T>(
       const context = await browser.newContext({
         locale: 'zh-CN',
         timezoneId: 'Asia/Shanghai',
-        ...devices['iPhone 13 Pro Max'],
+        ...devices['iPad Pro 11'],
         ...options
       });
 
