@@ -158,7 +158,7 @@ export async function runBrowserContextWithCache<T extends {}>(
                   consola.log('Receive from flaresolverr', {
                     url: solution.url,
                     status: solution.status,
-                    cookies: solution.cookies,
+                    cookies: solution.cookies.map((c: any) => c.name),
                     userAgent: solution.userAgent
                   });
 
