@@ -590,9 +590,11 @@ export const getNovelChapterByDatabase = async (
 
 export async function triggerUpdateNovels(c: Context, nids: number[]) {
   for (const nid of nids) {
-    await waitBrowserIdle();
-    await getNovel(c, '' + nid);
-    await sleep(30 * 1000 + 60 * 1000 * Math.random());
+    try {
+      await waitBrowserIdle();
+      await getNovel(c, '' + nid);
+      await sleep(30 * 1000 + 60 * 1000 * Math.random());
+    } catch {}
   }
 }
 
