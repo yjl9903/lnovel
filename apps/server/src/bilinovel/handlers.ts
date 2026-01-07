@@ -98,9 +98,6 @@ function getTopFilterKey(filter: BilinovelFetchTopFilter) {
   return 'bilinovel:top:' + entries.sort().join('&');
 }
 
-// 正在运行的异步拉取任务 id
-const runningTasks = new Set<string>();
-
 export const getWenku = memo(
   async (c: Context, filter: BilinovelFetchWenkuFilter) => {
     try {
@@ -141,17 +138,10 @@ export const getWenku = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = getWenkuFilterKey(filter);
-              if (runningTasks.has(key)) return;
-              try {
-                runningTasks.add(key);
-                await triggerUpdateNovels(
-                  c,
-                  resp.items.map((item) => item.nid)
-                );
-              } finally {
-                runningTasks.delete(key);
-              }
+              await triggerUpdateNovels(
+                c,
+                resp.items.map((item) => item.nid)
+              );
             }, 1000);
 
             return resp;
@@ -235,17 +225,10 @@ export const getTop = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = getTopFilterKey(filter);
-              if (runningTasks.has(key)) return;
-              try {
-                runningTasks.add(key);
-                await triggerUpdateNovels(
-                  c,
-                  resp.items.map((item) => item.nid)
-                );
-              } finally {
-                runningTasks.delete(key);
-              }
+              await triggerUpdateNovels(
+                c,
+                resp.items.map((item) => item.nid)
+              );
             }, 1000);
 
             return resp;
@@ -588,14 +571,31 @@ export const getNovelChapterByDatabase = async (
   return undefined;
 };
 
+let pending: Promise<void> | undefined;
+const pendingNids: number[] = [];
 export async function triggerUpdateNovels(c: Context, nids: number[]) {
   for (const nid of nids) {
-    try {
-      await waitBrowserIdle();
-      await getNovel(c, '' + nid);
-      await sleep(30 * 1000 + 60 * 1000 * Math.random());
-    } catch {}
+    if (!pendingNids.includes(nid)) {
+      pendingNids.push(nid);
+    }
   }
+
+  if (!pending) {
+    pending = new Promise(async (res) => {
+      for (let i = 0; i < pendingNids.length; i++) {
+        try {
+          const nid = pendingNids[i];
+          await waitBrowserIdle();
+          await getNovel(c, '' + nid);
+          await sleep(30 * 1000 + 30 * 1000 * Math.random());
+        } catch {}
+      }
+      pending = undefined
+      pendingNids.splice(0, pendingNids.length);
+      res();
+    });
+  }
+  await pending;
 }
 
 export const triggerUpdateNovel = memo(
