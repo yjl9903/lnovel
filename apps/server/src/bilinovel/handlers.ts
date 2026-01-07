@@ -17,12 +17,12 @@ import {
 import type { Context } from '../app';
 
 import { database } from '../database';
+import { setFoloFeedId } from '../folo';
 import { buildSite, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../browser';
 
 import { consola } from './utils';
-import { setFoloFeedId } from '../folo';
 
 const MAX_RETRY = 1;
 
@@ -99,7 +99,7 @@ function getTopFilterKey(filter: BilinovelFetchTopFilter) {
 }
 
 // 正在运行的异步拉取任务 id
-const runningTasks = new Set<string>()
+const runningTasks = new Set<string>();
 
 export const getWenku = memo(
   async (c: Context, filter: BilinovelFetchWenkuFilter) => {
@@ -142,16 +142,16 @@ export const getWenku = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = 'wenku:' + getWenkuFilterKey(filter)
-              if (runningTasks.has(key)) return
+              const key = 'wenku:' + getWenkuFilterKey(filter);
+              if (runningTasks.has(key)) return;
               try {
-                runningTasks.add(key)
+                runningTasks.add(key);
                 await triggerUpdateNovels(
                   c,
                   resp.items.map((item) => item.nid)
                 );
               } finally {
-                runningTasks.delete(key)
+                runningTasks.delete(key);
               }
             }, 1000);
 
@@ -236,16 +236,16 @@ export const getTop = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = 'top:' + getTopFilterKey(filter)
-              if (runningTasks.has(key)) return
+              const key = 'top:' + getTopFilterKey(filter);
+              if (runningTasks.has(key)) return;
               try {
-                runningTasks.add(key)
+                runningTasks.add(key);
                 await triggerUpdateNovels(
                   c,
                   resp.items.map((item) => item.nid)
                 );
               } finally {
-                runningTasks.delete(key)
+                runningTasks.delete(key);
               }
             }, 1000);
 
@@ -292,13 +292,7 @@ export const getTop = memo(
 async function triggerUpdateNovels(c: Context, nids: number[]) {
   for (const nid of nids) {
     await waitBrowserIdle();
-    const novel = await getNovel(c, '' + nid);
-    if (novel.data) {
-      await setFoloFeedId(buildSite(c, `/bili/novel/${nid}/feed.xml`));
-      for (const vol of novel.data.volumes) {
-        await setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`));
-      }
-    }
+    await getNovel(c, '' + nid);
     await sleep(30 * 1000 + 60 * 1000 * Math.random());
   }
 }
@@ -619,21 +613,13 @@ export const triggerUpdateNovel = memo(
 
     consola.log(`Start updating novel to database`, nid, novel.name, novel.updatedAt.toISOString());
 
-    await database
-      .insert(biliNovels)
-      .values({
-        nid: +nid,
-        name: novel.name,
-        description: novel.description,
-        cover: novel.cover,
-        labels: novel.labels,
-        updatedAt: novel.updatedAt,
-        done: false,
-        fetchedAt: new Date()
-      })
-      .onConflictDoUpdate({
-        target: biliNovels.nid,
-        set: {
+    let failed = 0;
+
+    try {
+      await database
+        .insert(biliNovels)
+        .values({
+          nid: +nid,
           name: novel.name,
           description: novel.description,
           cover: novel.cover,
@@ -641,84 +627,108 @@ export const triggerUpdateNovel = memo(
           updatedAt: novel.updatedAt,
           done: false,
           fetchedAt: new Date()
-        }
-      });
-
-    let error = 0;
-
-    for (const vol of novel.volumes) {
-      await waitBrowserIdle(5);
-
-      await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
-
-      const resp = await getNovelVolume(c, nid, '' + vol.vid);
-
-      if (resp.ok) {
-        const { data: volume } = resp;
-
-        await database
-          .insert(biliVolumes)
-          .values({
-            vid: vol.vid,
-            nid: +nid,
-            name: vol.title,
-            volume: vol.volume,
-            description: volume.description,
-            cover: vol.cover,
-            labels: volume.labels,
-            updatedAt: volume.updatedAt,
+        })
+        .onConflictDoUpdate({
+          target: biliNovels.nid,
+          set: {
+            name: novel.name,
+            description: novel.description,
+            cover: novel.cover,
+            labels: novel.labels,
+            updatedAt: novel.updatedAt,
+            done: false,
             fetchedAt: new Date()
-          })
-          .onConflictDoUpdate({
-            target: biliVolumes.vid,
-            set: {
+          }
+        });
+
+      // 异步更新 foloId
+      setFoloFeedId(buildSite(c, `/bili/novel/${nid}/feed.xml`));
+
+      for (const vol of novel.volumes) {
+        await waitBrowserIdle(5);
+
+        await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
+
+        const resp = await getNovelVolume(c, nid, '' + vol.vid);
+
+        if (resp.ok) {
+          const { data: volume } = resp;
+
+          await database
+            .insert(biliVolumes)
+            .values({
+              vid: vol.vid,
+              nid: +nid,
               name: vol.title,
               volume: vol.volume,
               description: volume.description,
               cover: vol.cover,
+              labels: volume.labels,
               updatedAt: volume.updatedAt,
               fetchedAt: new Date()
-            }
-          });
-
-        for (const ch of volume.chapters) {
-          await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
-
-          const resp = await getNovelChapter(c, nid, '' + ch.cid);
-
-          if (resp.ok) {
-            const { data: chapter } = resp;
-
-            await database
-              .insert(biliChapters)
-              .values({
-                cid: ch.cid,
-                vid: vol.vid,
-                nid: +nid,
-                title: ch.title,
-                content: chapter.content,
-                images: chapter.images,
+            })
+            .onConflictDoUpdate({
+              target: biliVolumes.vid,
+              set: {
+                name: vol.title,
+                volume: vol.volume,
+                description: volume.description,
+                cover: vol.cover,
+                updatedAt: volume.updatedAt,
                 fetchedAt: new Date()
-              })
-              .onConflictDoUpdate({
-                target: biliChapters.cid,
-                set: {
+              }
+            });
+
+          for (const ch of volume.chapters) {
+            await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
+
+            const resp = await getNovelChapter(c, nid, '' + ch.cid);
+
+            if (resp.ok) {
+              const { data: chapter } = resp;
+
+              await database
+                .insert(biliChapters)
+                .values({
+                  cid: ch.cid,
+                  vid: vol.vid,
+                  nid: +nid,
                   title: ch.title,
                   content: chapter.content,
                   images: chapter.images,
                   fetchedAt: new Date()
-                }
-              });
-          } else {
-            error++;
+                })
+                .onConflictDoUpdate({
+                  target: biliChapters.cid,
+                  set: {
+                    title: ch.title,
+                    content: chapter.content,
+                    images: chapter.images,
+                    fetchedAt: new Date()
+                  }
+                });
+            } else {
+              failed++;
+            }
           }
+
+          // 异步更新 foloId
+          setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`));
+        } else {
+          failed++;
         }
-      } else {
-        error++;
       }
+    } catch (error) {
+      consola.log(
+        `Failed updating novel to database`,
+        nid,
+        novel.name,
+        novel.updatedAt.toISOString(),
+        error
+      );
     }
 
-    if (error === 0) {
+    if (failed === 0) {
       await database.update(biliNovels).set({ done: true }).where(eq(biliNovels.nid, +nid));
 
       consola.log(
@@ -732,8 +742,7 @@ export const triggerUpdateNovel = memo(
         `Failed updating novel to database`,
         nid,
         novel.name,
-        novel.updatedAt.toISOString(),
-        error
+        novel.updatedAt.toISOString()
       );
     }
   },
