@@ -98,6 +98,9 @@ function getTopFilterKey(filter: BilinovelFetchTopFilter) {
   return entries.sort().join('&');
 }
 
+// 正在运行的异步拉取任务 id
+const runningTasks = new Set<string>()
+
 export const getWenku = memo(
   async (c: Context, filter: BilinovelFetchWenkuFilter) => {
     try {
@@ -139,10 +142,17 @@ export const getWenku = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              await triggerUpdateNovels(
-                c,
-                resp.items.map((item) => item.nid)
-              );
+              const key = 'wenku:' + getWenkuFilterKey(filter)
+              if (runningTasks.has(key)) return
+              try {
+                runningTasks.add(key)
+                await triggerUpdateNovels(
+                  c,
+                  resp.items.map((item) => item.nid)
+                );
+              } finally {
+                runningTasks.delete(key)
+              }
             }, 1000);
 
             return resp;
@@ -226,10 +236,17 @@ export const getTop = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              await triggerUpdateNovels(
-                c,
-                resp.items.map((item) => item.nid)
-              );
+              const key = 'top:' + getTopFilterKey(filter)
+              if (runningTasks.has(key)) return
+              try {
+                runningTasks.add(key)
+                await triggerUpdateNovels(
+                  c,
+                  resp.items.map((item) => item.nid)
+                );
+              } finally {
+                runningTasks.delete(key)
+              }
             }, 1000);
 
             return resp;
