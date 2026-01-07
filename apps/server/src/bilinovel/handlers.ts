@@ -20,7 +20,7 @@ import { database } from '../database';
 import { setFoloFeedId } from '../folo';
 import { buildSite, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
-import { launchBrowser, runBrowserContextWithCache, waitBrowserIdle } from '../browser';
+import { launchBrowser, runBrowserContext, waitBrowserIdle } from '../browser';
 
 import { consola } from './utils';
 
@@ -90,12 +90,12 @@ function memo<F extends (...args: any[]) => Promise<any>>(
 
 function getWenkuFilterKey(filter: BilinovelFetchWenkuFilter) {
   const entries = Object.entries(filter).map(([k, v]) => `${k}=${v}`);
-  return entries.sort().join('&');
+  return 'bilinovel:wenku:' + entries.sort().join('&');
 }
 
 function getTopFilterKey(filter: BilinovelFetchTopFilter) {
   const entries = Object.entries(filter).map(([k, v]) => `${k}=${v}`);
-  return entries.sort().join('&');
+  return 'bilinovel:top:' + entries.sort().join('&');
 }
 
 // 正在运行的异步拉取任务 id
@@ -104,9 +104,8 @@ const runningTasks = new Set<string>();
 export const getWenku = memo(
   async (c: Context, filter: BilinovelFetchWenkuFilter) => {
     try {
-      const data = await runBrowserContextWithCache(
+      const data = await runBrowserContext(
         browser,
-        wenkuCache,
         getWenkuFilterKey(filter),
         async (context) => {
           try {
@@ -142,7 +141,7 @@ export const getWenku = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = 'wenku:' + getWenkuFilterKey(filter);
+              const key = getWenkuFilterKey(filter);
               if (runningTasks.has(key)) return;
               try {
                 runningTasks.add(key);
@@ -163,6 +162,7 @@ export const getWenku = memo(
           }
         },
         {
+          cache: wenkuCache,
           maxRetry: MAX_RETRY
         }
       );
@@ -198,9 +198,8 @@ export const getWenku = memo(
 export const getTop = memo(
   async (c: Context, filter: BilinovelFetchTopFilter) => {
     try {
-      const data = await runBrowserContextWithCache(
+      const data = await runBrowserContext(
         browser,
-        topCache,
         getTopFilterKey(filter),
         async (context) => {
           try {
@@ -236,7 +235,7 @@ export const getTop = memo(
 
             // 延迟拉取所有 novel
             setTimeout(async () => {
-              const key = 'top:' + getTopFilterKey(filter);
+              const key = getTopFilterKey(filter);
               if (runningTasks.has(key)) return;
               try {
                 runningTasks.add(key);
@@ -257,6 +256,7 @@ export const getTop = memo(
           }
         },
         {
+          cache: topCache,
           maxRetry: MAX_RETRY
         }
       );
@@ -289,21 +289,12 @@ export const getTop = memo(
   }
 );
 
-async function triggerUpdateNovels(c: Context, nids: number[]) {
-  for (const nid of nids) {
-    await waitBrowserIdle();
-    await getNovel(c, '' + nid);
-    await sleep(30 * 1000 + 60 * 1000 * Math.random());
-  }
-}
-
 export const getNovel = memo(
   async (c: Context, nid: string) => {
     try {
-      const data = await runBrowserContextWithCache(
+      const data = await runBrowserContext(
         browser,
-        novelCache,
-        `${nid}`,
+        `bilinovel:novel:${nid}`,
         async (context) => {
           try {
             consola.log(`Start fetching novel page`, `nid:${nid}`);
@@ -340,6 +331,7 @@ export const getNovel = memo(
           }
         },
         {
+          cache: novelCache,
           maxRetry: MAX_RETRY
         }
       );
@@ -375,10 +367,9 @@ export const getNovel = memo(
 export const getNovelVolume = memo(
   async (c: Context, nid: string, vid: string) => {
     try {
-      const data = await runBrowserContextWithCache(
+      const data = await runBrowserContext(
         browser,
-        volCache,
-        `${nid}/vol_${vid}`,
+        `bilinovel:novel:${nid}:vol:${vid}`,
         async (context) => {
           try {
             consola.log(`Start fetching novel volume page`, `nid:${nid}`, `vid:${vid}`);
@@ -420,6 +411,7 @@ export const getNovelVolume = memo(
           }
         },
         {
+          cache: volCache,
           maxRetry: MAX_RETRY
         }
       );
@@ -453,10 +445,9 @@ export const getNovelVolume = memo(
 export const getNovelChapter = memo(
   async (c: Context, nid: string, cid: string) => {
     try {
-      const data = await runBrowserContextWithCache(
+      const data = await runBrowserContext(
         browser,
-        chapterCache,
-        `${nid}/${cid}`,
+        `bilinovel:novel:${nid}:chapter:${cid}`,
         async (context) => {
           try {
             consola.log(`Start fetching novel chapter page`, `nid:${nid}`, `cid:${cid}`);
@@ -481,6 +472,7 @@ export const getNovelChapter = memo(
           }
         },
         {
+          cache: chapterCache,
           maxRetry: MAX_RETRY
         }
       );
@@ -538,6 +530,11 @@ export const getNovelByDatabase = async (nid: string): Promise<NovelPageResult |
   return undefined;
 };
 
+export const getPendingNovels = async () => {
+  const novels = await database.select().from(biliNovels).where(eq(biliNovels.done, false));
+  return novels;
+};
+
 export const getNovelVolumeByDatabase = async (
   nid: string,
   vid: string
@@ -590,6 +587,14 @@ export const getNovelChapterByDatabase = async (
 
   return undefined;
 };
+
+export async function triggerUpdateNovels(c: Context, nids: number[]) {
+  for (const nid of nids) {
+    await waitBrowserIdle();
+    await getNovel(c, '' + nid);
+    await sleep(30 * 1000 + 60 * 1000 * Math.random());
+  }
+}
 
 export const triggerUpdateNovel = memo(
   async (c: Context, nid: string, novel: NovelPageResult) => {

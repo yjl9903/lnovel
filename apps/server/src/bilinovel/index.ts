@@ -14,7 +14,7 @@ import type { AppEnv, Context } from '../app';
 import { Provider } from '../constants';
 import { buildSite, getFeedURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
-import { FOLLOW_USER_ID, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
+import { getFoloUserId, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
 import { consola, normalizeDescription } from './utils';
 import {
@@ -25,7 +25,9 @@ import {
   getNovelVolumeByDatabase,
   getNovelChapterByDatabase,
   getWenku,
-  getTop
+  getTop,
+  getPendingNovels,
+  triggerUpdateNovels
 } from './handlers';
 
 export const app = new Hono<AppEnv>();
@@ -202,7 +204,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
       items,
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: FOLLOW_USER_ID
+        userId: getFoloUserId()
       }
     });
   } else {
@@ -252,7 +254,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
       items,
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: FOLLOW_USER_ID
+        userId: getFoloUserId()
       }
     });
   } else {
@@ -301,7 +303,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       items,
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: FOLLOW_USER_ID
+        userId: getFoloUserId()
       }
     });
   } else {
@@ -387,7 +389,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       })),
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: FOLLOW_USER_ID
+        userId: getFoloUserId()
       }
     });
   } else {
@@ -423,7 +425,7 @@ app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
       ],
       follow: {
         feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: FOLLOW_USER_ID
+        userId: getFoloUserId()
       }
     });
   } else {
@@ -447,6 +449,26 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
       }
     }, 1000);
   });
+}
+
+export async function updatePendingNovels(c: Context) {
+  const now = new Date().toLocaleString();
+  try {
+    const novels = await getPendingNovels();
+    consola.log(
+      'Trigger updating pending novels',
+      now,
+      novels.map((n) => ({ nid: n.nid, name: n.name }))
+    );
+    await triggerUpdateNovels(
+      c,
+      novels.map((n) => n.nid)
+    );
+  } catch (error) {
+    consola.error('Failed updating pending novels', now, error);
+  } finally {
+    consola.log('Finish updating pending novels', now);
+  }
 }
 
 app.get('/files/*', async (c: Context) => {

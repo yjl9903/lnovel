@@ -24,7 +24,7 @@ export async function connectDatabase(file: string): Promise<
     }
   });
 
-  migrateDatabase(database);
+  await migrateDatabase(database);
 
   return database;
 }
@@ -33,4 +33,6 @@ export async function migrateDatabase(database: Awaited<ReturnType<typeof connec
   migrate(database, { migrationsFolder: path.resolve(import.meta.dirname, '../drizzle/') });
 }
 
-export const database = await connectDatabase(process.env.DATABASE_FILE || 'lnovel.db');
+const databaseFile = process.env.DATABASE_FILE || 'lnovel.db';
+
+export const database = await connectDatabase(databaseFile);

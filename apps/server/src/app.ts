@@ -2,10 +2,12 @@ import { type Context as HonoContext, Hono } from 'hono';
 import { type HttpBindings } from '@hono/node-server';
 import { logger } from 'hono/logger';
 import { prettyJSON } from 'hono/pretty-json';
+import { HTTPException } from 'hono/http-exception';
+import { Cron } from 'croner';
 import { createConsola } from 'consola';
 
-import { app as bilinovel } from './bilinovel';
-import { HTTPException } from 'hono/http-exception';
+import { app as browser } from './browser';
+import { app as bilinovel, updatePendingNovels } from './bilinovel';
 
 export const consola = createConsola().withTag('server');
 
@@ -23,7 +25,7 @@ export type AppEnv = {
 
 export type Context = HonoContext<AppEnv>;
 
-export function createApp() {
+function createHono() {
   const app = new Hono<AppEnv>();
 
   app.use('*', async (c, next) => {
@@ -88,21 +90,41 @@ export function createApp() {
     })
   );
 
+  return app;
+}
+
+export function createApp() {
+  const app = createHono();
+
   app.route('/bili/', bilinovel);
 
-  app.get('/html/', async (c) => {
-    // const searchParams = new URL(c.req.url).searchParams;
-    // const url = new URL(searchParams.get('url')!).toString();
-    // const html = await launchBrowser(c, async (page) => {
-    //   const resp = await page.goto(url);
-    //   console.log('[browser]', resp!.request().headers(), page.viewport(), await page.cookies());
-    //   return await page.content();
-    // });
-    // return c.json({
-    //   ok: true,
-    //   html
-    // });
-  });
+  app.route('/browser/', browser);
 
   return app;
+}
+
+export async function startCron() {
+  const app = createHono();
+
+  app.post('/bili/_/cron', async (c) => {
+    try {
+      await updatePendingNovels(c);
+      return c.json({ ok: true });
+    } catch (error) {
+      consola.error(error);
+      return c.json({ ok: false });
+    }
+  });
+
+  new Cron('0 * * * *', { timezone: 'Asia/Shanghai', protect: true }, async () => {
+    try {
+      const req = new Request(`https://lnovel.animes.garden/bili/_/cron`, {
+        method: 'POST'
+      });
+      const res = await app.fetch(req);
+      await res.json();
+    } catch (error) {
+      consola.error(error);
+    }
+  });
 }

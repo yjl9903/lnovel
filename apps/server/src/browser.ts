@@ -9,18 +9,46 @@ import type {
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { chromium, devices } from 'playwright-extra';
 import pLimit from 'p-limit';
+import { Hono } from 'hono';
 import { LRUCache } from 'lru-cache';
 import { createConsola } from 'consola';
 
 import { CloudflareError } from 'bilinovel';
 
-import { type RetryOptions, sleep } from './utils';
+import type { AppEnv } from './app';
+
+import { sleep } from './utils';
+import { TaskManager, Task } from './task';
 
 const limit = pLimit(1);
 
 const consola = createConsola().withTag('browser');
 
 chromium.use(stealth());
+
+export const browserTaskManager = new TaskManager();
+
+export type BrowserTask = Task<{}>;
+
+export const app = new Hono<AppEnv>();
+
+app.get('/tasks', async (c) => {
+  return c.json({
+    ok: true,
+    tasks: (await browserTaskManager.getRunningTasks()).map((t) => t.toJSON())
+  });
+});
+
+app.post('/task/abort', async (c) => {
+  const key = new URL(c.req.url).searchParams.get('key');
+
+  const aborted = key ? await browserTaskManager.abort(key) : false;
+
+  return c.json({
+    ok: aborted,
+    key
+  });
+});
 
 export async function launchBrowser(options?: LaunchOptions | undefined) {
   if (process.env.CHROMIUM_USER_DIR) {
@@ -46,53 +74,29 @@ export function connectBrowserOverCDP(
   return chromium.connectOverCDP(wsEndpointOrOptions, wsOptions);
 }
 
-export async function runBrowserContext<T>(
+export async function runBrowserContext<T extends {}>(
   browserPromise: Browser | Promise<Browser>,
-  fn: (context: BrowserContext) => Promise<T>,
-  options?: BrowserContextOptions | undefined
-) {
-  const browser = await browserPromise;
-
-  return new Promise<T>(async (res, rej) => {
-    await limit(async () => {
-      const context = await browser.newContext({
-        locale: 'zh-CN',
-        timezoneId: 'Asia/Shanghai',
-        ...devices['Desktop Chrome HiDPI'],
-        ...options,
-        userAgent:
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
-      });
-
-      try {
-        const result = await fn(context);
-        res(result);
-      } catch (error) {
-        rej(error);
-      } finally {
-        await context.close().catch(() => {});
-      }
-    });
-  });
-}
-
-export async function runBrowserContextWithCache<T extends {}>(
-  browserPromise: Browser | Promise<Browser>,
-  cache: LRUCache<string, Awaited<T>>,
   key: string,
-  fn: (context: BrowserContext) => Promise<Awaited<T> | null | undefined>,
+  fn: (context: BrowserContext, task: BrowserTask) => Promise<Awaited<T> | null | undefined>,
   options: {
+    cache?: LRUCache<string, Awaited<T>>;
     context?: BrowserContextOptions | undefined;
     maxRetry?: number;
   } = {}
 ) {
-  const result = await cache.get(key);
+  const result = await options.cache?.get(key);
   if (result !== undefined && result !== null) return result;
 
   const browser = await browserPromise;
 
   return new Promise<Awaited<T> | null | undefined>(async (res, rej) => {
+    const task = await browserTaskManager.register(key, {});
+
     await limit(async () => {
+      if (task.aborted) rej(new Error(`Task "${key}" is aborted`));
+
+      await task.start();
+
       let context = await browser.newContext({
         locale: 'zh-CN',
         timezoneId: 'Asia/Shanghai',
@@ -114,17 +118,23 @@ export async function runBrowserContextWithCache<T extends {}>(
 
       for (let turn = 0; turn < MAX_RETRY; turn++) {
         try {
-          const result = await fn(context);
+          if (task.aborted) break;
+
+          const result = await fn(context, task);
           if (result !== undefined && result !== null) {
-            cache.set(key, result);
+            options.cache?.set(key, result);
           }
 
+          await task.finish();
           await context.close().catch(() => {});
+
           res(result);
 
           return;
         } catch (_error) {
           error = _error;
+
+          if (task.aborted) break;
 
           const FLARESOLVERR_URL = process.env.FLARESOLVERR_URL;
           if (
@@ -202,6 +212,7 @@ export async function runBrowserContextWithCache<T extends {}>(
         }
       }
 
+      await task.finish();
       await context.close().catch(() => {});
 
       rej(error ? error : new Error('failed after retry'));
@@ -209,13 +220,13 @@ export async function runBrowserContextWithCache<T extends {}>(
   });
 }
 
-export async function waitBrowserIdle(threshold: number = 0) {
+export async function waitBrowserIdle(threshold: number = 0, timeout = 1000) {
   return new Promise<void>((res) => {
     const waiting = () => {
       if (limit.pendingCount <= threshold) {
         res();
       } else {
-        setTimeout(waiting, 1000);
+        setTimeout(waiting, timeout);
       }
     };
     waiting();

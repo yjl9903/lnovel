@@ -6,10 +6,12 @@ import { database } from './database';
 
 const consola = createConsola().withTag('folo');
 
-export const FOLLOW_USER_ID = '41508082357911552';
-
 export function getFoloShareURL(feedId: string) {
   return `https://app.folo.is/share/feeds/${feedId}`;
+}
+
+export function getFoloUserId() {
+  return process.env.FOLLOW_USER_ID || '41508082357911552';
 }
 
 export async function getFoloFeedId(url: string) {

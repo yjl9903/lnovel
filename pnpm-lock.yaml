@@ -74,6 +74,9 @@ importers:
       consola:
         specifier: 3.4.2
         version: 3.4.2
+      croner:
+        specifier: 9.1.0
+        version: 9.1.0
       dotenv:
         specifier: 17.2.3
         version: 17.2.3
@@ -1298,6 +1301,10 @@ packages:
 
   cookie-es@1.2.2:
     resolution: {integrity: sha512-+W7VmiVINB+ywl1HGXJXmrqkOhpKrIiVZV6tQuV54ZyQC7MMuBt81Vc336GMLoHBq5hV/F9eXgt5Mnx0Rha5Fg==}
+
+  croner@9.1.0:
+    resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
+    engines: {node: '>=18.0'}
 
   crossws@0.3.5:
     resolution: {integrity: sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==}
@@ -3672,6 +3679,8 @@ snapshots:
   consola@3.4.2: {}
 
   cookie-es@1.2.2: {}
+
+  croner@9.1.0: {}
 
   crossws@0.3.5:
     dependencies:

@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import 'dotenv/config';
+
 import {
   launchBrowser,
   // connectBrowserOverCDP,
@@ -22,20 +24,18 @@ const browser = launchBrowser();
 
 await fs.mkdir('./.data/').catch(() => {});
 
-const { volumes } = await runBrowserContext(browser, async (ctx) => {
+await runBrowserContext(browser, 'novel', async (ctx) => {
   console.log('chrome has been connected...');
 
   const novel = await fetchNovelPage(ctx, nid);
   console.log(novel);
 
-  const volumes = await Promise.all(
-    (novel?.volumes ?? []).map(async (volume) => await fetchNovelVolumePage(ctx, nid, volume.vid))
-  );
+  const volumes = (
+    await Promise.all(
+      (novel?.volumes ?? []).map(async (volume) => await fetchNovelVolumePage(ctx, nid, volume.vid))
+    )
+  ).filter(Boolean);
 
-  return { novel, volumes: volumes.filter(Boolean) };
-});
-
-await runBrowserContext(browser, async (ctx) => {
   for (const info of volumes) {
     if (!info) continue;
 
