@@ -93,7 +93,10 @@ export async function runBrowserContext<T extends {}>(
     const task = await browserTaskManager.register(key, {});
 
     await limit(async () => {
-      if (task.aborted) rej(new Error(`Task "${key}" is aborted`));
+      if (task.aborted) {
+        rej(new Error(`Task "${key}" is aborted`));
+        return;
+      }
 
       await task.start();
 
@@ -215,7 +218,13 @@ export async function runBrowserContext<T extends {}>(
       await task.finish();
       await context.close().catch(() => {});
 
-      rej(error ? error : new Error('failed after retry'));
+      rej(
+        error
+          ? error
+          : task.aborted
+            ? new Error(`Task "${key}" is aborted`)
+            : new Error('failed after retry')
+      );
     });
   });
 }

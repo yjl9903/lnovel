@@ -590,7 +590,7 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
           await sleep(30 * 1000 + 30 * 1000 * Math.random());
         } catch {}
       }
-      pending = undefined
+      pending = undefined;
       pendingNids.splice(0, pendingNids.length);
       res();
     });
