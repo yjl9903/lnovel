@@ -397,42 +397,6 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   }
 });
 
-app.get('/novel/:nid/chapter/:cid/feed.xml', async (c: Context) => {
-  const nid = c.req.param('nid');
-  const cid = c.req.param('cid');
-
-  const [resp, novel] = await Promise.all([getNovelChapter(c, nid, cid), getNovel(c, nid)]);
-
-  if (resp.ok && novel.ok) {
-    const { data } = resp;
-    const title = data.title || `Chapter ${cid}`;
-
-    updateNovelAndFeedId(c, nid);
-
-    return getFeedResponse(c, {
-      title,
-      description: normalizeDescription(title),
-      link: `https://www.linovelib.com/novel/${nid}/${cid}.html`,
-      rssLink: buildSite(c, `/bili/novel/${nid}/chapter/${cid}/feed.xml`),
-      items: [
-        {
-          title,
-          id: `/bili/novel/${nid}/chapter/${cid}`,
-          link: `https://www.linovelib.com/novel/${nid}/${cid}.html`,
-          date: new Date(novel.data.updatedAt),
-          content: data.content
-        }
-      ],
-      follow: {
-        feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: getFoloUserId()
-      }
-    });
-  } else {
-    return c.text(`${resp.message}`, resp.status);
-  }
-});
-
 async function updateNovelAndFeedId(c: Context, nid: string) {
   return new Promise<void>((res) => {
     setTimeout(async () => {

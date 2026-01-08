@@ -1,17 +1,26 @@
-###
+### Health check
 GET https://lnovel.animes.garden
 
-###
-GET https://lnovel.animes.garden/bili/
+### Get browser tasks
+GET https://lnovel.animes.garden/browser/tasks
 
-###
+### Get top novels
+GET https://lnovel.animes.garden/bili/top/weekvisit
+
+### Get top novels feed
+GET https://lnovel.animes.garden/bili/top/weekvisit/feed.xml
+
+### Get novel info
 GET https://lnovel.animes.garden/bili/novel/4649
 
-###
+### Get novel feed
+GET https://lnovel.animes.garden/bili/novel/4649/feed.xml
+
+### Get novel volume info
 GET https://lnovel.animes.garden/bili/novel/4649/vol/274116
 
-###
-GET https://lnovel.animes.garden/bili/novel/4649/chapter/274117
+### Get novel volume feed
+GET https://lnovel.animes.garden/bili/novel/4649/vol/274116/feed.xml
 
-###
-GET https://lnovel.animes.garden/bili/novel/4649/chapter/274118
+### Get novel chapter
+GET https://lnovel.animes.garden/bili/novel/4649/chapter/274117
