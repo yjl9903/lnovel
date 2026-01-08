@@ -611,14 +611,19 @@ export const triggerUpdateNovel = memo(
     ) {
       consola.log(
         `Skip updating novel to database`,
-        nid,
+        `nid:${nid}`,
         novel.name,
         novel.updatedAt.toISOString()
       );
       return;
     }
 
-    consola.log(`Start updating novel to database`, nid, novel.name, novel.updatedAt.toISOString());
+    consola.log(
+      `Start updating novel to database`,
+      `nid:${nid}`,
+      novel.name,
+      novel.updatedAt.toLocaleString()
+    );
 
     let failed = 0;
 
@@ -651,42 +656,69 @@ export const triggerUpdateNovel = memo(
       // 异步更新 foloId
       setFoloFeedId(buildSite(c, `/bili/novel/${nid}/feed.xml`));
 
-      for (const vol of novel.volumes) {
+      for (const novelVolume of novel.volumes) {
         await waitBrowserIdle(5);
 
         await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
 
-        const resp = await getNovelVolume(c, nid, '' + vol.vid);
+        const vid = novelVolume.vid;
+
+        consola.log(
+          `Start updating novel volume to database`,
+          `nid:${nid}`,
+          novel.name,
+          `vid:${vid}`,
+          novelVolume.title
+        );
+
+        const resp = await getNovelVolume(c, nid, '' + vid);
 
         if (resp.ok) {
-          const { data: volume } = resp;
+          const { data: fetchedVolume } = resp;
 
           await database
             .insert(biliVolumes)
             .values({
-              vid: vol.vid,
+              vid,
               nid: +nid,
-              name: vol.title,
-              volume: vol.volume,
-              description: volume.description,
-              cover: vol.cover,
-              labels: volume.labels,
-              updatedAt: volume.updatedAt,
+              name: novelVolume.title,
+              volume: novelVolume.volume,
+              description: fetchedVolume.description,
+              cover: novelVolume.cover,
+              labels: fetchedVolume.labels,
+              updatedAt: fetchedVolume.updatedAt,
               fetchedAt: new Date()
             })
             .onConflictDoUpdate({
               target: biliVolumes.vid,
               set: {
-                name: vol.title,
-                volume: vol.volume,
-                description: volume.description,
-                cover: vol.cover,
-                updatedAt: volume.updatedAt,
+                name: novelVolume.title,
+                volume: novelVolume.volume,
+                description: fetchedVolume.description,
+                cover: novelVolume.cover,
+                updatedAt: fetchedVolume.updatedAt,
                 fetchedAt: new Date()
               }
             });
 
-          for (const ch of volume.chapters) {
+          const oldVolume = oldVolumes.find((v) => v.vid === vid);
+          // 不刷新: 数据库存在 且 更新时间在一个月以前
+          if (
+            oldVolume &&
+            oldVolume.updatedAt.getTime() <=
+              fetchedVolume.updatedAt.getTime() - 30 * 24 * 60 * 60 * 1000
+          ) {
+            consola.log(
+              `Skip updating novel volume to database`,
+              `nid:${nid}`,
+              novel.name,
+              `vid:${vid}`,
+              novelVolume.title
+            );
+            continue;
+          }
+
+          for (const ch of fetchedVolume.chapters) {
             await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
 
             const resp = await getNovelChapter(c, nid, '' + ch.cid);
@@ -698,7 +730,7 @@ export const triggerUpdateNovel = memo(
                 .insert(biliChapters)
                 .values({
                   cid: ch.cid,
-                  vid: vol.vid,
+                  vid: novelVolume.vid,
                   nid: +nid,
                   title: ch.title,
                   content: chapter.content,
@@ -720,17 +752,33 @@ export const triggerUpdateNovel = memo(
           }
 
           // 异步更新 foloId
-          setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`));
+          setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`));
+
+          consola.log(
+            `Finish updating novel volume to database`,
+            `nid:${nid}`,
+            novel.name,
+            `vid:${vid}`,
+            novelVolume.title
+          );
         } else {
           failed++;
+
+          consola.log(
+            `Failed updating novel volume to database`,
+            `nid:${nid}`,
+            novel.name,
+            `vid:${vid}`,
+            novelVolume.title
+          );
         }
       }
     } catch (error) {
       consola.log(
         `Failed updating novel to database`,
-        nid,
+        `nid:${nid}`,
         novel.name,
-        novel.updatedAt.toISOString(),
+        novel.updatedAt.toLocaleString(),
         error
       );
     }
@@ -740,16 +788,16 @@ export const triggerUpdateNovel = memo(
 
       consola.log(
         `Finish updating novel to database`,
-        nid,
+        `nid:${nid}`,
         novel.name,
-        novel.updatedAt.toISOString()
+        novel.updatedAt.toLocaleString()
       );
     } else {
       consola.log(
         `Failed updating novel to database`,
-        nid,
+        `nid:${nid}`,
         novel.name,
-        novel.updatedAt.toISOString()
+        novel.updatedAt.toLocaleString()
       );
     }
   },

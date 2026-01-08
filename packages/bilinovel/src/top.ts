@@ -174,7 +174,7 @@ export function parseTopFilter(input: URL): BilinovelFetchTopFilter {
   const searchParams = input.searchParams;
   const filter: BilinovelFetchTopFilter = {};
 
-  const inputSort = /\/top\/(.*)\/.*/.exec(input.pathname)?.[1]
+  const inputSort = /\/top\/(.*)\/.*/.exec(input.pathname)?.[1];
   const sort = parseMappedParam(TOP_SORT, inputSort || input.pathname.split('/').at(-1));
   if (sort !== undefined) filter.sort = sort;
 
