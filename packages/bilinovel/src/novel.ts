@@ -322,20 +322,27 @@ export async function fetchNovelChapterPage(
     .first()
     .evaluate<string>((container) => {
       try {
-        return [...container.childNodes].reduce((acc, dom) => {
-          if (dom.nodeType === 8) return acc;
-          if (dom.nodeType === 3) return acc + dom.textContent.trim();
+        // @hack under tsx environment, all the function will be wrapped by __name, hacked by eval shadow __name function
+        // @ts-ignore
+        eval('var __name = t => t');
+
+        // @ts-ignore
+        const getString = (dom) => {
+          if (dom.nodeType === 8) return '';
+          if (dom.nodeType === 3) return dom.textContent.trim();
           if (dom.nodeType === 1) {
-            if (dom.getAttribute('class')?.includes('google')) return acc;
-            if (dom.getAttribute('class')?.includes('dag')) return acc;
-            if (dom.getAttribute('id')?.includes('hidden-images')) return acc;
-            if (dom.getAttribute('id')?.includes('show-more-images')) return acc;
-            if (dom.nodeName === 'BR') return acc + '<br/>';
+            if (dom.getAttribute('class')?.includes('google')) return '';
+            if (dom.getAttribute('class')?.includes('dag')) return '';
+            if (dom.getAttribute('id')?.includes('hidden-images')) return '';
+            if (dom.getAttribute('id')?.includes('show-more-images')) return '';
+            if (dom.nodeName === 'BR') return '<br/>';
             if (dom.nodeName === 'P') {
               // @ts-ignore
-              const style = getComputedStyle(dom);
+              const style = window.getComputedStyle(dom);
               const position = style.getPropertyValue('position');
-              return acc + (position === 'static' ? `<p>${dom.innerHTML}</p>` : '');
+              return position === 'static' && dom.textContent.length > 0
+                ? `<p>${dom.innerHTML}</p>`
+                : '';
             }
             if (dom.nodeName === 'IMG') {
               const cloned = dom.cloneNode();
@@ -345,14 +352,21 @@ export async function fetchNovelChapterPage(
                 cloned.removeAttribute('data-src');
                 cloned.setAttribute('src', realSrc);
               }
-              return acc + cloned.outerHTML.replace(/>$/, '/>');
+              return cloned.outerHTML.replace(/>$/, '/>');
             }
-            return acc + dom.outerHTML;
+            if (dom.nodeName === 'SMALL' && dom.querySelector('p')) {
+              return [...dom.childNodes].reduce((acc, dom) => acc + getString(dom), '');
+            }
+            return dom.outerHTML;
           }
-          return acc;
+          return '';
+        };
+        return [...container.childNodes].reduce((acc, dom) => {
+          return acc + getString(dom);
         }, '');
       } catch (error) {
-        return '';
+        // @ts-ignore
+        return 'ERROR: ' + error?.message + '\n' + (error?.stack || '');
       }
     });
 

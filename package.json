@@ -10,6 +10,7 @@
     "lnovel": "tsx packages/lnovel/src/cli.ts",
     "release": "bumpp package.json apps/*/package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
     "server:dev": "tsx apps/server/src/cli.ts",
+    "server:start": "node apps/server/cli.mjs",
     "test:ci": "turbo run test:ci",
     "typecheck": "turbo run typecheck",
     "preversion": "turbo run test:ci",
