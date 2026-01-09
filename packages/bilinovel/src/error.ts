@@ -6,3 +6,5 @@ export class CloudflareError extends Error {
     this.url = url;
   }
 }
+
+export class BilinovelError extends Error {}

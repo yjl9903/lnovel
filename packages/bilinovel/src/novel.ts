@@ -6,8 +6,8 @@ import type {
   BilinovelFetchChapterOptions
 } from './types';
 
-import { CloudflareError } from './error';
 import { blockRoutes, isCloudflarePage } from './browser';
+import { BilinovelError, CloudflareError } from './error';
 import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
 
 export interface NovelPageResult {
@@ -62,6 +62,10 @@ export async function fetchNovelPage(
 
   if (await isCloudflarePage(page)) {
     throw new CloudflareError(novelURL);
+  }
+
+  if ((await page.getByText('抱歉，作品已下架！').count()) > 0) {
+    throw new BilinovelError(`This novel ${nid} has been taken down.`);
   }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
