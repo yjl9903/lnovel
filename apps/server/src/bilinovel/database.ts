@@ -1,4 +1,4 @@
-import { and, eq, ne } from 'drizzle-orm';
+import { and, asc, eq, ne } from 'drizzle-orm';
 
 import {
   type NovelPageResult,
@@ -67,7 +67,11 @@ export const getNovelVolumeFromDatabase = async (
     const [volume] = await database.select().from(biliVolumes).where(eq(biliVolumes.vid, +vid));
 
     if (volume) {
-      const chapters = await database.select().from(biliChapters).where(eq(biliChapters.vid, +vid));
+      const chapters = await database
+        .select()
+        .from(biliChapters)
+        .where(eq(biliChapters.vid, +vid))
+        .orderBy(asc(biliChapters.index), asc(biliChapters.cid));
 
       return {
         nid: volume.nid,

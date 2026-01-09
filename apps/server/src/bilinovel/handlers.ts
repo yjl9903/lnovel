@@ -517,12 +517,17 @@ export const triggerUpdateNovel = memo(
   async (c: Context, nid: string, novel: NovelPageResult) => {
     const [oldNovel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
     const oldVolumes = await database.select().from(biliVolumes).where(eq(biliVolumes.nid, +nid));
+    const oldChapters = await database
+      .select({ cid: biliChapters.cid, nid: biliChapters.nid, index: biliChapters.index })
+      .from(biliChapters)
+      .where(eq(biliVolumes.nid, +nid));
 
     if (
       oldNovel &&
       oldNovel.done &&
       oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
-      oldVolumes.length === novel.volumes.length
+      oldVolumes.length === novel.volumes.length &&
+      oldChapters.some((ch) => ch.index > 0)
     ) {
       consola.log(
         `Skip updating novel to database`,
@@ -633,7 +638,9 @@ export const triggerUpdateNovel = memo(
             continue;
           }
 
-          for (const ch of fetchedVolume.chapters) {
+          for (let index = 0; index < fetchedVolume.chapters.length; index++) {
+            const ch = fetchedVolume.chapters[index];
+
             await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
 
             const resp = await getNovelChapter(c, nid, '' + ch.cid);
@@ -650,6 +657,7 @@ export const triggerUpdateNovel = memo(
                   title: ch.title,
                   content: chapter.content,
                   images: chapter.images,
+                  index,
                   fetchedAt: new Date()
                 })
                 .onConflictDoUpdate({
@@ -658,6 +666,7 @@ export const triggerUpdateNovel = memo(
                     title: ch.title,
                     content: chapter.content,
                     images: chapter.images,
+                    index,
                     fetchedAt: new Date()
                   }
                 });

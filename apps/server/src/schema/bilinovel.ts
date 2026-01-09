@@ -3,6 +3,7 @@ import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
 export const biliNovels = sqliteTable('bili_novels', {
   nid: integer('nid').primaryKey(),
   name: text('name').notNull(),
+  author: text('author', { mode: 'json' }).$type<[]>().notNull().default([]),
   description: text('description').notNull(),
   cover: text('cover'),
   labels: text('label', { mode: 'json' }).$type<string[]>().default([]),
@@ -39,5 +40,6 @@ export const biliChapters = sqliteTable('bili_chapters', {
     .$type<Array<{ src: string; alt: string | null | undefined }>>()
     .notNull()
     .default([]),
+  index: integer('index').notNull().default(0),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });
