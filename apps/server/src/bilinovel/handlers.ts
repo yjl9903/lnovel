@@ -520,7 +520,7 @@ export const triggerUpdateNovel = memo(
     const oldChapters = await database
       .select({ cid: biliChapters.cid, nid: biliChapters.nid, index: biliChapters.index })
       .from(biliChapters)
-      .where(eq(biliVolumes.nid, +nid));
+      .where(eq(biliChapters.nid, +nid));
 
     if (
       oldNovel &&
