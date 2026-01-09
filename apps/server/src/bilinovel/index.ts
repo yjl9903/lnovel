@@ -182,7 +182,21 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const resp = await getNovelChapter(c, nid, cid);
   // force 状态下, 更新数据
   if (resp.ok && force) {
+    consola.log(
+      'Start updating novel chapter to database',
+      `nid:${nid}`,
+      `cid:${cid}`,
+      resp.data.title,
+      resp.data.content,
+      resp.data.images
+    );
     updateNovelChapterToDatabase(resp.data);
+    consola.log(
+      'Finish updating novel chapter to database',
+      `nid:${nid}`,
+      `cid:${cid}`,
+      resp.data.title
+    );
   }
 
   updateNovelAndFeedId(c, nid);
