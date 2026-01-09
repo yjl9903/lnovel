@@ -27,7 +27,8 @@ import {
   getWenku,
   getTop,
   getPendingNovels,
-  triggerUpdateNovels
+  triggerUpdateNovels,
+  updateNovelChapterToDatabase
 } from './handlers';
 
 export const app = new Hono<AppEnv>();
@@ -108,15 +109,20 @@ app.get('/top/:sort', async (c: Context) => {
 });
 
 app.get('/novel/:nid', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const force = !!url.searchParams.get('force');
+
   const nid = c.req.param('nid');
 
   const db = await getNovelByDatabase(nid);
-  if (db) {
+  if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
   const resp = await getNovel(c, nid);
+
+  updateNovelAndFeedId(c, nid);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
@@ -124,18 +130,21 @@ app.get('/novel/:nid', async (c: Context) => {
 });
 
 app.get('/novel/:nid/vol/:vid', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const force = !!url.searchParams.get('force');
+
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
   const db = await getNovelVolumeByDatabase(nid, vid);
-  if (db) {
+  if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
   const resp = await getNovelVolume(c, nid, vid);
 
-  getNovel(c, nid);
+  updateNovelAndFeedId(c, nid);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
@@ -143,18 +152,25 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
 });
 
 app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
+  const url = new URL(c.req.url);
+  const force = !!url.searchParams.get('force');
+
   const nid = c.req.param('nid');
   const cid = c.req.param('cid');
 
   const db = await getNovelChapterByDatabase(nid, cid);
-  if (db) {
+  if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
   const resp = await getNovelChapter(c, nid, cid);
+  // force 状态下, 更新数据
+  if (resp.ok && force) {
+    updateNovelChapterToDatabase(resp.data);
+  }
 
-  getNovel(c, nid);
+  updateNovelAndFeedId(c, nid);
 
   return resp.ok
     ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })

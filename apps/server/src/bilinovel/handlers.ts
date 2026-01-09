@@ -1,5 +1,5 @@
-import { eq } from 'drizzle-orm';
 import { LRUCache } from 'lru-cache';
+import { and, eq, ne } from 'drizzle-orm';
 
 import {
   type NovelPageResult,
@@ -569,6 +569,19 @@ export const getNovelChapterByDatabase = async (
   }
 
   return undefined;
+};
+
+export const updateNovelChapterToDatabase = async (chapter: NovelChaptersResult) => {
+  const resp = await database
+    .update(biliChapters)
+    .set({
+      content: chapter.content,
+      images: chapter.images,
+      fetchedAt: new Date()
+    })
+    .where(and(eq(biliChapters.cid, chapter.cid), ne(biliChapters.content, chapter.content)))
+    .returning({ cid: biliChapters.cid });
+  return resp.length > 0;
 };
 
 let pending: Promise<void> | undefined;
