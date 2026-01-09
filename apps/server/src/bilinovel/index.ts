@@ -206,6 +206,51 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
+app.get('/novels/feed.xml', async (c: Context) => {
+  try {
+    const novels = await getNovelsFromDatabase();
+
+    const items = await Promise.all(
+      novels.map(async (dbItem) => {
+        const rawFeedURL = buildSite(c, `/bili/novel/${dbItem.nid}/feed.xml`);
+        const foloId = await getFoloFeedId(rawFeedURL);
+        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+        const feedUrl = rawFeedURL;
+
+        return {
+          title: dbItem.name,
+          id: `/bili/novel/${dbItem.nid}`,
+          link: `https://www.linovelib.com/novel/${dbItem.nid}.html`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${dbItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
+<p>${dbItem.description}</p>
+<p><img src="${dbItem.cover}" alt="cover" /></p>`,
+          image: dbItem.cover,
+          date: dbItem.updatedAt,
+          categories: dbItem.labels
+        };
+      })
+    );
+
+    setFoloFeedId(getFeedURL(c));
+
+    return getFeedResponse(c, {
+      title: 'lnovel 哔哩轻小说 索引',
+      description: '轻小说镜像聚合站 lnovel',
+      link: buildSite(c, `/novels`),
+      rssLink: buildSite(c, `/novels/feed.xml`),
+      image: 'https://www.bilinovel.com/logo.png',
+      items,
+      follow: {
+        feedId: await getFoloFeedId(getFeedURL(c)),
+        userId: getFoloUserId()
+      }
+    });
+  } catch (error) {
+    consola.error(error);
+    return c.text(`Internal Error`, 500);
+  }
+});
+
 app.get('/wenku/feed.xml', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
