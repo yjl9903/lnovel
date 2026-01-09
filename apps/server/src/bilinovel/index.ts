@@ -186,9 +186,7 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
       'Start updating novel chapter to database',
       `nid:${nid}`,
       `cid:${cid}`,
-      resp.data.title,
-      resp.data.content,
-      resp.data.images
+      resp.data.title
     );
     updateNovelChapterToDatabase(resp.data);
     consola.log(
