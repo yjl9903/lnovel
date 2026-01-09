@@ -21,15 +21,17 @@ import {
   getNovel,
   getNovelVolume,
   getNovelChapter,
-  getNovelByDatabase,
-  getNovelVolumeByDatabase,
-  getNovelChapterByDatabase,
   getWenku,
   getTop,
-  getPendingNovels,
-  triggerUpdateNovels,
-  updateNovelChapterToDatabase
+  triggerUpdateNovels
 } from './handlers';
+import {
+  getNovelFromDatabase,
+  getNovelsFromDatabase,
+  getNovelVolumeFromDatabase,
+  getNovelChapterFromDatabase,
+  updateNovelChapterToDatabase
+} from './database';
 
 export const app = new Hono<AppEnv>();
 
@@ -108,13 +110,26 @@ app.get('/top/:sort', async (c: Context) => {
     : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
+app.get('/novels', async (c: Context) => {
+  try {
+    const novels = await getNovelsFromDatabase();
+    return c.json({ ok: true, provider: Provider.bilinovel, data: novels });
+  } catch (error) {
+    consola.error(error);
+    return c.json(
+      { ok: false, provider: Provider.bilinovel, message: (error as any)?.message },
+      500
+    );
+  }
+});
+
 app.get('/novel/:nid', async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
   const nid = c.req.param('nid');
 
-  const db = await getNovelByDatabase(nid);
+  const db = await getNovelFromDatabase(nid);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
@@ -136,7 +151,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
-  const db = await getNovelVolumeByDatabase(nid, vid);
+  const db = await getNovelVolumeFromDatabase(nid, vid);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
@@ -158,7 +173,7 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
   const nid = c.req.param('nid');
   const cid = c.req.param('cid');
 
-  const db = await getNovelChapterByDatabase(nid, cid);
+  const db = await getNovelChapterFromDatabase(nid, cid);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
@@ -192,7 +207,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
         const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
         const feedUrl = rawFeedURL;
 
-        const dbItem = await getNovelByDatabase('' + rawItem.nid);
+        const dbItem = await getNovelFromDatabase('' + rawItem.nid);
 
         return {
           title: dbItem?.name || rawItem.title,
@@ -243,7 +258,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
         const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
         const feedUrl = rawFeedURL;
 
-        const dbItem = await getNovelByDatabase('' + rawItem.nid);
+        const dbItem = await getNovelFromDatabase('' + rawItem.nid);
 
         return {
           title: dbItem?.name || rawItem.title,
@@ -281,7 +296,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
 
-  const db = await getNovelByDatabase(nid);
+  const db = await getNovelFromDatabase(nid);
 
   const resp = db ? ({ ok: true, data: db } as const) : await getNovel(c, nid);
 
@@ -365,7 +380,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
-  const db = await getNovelVolumeByDatabase(nid, vid);
+  const db = await getNovelVolumeFromDatabase(nid, vid);
 
   const resp = db ? ({ ok: true, data: db } as const) : await getNovelVolume(c, nid, vid);
 
@@ -374,7 +389,7 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
 
     const chapters = [];
     for (const chapter of data.chapters) {
-      const db = await getNovelChapterByDatabase(nid, '' + chapter.cid);
+      const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
       const resp = db
         ? ({ ok: true, data: db } as const)
         : await getNovelChapter(c, nid, '' + chapter.cid);
@@ -434,7 +449,7 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
 export async function updatePendingNovels(c: Context) {
   const now = new Date().toLocaleString();
   try {
-    const novels = await getPendingNovels();
+    const novels = await getNovelsFromDatabase({ done: false });
     consola.log(
       'Trigger updating pending novels',
       now,
