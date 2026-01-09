@@ -322,8 +322,8 @@ export async function fetchNovelChapterPage(
     .first()
     .evaluate<string>((container) => {
       try {
-        // @hack under tsx environment, all the function will be wrapped by __name, hacked by eval shadow __name function
-        // @ts-ignore
+        // Under tsx / esbuild environment, all the function will be wrapped by __name(<fn>, '<name>')
+        // hacked by eval a script to shadow __name function
         eval('var __name = t => t');
 
         // @ts-ignore
@@ -361,6 +361,7 @@ export async function fetchNovelChapterPage(
           }
           return '';
         };
+
         return [...container.childNodes].reduce((acc, dom) => {
           return acc + getString(dom);
         }, '');
