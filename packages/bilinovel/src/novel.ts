@@ -322,8 +322,8 @@ export async function fetchNovelChapterPage(
     .first()
     .evaluate<string>((container) => {
       try {
-        // Under tsx / esbuild environment, all the function will be wrapped by __name(<fn>, '<name>')
-        // hacked by eval a script to shadow __name function
+        // Under tsx / esbuild environment, all the functions will be wrapped by __name(<fn>, '<name>')
+        // hacked by evalling a script to "polyfill" __name function
         eval('var __name = t => t');
 
         // @ts-ignore
