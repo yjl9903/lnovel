@@ -42,7 +42,7 @@
     "@hono/node-server": "1.19.8",
     "@hono/zod-validator": "0.7.6",
     "@playwright/browser-chromium": "1.57.0",
-    "better-sqlite3": "12.5.0",
+    "better-sqlite3": "12.6.0",
     "bilinovel": "workspace:*",
     "breadc": "0.9.7",
     "consola": "3.4.2",
