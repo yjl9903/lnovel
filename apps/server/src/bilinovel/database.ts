@@ -13,7 +13,11 @@ export const getNovelFromDatabase = async (nid: string): Promise<NovelPageResult
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
   if (novel) {
-    const volumes = await database.select().from(biliVolumes).where(eq(biliVolumes.nid, +nid));
+    const volumes = await database
+      .select()
+      .from(biliVolumes)
+      .where(eq(biliVolumes.nid, +nid))
+      .orderBy(biliVolumes.vid);
 
     return {
       nid: novel.nid,

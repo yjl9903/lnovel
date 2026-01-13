@@ -533,12 +533,19 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
 
   if (!pending) {
     pending = new Promise(async (res) => {
-      for (let i = 0; i < pendingNids.length; i++) {
-        try {
-          const nid = pendingNids[i];
-          await waitBrowserIdle();
-          await getNovel(c, '' + nid);
-        } catch {}
+      const running = new Set<number>();
+      const done = new Set<number>();
+      while (done.size < pendingNids.length) {
+        await waitBrowserIdle(0, 10 * 1000 + 10 * 1000 * Math.random());
+        for (const nid of pendingNids) {
+          if (running.has(nid)) continue;
+          running.add(nid);
+          try {
+            getNovel(c, '' + nid).finally(() => {
+              done.add(nid);
+            });
+          } catch {}
+        }
       }
       pending = undefined;
       pendingNids.splice(0, pendingNids.length);
@@ -590,13 +597,16 @@ export const triggerUpdateNovel = memo(
       // 异步更新 foloId
       setFoloFeedId(buildSite(c, `/bili/novel/${nid}/feed.xml`));
 
-      for (const novelVolume of novel.volumes) {
-        await waitBrowserIdle(5);
-        const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
-        if (!resp.ok) {
-          failed++;
-        }
-      }
+      // 并发更新所有 volume
+      await Promise.all(
+        novel.volumes.map(async (novelVolume) => {
+          await waitBrowserIdle(5);
+          const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
+          if (!resp.ok) {
+            failed++;
+          }
+        })
+      );
     } catch (error) {
       consola.log(
         `Failed updating novel to database`,

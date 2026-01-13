@@ -78,7 +78,7 @@ export async function fetchNovelPage(
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
 
-  const authors = await extractAuthors(page)
+  const authors = await extractAuthors(page);
 
   const updatedAtStr = await page
     .locator('meta[property="og:novel:update_time"]')
@@ -213,7 +213,7 @@ export async function fetchNovelVolumePage(
 
   if (!name || !updatedAt) throw new Error(`missing info`);
 
-  const authors = await extractAuthors(page)
+  const authors = await extractAuthors(page);
 
   const labels = await page.locator('.book-info > .book-label a').allTextContents();
   const description = await page
@@ -323,7 +323,7 @@ async function extractAuthors(page: Page) {
     }
   }
 
-  return authors
+  return authors;
 }
 
 export async function fetchNovelChapters(
