@@ -12,12 +12,13 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
 export const getNovelFromDatabase = async (nid: string): Promise<NovelPageResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
-  if (novel && novel.done) {
+  if (novel) {
     const volumes = await database.select().from(biliVolumes).where(eq(biliVolumes.nid, +nid));
 
     return {
       nid: novel.nid,
       name: novel.name,
+      authors: novel.authors || [],
       description: novel.description,
       cover: novel.cover || undefined,
       labels: novel.labels || [],
@@ -47,6 +48,7 @@ export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) =
     return {
       nid: novel.nid,
       name: novel.name,
+      authors: novel.authors,
       description: novel.description,
       cover: novel.cover || undefined,
       labels: novel.labels || [],
@@ -63,7 +65,7 @@ export const getNovelVolumeFromDatabase = async (
 ): Promise<NovelVolumePageResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
-  if (novel && novel.done) {
+  if (novel) {
     const [volume] = await database.select().from(biliVolumes).where(eq(biliVolumes.vid, +vid));
 
     if (volume) {
@@ -77,6 +79,7 @@ export const getNovelVolumeFromDatabase = async (
         nid: volume.nid,
         vid: volume.vid,
         name: volume.name,
+        authors: novel.authors,
         labels: volume.labels,
         description: volume.description,
         cover: volume.cover || '',
@@ -96,7 +99,7 @@ export const getNovelChapterFromDatabase = async (
 ): Promise<NovelChaptersResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
-  if (novel && novel.done) {
+  if (novel) {
     const [chapter] = await database.select().from(biliChapters).where(eq(biliChapters.cid, +cid));
 
     if (chapter) {
@@ -124,5 +127,6 @@ export const updateNovelChapterToDatabase = async (chapter: NovelChaptersResult)
     })
     .where(and(eq(biliChapters.cid, chapter.cid), ne(biliChapters.content, chapter.content)))
     .returning({ cid: biliChapters.cid });
+
   return resp.length > 0;
 };

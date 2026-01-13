@@ -1,4 +1,4 @@
-import { Feed } from 'feed';
+import { Author, Feed } from 'feed';
 
 import type { Context } from '../app';
 
@@ -9,6 +9,7 @@ export type FeedEntry = {
   description?: string;
   content?: string;
   date: Date | string | number;
+  author?: Author[];
   categories?: string[];
   image?: string;
 };
@@ -18,6 +19,7 @@ export type FeedOptions = {
   description: string;
   link: string;
   rssLink: string;
+  author?: Author;
   image?: string | null | undefined;
   language?: string;
   copyright?: string;
@@ -37,10 +39,11 @@ export function getFeedString(options: FeedOptions): string {
     description: options.description,
     link: options.link,
     feedLinks: { rss: options.rssLink },
+    author: options.author,
     image: options.image || undefined,
     language: options.language || 'zh',
     Xcopyright: options.copyright || '内容来源于互联网，版权归原作者或原网站所有。',
-    generator: 'lnovel'
+    generator: 'lnovel.animes.garden'
   });
 
   if (options.follow && options.follow.feedId && options.follow.userId) {
@@ -60,6 +63,7 @@ export function getFeedString(options: FeedOptions): string {
       title: item.title,
       id: item.id ?? item.link,
       link: item.link,
+      author: item.author,
       description: item.description,
       content: item.content,
       date: new Date(item.date),
@@ -68,7 +72,7 @@ export function getFeedString(options: FeedOptions): string {
     });
   });
 
-  return feed.rss2();
+  return feed.atom1();
 }
 
 export function getFeedResponse(ctx: Context, options: FeedOptions) {

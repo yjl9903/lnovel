@@ -15,6 +15,13 @@
       "when": 1767986372132,
       "tag": "0001_stormy_vindicator",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1768316424873,
+      "tag": "0002_clean_hellion",
+      "breakpoints": true
     }
   ]
 }

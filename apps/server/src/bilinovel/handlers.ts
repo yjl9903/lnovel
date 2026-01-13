@@ -63,26 +63,44 @@ const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelCh
 function memo<F extends (...args: any[]) => Promise<any>>(
   fn: F,
   getKey: (...args: Parameters<F>) => string,
-  keepDuration: number = 2000
+  options?: { ttl?: number }
 ): F {
-  const map = new Map<string, ReturnType<F>>();
+  const map = new Map<string, Promise<Awaited<ReturnType<F>>>>();
 
-  return (async (...args) => {
-    const key = getKey(...(args as any));
-    if (map.get(key)) {
-      return map.get(key);
-    }
+  return (async (...args: Parameters<F>) => {
+    const key = getKey(...args);
+    const existing = map.get(key);
+    if (existing) return existing;
+
+    const promise = fn(...args);
+    map.set(key, promise);
 
     try {
-      const promise = fn(...args);
-      map.set(key, promise as any);
       const result = await promise;
-      setTimeout(() => {
-        map.delete(key);
-      }, keepDuration);
+
+      const ttl = options?.ttl ?? 0;
+      if (ttl === 0) {
+        // ttl === 0: 不缓存结果
+        if (map.get(key) === promise) {
+          map.delete(key);
+        }
+      } else if (ttl > 0) {
+        // ttl > 0: 缓存 ttl ms
+        setTimeout(() => {
+          if (map.get(key) === promise) {
+            map.delete(key);
+          }
+        }, ttl);
+      } else {
+        // ttl < 0: 无限缓存
+      }
+
       return result;
     } catch (error) {
-      map.delete(key);
+      if (map.get(key) === promise) {
+        map.delete(key);
+      }
+
       throw error;
     }
   }) as F;
@@ -182,6 +200,9 @@ export const getWenku = memo(
   },
   (_, filter) => {
     return getWenkuFilterKey(filter);
+  },
+  {
+    ttl: 10 * 1000
   }
 );
 
@@ -269,6 +290,9 @@ export const getTop = memo(
   },
   (_, filter) => {
     return getTopFilterKey(filter);
+  },
+  {
+    ttl: 10 * 1000
   }
 );
 
@@ -345,7 +369,10 @@ export const getNovel = memo(
       } as const;
     }
   },
-  (_, nid) => nid
+  (_, nid) => nid,
+  {
+    ttl: 10 * 1000
+  }
 );
 
 export const getNovelVolume = memo(
@@ -424,7 +451,10 @@ export const getNovelVolume = memo(
       } as const;
     }
   },
-  (_, nid, vid) => `${nid}/${vid}`
+  (_, nid, vid) => `${nid}/${vid}`,
+  {
+    ttl: 10 * 1000
+  }
 );
 
 export const getNovelChapter = memo(
@@ -486,7 +516,10 @@ export const getNovelChapter = memo(
       } as const;
     }
   },
-  (_, nid, cid) => `${nid}/${cid}`
+  (_, nid, cid) => `${nid}/${cid}`,
+  {
+    ttl: 10 * 1000
+  }
 );
 
 let pending: Promise<void> | undefined;
@@ -505,7 +538,6 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
           const nid = pendingNids[i];
           await waitBrowserIdle();
           await getNovel(c, '' + nid);
-          await sleep(30 * 1000 + 30 * 1000 * Math.random());
         } catch {}
       }
       pending = undefined;
@@ -518,29 +550,6 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
 
 export const triggerUpdateNovel = memo(
   async (c: Context, nid: string, novel: NovelPageResult) => {
-    const [oldNovel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
-    const oldVolumes = await database.select().from(biliVolumes).where(eq(biliVolumes.nid, +nid));
-    const oldChapters = await database
-      .select({ cid: biliChapters.cid, nid: biliChapters.nid, index: biliChapters.index })
-      .from(biliChapters)
-      .where(eq(biliChapters.nid, +nid));
-
-    if (
-      oldNovel &&
-      oldNovel.done &&
-      oldNovel.updatedAt.getTime() === novel.updatedAt.getTime() &&
-      oldVolumes.length === novel.volumes.length &&
-      oldChapters.some((ch) => ch.index > 0)
-    ) {
-      consola.log(
-        `Skip updating novel to database`,
-        `nid:${nid}`,
-        novel.name,
-        novel.updatedAt.toISOString()
-      );
-      return;
-    }
-
     consola.log(
       `Start updating novel to database`,
       `nid:${nid}`,
@@ -556,6 +565,7 @@ export const triggerUpdateNovel = memo(
         .values({
           nid: +nid,
           name: novel.name,
+          authors: novel.authors,
           description: novel.description,
           cover: novel.cover,
           labels: novel.labels,
@@ -567,6 +577,7 @@ export const triggerUpdateNovel = memo(
           target: biliNovels.nid,
           set: {
             name: novel.name,
+            authors: novel.authors,
             description: novel.description,
             cover: novel.cover,
             labels: novel.labels,
@@ -581,123 +592,9 @@ export const triggerUpdateNovel = memo(
 
       for (const novelVolume of novel.volumes) {
         await waitBrowserIdle(5);
-
-        await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
-
-        const vid = novelVolume.vid;
-
-        consola.log(
-          `Start updating novel volume to database`,
-          `nid:${nid}`,
-          novel.name,
-          `vid:${vid}`,
-          novelVolume.title
-        );
-
-        const resp = await getNovelVolume(c, nid, '' + vid);
-
-        if (resp.ok) {
-          const { data: fetchedVolume } = resp;
-
-          await database
-            .insert(biliVolumes)
-            .values({
-              vid,
-              nid: +nid,
-              name: novelVolume.title,
-              volume: novelVolume.volume,
-              description: fetchedVolume.description,
-              cover: novelVolume.cover,
-              labels: fetchedVolume.labels,
-              updatedAt: fetchedVolume.updatedAt,
-              fetchedAt: new Date()
-            })
-            .onConflictDoUpdate({
-              target: biliVolumes.vid,
-              set: {
-                name: novelVolume.title,
-                volume: novelVolume.volume,
-                description: fetchedVolume.description,
-                cover: novelVolume.cover,
-                updatedAt: fetchedVolume.updatedAt,
-                fetchedAt: new Date()
-              }
-            });
-
-          const oldVolume = oldVolumes.find((v) => v.vid === vid);
-          // 不刷新: 数据库存在 且 更新时间在一个月以前
-          if (
-            oldVolume &&
-            oldVolume.updatedAt.getTime() <=
-              fetchedVolume.updatedAt.getTime() - 30 * 24 * 60 * 60 * 1000
-          ) {
-            consola.log(
-              `Skip updating novel volume to database`,
-              `nid:${nid}`,
-              novel.name,
-              `vid:${vid}`,
-              novelVolume.title
-            );
-            continue;
-          }
-
-          for (let index = 0; index < fetchedVolume.chapters.length; index++) {
-            const ch = fetchedVolume.chapters[index];
-
-            await new Promise((res) => setTimeout(res, 1000 + Math.floor(Math.random() * 1000)));
-
-            const resp = await getNovelChapter(c, nid, '' + ch.cid);
-
-            if (resp.ok) {
-              const { data: chapter } = resp;
-
-              await database
-                .insert(biliChapters)
-                .values({
-                  cid: ch.cid,
-                  vid: novelVolume.vid,
-                  nid: +nid,
-                  title: ch.title,
-                  content: chapter.content,
-                  images: chapter.images,
-                  index,
-                  fetchedAt: new Date()
-                })
-                .onConflictDoUpdate({
-                  target: biliChapters.cid,
-                  set: {
-                    title: ch.title,
-                    content: chapter.content,
-                    images: chapter.images,
-                    index,
-                    fetchedAt: new Date()
-                  }
-                });
-            } else {
-              failed++;
-            }
-          }
-
-          // 异步更新 foloId
-          setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`));
-
-          consola.log(
-            `Finish updating novel volume to database`,
-            `nid:${nid}`,
-            novel.name,
-            `vid:${vid}`,
-            novelVolume.title
-          );
-        } else {
+        const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
+        if (!resp.ok) {
           failed++;
-
-          consola.log(
-            `Failed updating novel volume to database`,
-            `nid:${nid}`,
-            novel.name,
-            `vid:${vid}`,
-            novelVolume.title
-          );
         }
       }
     } catch (error) {
@@ -728,5 +625,158 @@ export const triggerUpdateNovel = memo(
       );
     }
   },
-  (_, nid) => nid
+  (_, nid) => nid,
+  {
+    ttl: 24 * 60 * 60 * 1000
+  }
+);
+
+export const triggerUpdateNovelVolume = memo(
+  async (c: Context, novel: NovelPageResult, novelVolume: NovelPageResult['volumes'][number]) => {
+    const nid = novel.nid;
+    const vid = novelVolume.vid;
+
+    consola.log(
+      `Start updating novel volume to database`,
+      `nid:${nid}`,
+      novel.name,
+      `vid:${vid}`,
+      novelVolume.title
+    );
+
+    const resp = await getNovelVolume(c, '' + nid, '' + vid);
+
+    if (resp.ok) {
+      const { data: fetchedVolume } = resp;
+
+      const [oldVolume] = await database
+        .select()
+        .from(biliVolumes)
+        .where(eq(biliVolumes.vid, +vid));
+
+      await database
+        .insert(biliVolumes)
+        .values({
+          vid,
+          nid: +nid,
+          name: novelVolume.title,
+          volume: novelVolume.volume,
+          description: fetchedVolume.description,
+          cover: novelVolume.cover,
+          labels: fetchedVolume.labels,
+          done: false,
+          updatedAt: fetchedVolume.updatedAt,
+          fetchedAt: new Date()
+        })
+        .onConflictDoUpdate({
+          target: biliVolumes.vid,
+          set: {
+            name: novelVolume.title,
+            volume: novelVolume.volume,
+            description: fetchedVolume.description,
+            cover: novelVolume.cover,
+            done: false,
+            updatedAt: fetchedVolume.updatedAt,
+            fetchedAt: new Date()
+          }
+        });
+
+      // 视为数据一致: 数据库条目存在 且 数据库条目 done 且 数据库条目更新时间 >= 抓取的更新时间
+      if (
+        oldVolume &&
+        oldVolume.done &&
+        oldVolume.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
+      ) {
+        consola.log(
+          `Skip updating novel volume to database`,
+          `nid:${nid}`,
+          novel.name,
+          `vid:${vid}`,
+          novelVolume.title
+        );
+        return { ok: true };
+      }
+
+      let isFailed = false;
+
+      for (let index = 0; index < fetchedVolume.chapters.length; index++) {
+        const ch = fetchedVolume.chapters[index];
+
+        await waitBrowserIdle(5);
+
+        const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
+
+        if (resp.ok) {
+          const { data: chapter } = resp;
+
+          await database
+            .insert(biliChapters)
+            .values({
+              cid: ch.cid,
+              vid: novelVolume.vid,
+              nid: +nid,
+              title: ch.title,
+              content: chapter.content,
+              images: chapter.images,
+              index,
+              fetchedAt: new Date()
+            })
+            .onConflictDoUpdate({
+              target: biliChapters.cid,
+              set: {
+                title: ch.title,
+                content: chapter.content,
+                images: chapter.images,
+                index,
+                fetchedAt: new Date()
+              }
+            });
+        } else {
+          isFailed = true;
+          break;
+        }
+      }
+
+      if (!isFailed) {
+        // 异步更新 foloId
+        setFoloFeedId(buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`));
+
+        await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
+
+        consola.log(
+          `Finish updating novel volume to database`,
+          `nid:${nid}`,
+          novel.name,
+          `vid:${vid}`,
+          novelVolume.title
+        );
+
+        return { ok: true };
+      } else {
+        consola.log(
+          `Failed updating novel volume to database`,
+          `nid:${nid}`,
+          novel.name,
+          `vid:${vid}`,
+          novelVolume.title
+        );
+
+        return { ok: false };
+      }
+    } else {
+      consola.log(
+        `Failed updating novel volume to database`,
+        `nid:${nid}`,
+        novel.name,
+        `vid:${vid}`,
+        novelVolume.title
+      );
+
+      return { ok: false };
+    }
+  },
+  (_, novel, novelVolume) => `${novel.nid}/${novelVolume.vid}`,
+  {
+    ttl: 24 * 60 * 60 * 1000
+  }
 );

@@ -70,6 +70,7 @@ RUN apt-get update && \
 ARG PORT APP_HOST
 ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} \
     FOLO=1 \
+    FOLLOW_USER_ID=41508082357911552 \
     DATABASE_FILE=/data/sqlite.db \
     CHROMIUM_USER_DIR=/data/profile \
     FLARESOLVERR_URL=http://flaresolverr-production.flycast/v1

@@ -12,7 +12,7 @@ export interface BilinovelFetchOptions {
   /**
    * logger
    */
-  logger?: Pick<typeof console, 'log' | 'info' | 'warn' | 'error'>
+  logger?: Pick<typeof console, 'log' | 'info' | 'warn' | 'error'>;
 }
 
 export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {}

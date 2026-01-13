@@ -13,6 +13,7 @@ import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
 export interface NovelPageResult {
   nid: number;
   name: string;
+  authors: Array<AuthorResult>;
   labels: string[];
   description: string;
   cover: string | undefined;
@@ -31,6 +32,7 @@ export interface NovelVolumePageResult {
   nid: number;
   vid: number;
   name: string;
+  authors: Array<AuthorResult>;
   labels: string[];
   description: string;
   cover: string | undefined;
@@ -46,6 +48,12 @@ export interface NovelChaptersResult {
   content: string;
   images: Array<{ src: string; alt: string | null | undefined }>;
   fetchedAt: Date;
+}
+
+export interface AuthorResult {
+  name: string;
+  position: string;
+  avatar?: string;
 }
 
 export async function fetchNovelPage(
@@ -69,6 +77,8 @@ export async function fetchNovelPage(
   }
 
   const name = await page.locator('.book-info > .book-name').first().textContent();
+
+  const authors = await extractAuthors(page)
 
   const updatedAtStr = await page
     .locator('meta[property="og:novel:update_time"]')
@@ -159,6 +169,7 @@ export async function fetchNovelPage(
   return {
     nid: nid,
     name,
+    authors,
     labels,
     description,
     cover,
@@ -202,6 +213,8 @@ export async function fetchNovelVolumePage(
 
   if (!name || !updatedAt) throw new Error(`missing info`);
 
+  const authors = await extractAuthors(page)
+
   const labels = await page.locator('.book-info > .book-label a').allTextContents();
   const description = await page
     .locator('.book-info > .book-dec > p:not(.backupname)')
@@ -234,6 +247,7 @@ export async function fetchNovelVolumePage(
     nid,
     vid,
     name,
+    authors,
     labels,
     description,
     cover,
@@ -241,6 +255,75 @@ export async function fetchNovelVolumePage(
     updatedAt,
     fetchedAt: new Date()
   };
+}
+
+async function extractAuthors(page: Page) {
+  let authors = await page
+    .locator('.book-author .au-name a')
+    .evaluateAll<AuthorResult[]>((links) => {
+      eval('var __name = t => t');
+
+      const items: AuthorResult[] = [];
+
+      const normalizePosition = (input: string) => {
+        input = input.replace(/[()（）]/g, '').trim();
+        if (input === '插画') return 'illustrator';
+        return input;
+      };
+      const parsePositionFromHref = (href: string) => {
+        if (href.includes('/illustratorarticle/')) return 'illustrator';
+        if (href.includes('/authorarticle/')) return 'author';
+        if (href.includes('/translatorarticle/')) return 'translator';
+        return '';
+      };
+      const normalizeName = (input: string) => input.replace(/[()（）]/g, '').trim();
+
+      for (const link of links) {
+        const ruby = link.querySelector('ruby');
+        const rt = ruby?.querySelector('rt');
+        let position = rt?.textContent ? normalizePosition(rt.textContent) : '';
+        if (!position) {
+          const href = link.getAttribute('href') || '';
+          position = parsePositionFromHref(href) || 'author';
+        }
+
+        let name = '';
+        if (ruby) {
+          const cloned = ruby.cloneNode(true);
+          cloned.querySelectorAll('rt, rp').forEach((node: any) => node.remove());
+          name = normalizeName(cloned.textContent || '');
+        } else {
+          name = normalizeName(link.textContent || '');
+        }
+
+        if (name) {
+          items.push({ name, position });
+        }
+      }
+
+      return items;
+    });
+
+  if (authors.length === 0) {
+    const authorMeta =
+      (await page.locator('meta[property="og:novel:author"]').first().getAttribute('content')) ||
+      (await page.locator('meta[name="author"]').first().getAttribute('content')) ||
+      '';
+    const authorPositionFallback =
+      (await page.locator('.book-author .au-head em').first().textContent()) || '';
+    const authorRaw = authorMeta.trim();
+
+    if (authorRaw) {
+      const fallbackPosition = authorPositionFallback.trim() || 'author';
+      authors = authorRaw
+        .split(/[、,，]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => ({ name: item, position: fallbackPosition }));
+    }
+  }
+
+  return authors
 }
 
 export async function fetchNovelChapters(

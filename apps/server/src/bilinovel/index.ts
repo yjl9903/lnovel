@@ -16,7 +16,7 @@ import { buildSite, getFeedURL } from '../utils';
 import { getFeedResponse, getOpmlResponse } from '../rss';
 import { getFoloUserId, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
-import { consola, normalizeDescription } from './utils';
+import { consola, normalizeDescription, transformAuthor } from './utils';
 import {
   getNovel,
   getNovelVolume,
@@ -219,6 +219,7 @@ app.get('/novels/feed.xml', async (c: Context) => {
           title: dbItem.name,
           id: `/bili/novel/${dbItem.nid}`,
           link: `https://www.linovelib.com/novel/${dbItem.nid}.html`,
+          author: dbItem.authors.map((author) => transformAuthor(author)),
           content: `<p><a href=\"${`https://www.linovelib.com/novel/${dbItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
 <p>${dbItem.description}</p>
 <p><img src="${dbItem.cover}" alt="cover" /></p>`,
@@ -266,10 +267,17 @@ app.get('/wenku/feed.xml', async (c: Context) => {
 
         const dbItem = await getNovelFromDatabase('' + rawItem.nid);
 
+        const author = dbItem?.authors
+          ? dbItem.authors.map((author) => transformAuthor(author))
+          : rawItem.author
+            ? [transformAuthor({ name: rawItem.author, position: 'author' })]
+            : undefined;
+
         return {
           title: dbItem?.name || rawItem.title,
           id: `/bili/novel/${rawItem.nid}`,
           link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+          author,
           content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
 <p>${dbItem?.description || rawItem.description}</p>
 <p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
@@ -317,10 +325,17 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
 
         const dbItem = await getNovelFromDatabase('' + rawItem.nid);
 
+        const author = dbItem?.authors
+          ? dbItem.authors.map((author) => transformAuthor(author))
+          : rawItem.author
+            ? [transformAuthor({ name: rawItem.author, position: 'author' })]
+            : undefined;
+
         return {
           title: dbItem?.name || rawItem.title,
           id: `/bili/novel/${rawItem.nid}`,
           link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+          author,
           content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
 <p>${dbItem?.description || rawItem.description}</p>
 <p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
@@ -362,6 +377,8 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
 
     updateNovelAndFeedId(c, nid);
 
+    const author = data.authors.find((author) => author.position === 'author');
+
     const items = await Promise.all(
       data.volumes.map(async (vol, index) => {
         const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
@@ -373,6 +390,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
           title: vol.title || vol.volume,
           id: `/bili/novel/${nid}/vol/${vol.vid}`,
           link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
+          // author: data.authors.map((author) => transformAuthor(author)),
           content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p><p><img src="${vol.cover}" alt="cover" /></p>`,
           image: vol.cover,
           // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
@@ -387,6 +405,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
       description: normalizeDescription(data.description || data.name),
       link: `https://www.linovelib.com/novel/${nid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
+      author: author ? transformAuthor(author) : undefined,
       image: data.cover,
       items,
       follow: {
@@ -444,6 +463,8 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   if (resp.ok) {
     const { data } = resp;
 
+    const author = data.authors.find((author) => author.position === 'author');
+
     const chapters = [];
     for (const chapter of data.chapters) {
       const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
@@ -465,11 +486,13 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
       description: normalizeDescription(data.description),
       link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
       rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
+      author: author ? transformAuthor(author) : undefined,
       image: data.cover,
       items: chapters.map((chapter, index) => ({
         title: `${data.name} ${chapter.title}`,
         id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
         link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
+        // author: data.authors.map((author) => transformAuthor(author)),
         // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
         date: new Date(data.updatedAt.getTime() + 1000 * index),
         categories: data.labels,

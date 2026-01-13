@@ -1,14 +1,16 @@
 import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
 
+import type { AuthorResult } from 'bilinovel';
+
 export const biliNovels = sqliteTable('bili_novels', {
   nid: integer('nid').primaryKey(),
   name: text('name').notNull(),
-  author: text('author', { mode: 'json' }).$type<[]>().notNull().default([]),
+  authors: text('authors', { mode: 'json' }).$type<AuthorResult[]>().notNull().default([]),
   description: text('description').notNull(),
   cover: text('cover'),
   labels: text('label', { mode: 'json' }).$type<string[]>().default([]),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   done: integer('done', { mode: 'boolean' }).default(false),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });
 
@@ -22,6 +24,7 @@ export const biliVolumes = sqliteTable('bili_volumes', {
   description: text('description').notNull(),
   cover: text('cover'),
   labels: text('label', { mode: 'json' }).$type<string[]>().notNull().default([]),
+  done: integer('done', { mode: 'boolean' }).default(false),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });
