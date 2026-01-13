@@ -50,7 +50,7 @@
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
     "fast-xml-parser": "5.3.3",
-    "feed": "5.1.0",
+    "feed": "5.2.0",
     "hono": "4.11.4",
     "lru-cache": "11.2.4",
     "p-limit": "7.2.0",
