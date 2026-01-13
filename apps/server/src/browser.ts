@@ -8,7 +8,7 @@ import type {
 
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { chromium, devices } from 'playwright-extra';
-import pLimit from 'p-limit';
+import pLimit, { type LimitFunction } from 'p-limit';
 import { Hono } from 'hono';
 import { LRUCache } from 'lru-cache';
 import { createConsola } from 'consola';
@@ -19,8 +19,6 @@ import type { AppEnv } from './app';
 
 import { sleep } from './utils';
 import { TaskManager, Task } from './task';
-
-const limit = pLimit(1);
 
 const consola = createConsola().withTag('browser');
 
@@ -80,6 +78,7 @@ export async function runBrowserContext<T extends {}>(
   fn: (context: BrowserContext, task: BrowserTask) => Promise<Awaited<T> | null | undefined>,
   options: {
     cache?: LRUCache<string, Awaited<T>>;
+    limit?: LimitFunction;
     context?: BrowserContextOptions | undefined;
     maxRetry?: number;
   } = {}
@@ -91,6 +90,8 @@ export async function runBrowserContext<T extends {}>(
 
   return new Promise<Awaited<T> | null | undefined>(async (res, rej) => {
     const task = await browserTaskManager.register(key, {});
+
+    const limit = options.limit ?? pLimit(1); // 故意直接执行, 无并发控制
 
     await limit(async () => {
       if (task.aborted) {
@@ -229,7 +230,16 @@ export async function runBrowserContext<T extends {}>(
   });
 }
 
-export async function waitBrowserIdle(threshold: number = 0, timeout = 1000) {
+export async function waitBrowserIdle(
+  limit: LimitFunction,
+  {
+    threshold = 0,
+    timeout = 1000
+  }: {
+    threshold?: number;
+    timeout?: number;
+  } = {}
+) {
   return new Promise<void>((res) => {
     const waiting = () => {
       if (limit.pendingCount <= threshold) {

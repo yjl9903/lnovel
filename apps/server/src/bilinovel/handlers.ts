@@ -1,5 +1,6 @@
+import pLimit from 'p-limit';
+import { eq } from 'drizzle-orm';
 import { LRUCache } from 'lru-cache';
-import { and, eq, ne } from 'drizzle-orm';
 
 import {
   type NovelPageResult,
@@ -34,6 +35,12 @@ const browser = launchBrowser({
     '--disable-setuid-sandbox'
   ]
 });
+
+// top 和 wenku 页使用的并发控制
+const indexLimit = pLimit(1);
+
+// novel 页使用的并发控制
+const novelLimit = pLimit(1);
 
 const wenkuCache = new LRUCache<string, Awaited<ReturnType<typeof fetchWenkuPage>> & {}>({
   max: 1000,
@@ -171,6 +178,7 @@ export const getWenku = memo(
         },
         {
           cache: wenkuCache,
+          limit: indexLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -261,6 +269,7 @@ export const getTop = memo(
         },
         {
           cache: topCache,
+          limit: indexLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -340,6 +349,7 @@ export const getNovel = memo(
         },
         {
           cache: novelCache,
+          limit: novelLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -424,6 +434,7 @@ export const getNovelVolume = memo(
         },
         {
           cache: volCache,
+          limit: novelLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -489,6 +500,7 @@ export const getNovelChapter = memo(
         },
         {
           cache: chapterCache,
+          limit: novelLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -536,7 +548,10 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
       const running = new Set<number>();
       const done = new Set<number>();
       while (done.size < pendingNids.length) {
-        await waitBrowserIdle(0, 10 * 1000 + 10 * 1000 * Math.random());
+        await waitBrowserIdle(novelLimit, {
+          threshold: 0,
+          timeout: 10 * 1000 + 10 * 1000 * Math.random()
+        });
         for (const nid of pendingNids) {
           if (running.has(nid)) continue;
           running.add(nid);
@@ -600,7 +615,7 @@ export const triggerUpdateNovel = memo(
       // 并发更新所有 volume
       await Promise.all(
         novel.volumes.map(async (novelVolume) => {
-          await waitBrowserIdle(5);
+          await waitBrowserIdle(novelLimit, { threshold: 5 });
           const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
           if (!resp.ok) {
             failed++;
@@ -712,7 +727,7 @@ export const triggerUpdateNovelVolume = memo(
       for (let index = 0; index < fetchedVolume.chapters.length; index++) {
         const ch = fetchedVolume.chapters[index];
 
-        await waitBrowserIdle(5);
+        await waitBrowserIdle(novelLimit, { threshold: 5 });
 
         const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
 
