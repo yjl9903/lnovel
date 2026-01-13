@@ -243,13 +243,6 @@ export async function fetchNovelVolumePage(
   };
 }
 
-/**
- * @param context 需要禁用 JavaScript 执行, javaScriptEnabled: false
- * @param nid
- * @param cid
- * @param options
- * @returns
- */
 export async function fetchNovelChapters(
   context: BrowserContext,
   nid: number,

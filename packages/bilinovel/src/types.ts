@@ -8,6 +8,11 @@ export interface BilinovelFetchOptions {
    * <img src="..." />
    */
   transformImgSrc?: string | ((url: string) => string | undefined | null);
+
+  /**
+   * logger
+   */
+  logger?: Pick<typeof console, 'log' | 'info' | 'warn' | 'error'>
 }
 
 export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {}

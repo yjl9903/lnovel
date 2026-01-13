@@ -301,7 +301,8 @@ export const getNovel = memo(
                   consola.error('Transform img src', error, _url);
                   return _url;
                 }
-              }
+              },
+              logger: consola
             });
 
             consola.log(`Finish fetching novel page`, `nid:${nid}`, resp?.name);
@@ -376,7 +377,8 @@ export const getNovelVolume = memo(
                   consola.error('Transform img src', error, _url);
                   return _url;
                 }
-              }
+              },
+              logger: consola
             });
 
             consola.log(
@@ -437,7 +439,8 @@ export const getNovelChapter = memo(
 
             const resp = await fetchNovelChapters(context, +nid, +cid, {
               transformBbcode: true,
-              transformImgSrc: buildSite(c, '/bili/img3/')
+              transformImgSrc: buildSite(c, '/bili/img3/'),
+              logger: consola
             });
 
             consola.log(
