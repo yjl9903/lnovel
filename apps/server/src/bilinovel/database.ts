@@ -9,10 +9,16 @@ import {
 import { database } from '../database';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 
-export const getNovelFromDatabase = async (nid: string): Promise<NovelPageResult | undefined> => {
+/**
+ * 从数据库查询 novel 信息
+ * @param nid novel id
+ * @param done 数据库 novel 信息是否必须抓取完成
+ * @returns 
+ */
+export const getNovelFromDatabase = async (nid: string, done = true): Promise<NovelPageResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
-  if (novel) {
+  if (novel && ((done && novel.done) || !done)) {
     const volumes = await database
       .select()
       .from(biliVolumes)
@@ -41,6 +47,10 @@ export const getNovelFromDatabase = async (nid: string): Promise<NovelPageResult
   return undefined;
 };
 
+/**
+ * 获取数据库中的所有 novel, 根据 done 状态筛选
+ * @returns 
+ */
 export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) => {
   const novels = await database
     .select()
@@ -72,7 +82,7 @@ export const getNovelVolumeFromDatabase = async (
   if (novel) {
     const [volume] = await database.select().from(biliVolumes).where(eq(biliVolumes.vid, +vid));
 
-    if (volume) {
+    if (volume && volume.done) {
       const chapters = await database
         .select()
         .from(biliChapters)

@@ -265,7 +265,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
         const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
         const feedUrl = rawFeedURL;
 
-        const dbItem = await getNovelFromDatabase('' + rawItem.nid);
+        const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
 
         const author = dbItem?.authors
           ? dbItem.authors.map((author) => transformAuthor(author))
@@ -323,7 +323,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
         const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
         const feedUrl = rawFeedURL;
 
-        const dbItem = await getNovelFromDatabase('' + rawItem.nid);
+        const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
 
         const author = dbItem?.authors
           ? dbItem.authors.map((author) => transformAuthor(author))
