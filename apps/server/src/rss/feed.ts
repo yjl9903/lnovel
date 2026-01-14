@@ -15,8 +15,8 @@ export type FeedEntry = {
 };
 
 export type FeedOptions = {
-  id?: string
-  
+  id?: string;
+
   title: string;
   description: string;
   link: string;
@@ -44,19 +44,17 @@ export function getFeedString(options: FeedOptions): string {
     author: options.author,
     image: options.image || undefined,
     language: options.language || 'zh',
-    Xcopyright: options.copyright || '内容来源于互联网，版权归原作者或原网站所有。',
+    copyright: options.copyright || '内容来源于互联网，版权归原作者或原网站所有。',
     generator: 'lnovel.animes.garden'
   });
 
   if (options.follow && options.follow.feedId && options.follow.userId) {
     feed.addExtension({
       name: 'follow_challenge',
-      objects: [
-        {
-          feedId: options.follow.feedId,
-          userId: options.follow.userId
-        }
-      ]
+      objects: {
+        feedId: options.follow.feedId,
+        userId: options.follow.userId
+      }
     });
   }
 
@@ -65,7 +63,7 @@ export function getFeedString(options: FeedOptions): string {
       title: item.title,
       id: item.id ?? item.link,
       link: item.link,
-      author: item.author,
+      author: item.author ? item.author : options.author ? [options.author] : undefined,
       description: item.description,
       content: item.content,
       date: new Date(item.date),
