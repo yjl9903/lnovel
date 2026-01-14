@@ -18,8 +18,8 @@ import {
 import type { Context } from '../app';
 
 import { database } from '../database';
+import { buildSite } from '../utils';
 import { setFoloFeedId } from '../folo';
-import { buildSite, sleep } from '../utils';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { launchBrowser, runBrowserContext, waitBrowserIdle } from '../browser';
 
@@ -39,8 +39,11 @@ const browser = launchBrowser({
 // top 和 wenku 页使用的并发控制
 const indexLimit = pLimit(1);
 
-// novel 页使用的并发控制
+// novel 和 vol 页使用的并发控制
 const novelLimit = pLimit(1);
+
+// chapter 页使用的并发控制
+const chapterLimit = pLimit(1);
 
 const wenkuCache = new LRUCache<string, Awaited<ReturnType<typeof fetchWenkuPage>> & {}>({
   max: 1000,
@@ -386,7 +389,7 @@ export const getNovel = memo(
         data
       } as const;
     } catch (error) {
-      consola.error(error);
+      getNovel.delete(c, nid);
 
       return {
         ok: false,
@@ -469,7 +472,7 @@ export const getNovelVolume = memo(
         data
       } as const;
     } catch (error) {
-      consola.error(error);
+      getNovelVolume.delete(c, nid, vid);
 
       return {
         ok: false,
@@ -516,7 +519,7 @@ export const getNovelChapter = memo(
         },
         {
           cache: chapterCache,
-          limit: novelLimit,
+          limit: chapterLimit,
           maxRetry: MAX_RETRY
         }
       );
@@ -535,7 +538,7 @@ export const getNovelChapter = memo(
         data
       } as const;
     } catch (error) {
-      consola.error(error);
+      getNovelChapter.delete(c, nid, cid);
 
       return {
         ok: false,
@@ -564,7 +567,7 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
       const running = new Set<number>();
       const done = new Set<number>();
       while (done.size < pendingNids.length) {
-        await waitBrowserIdle(novelLimit, {
+        await waitBrowserIdle(chapterLimit, {
           threshold: 0,
           timeout: 10 * 1000 + 10 * 1000 * Math.random()
         });
@@ -631,7 +634,7 @@ export const triggerUpdateNovel = memo(
       // 并发更新所有 volume
       await Promise.all(
         novel.volumes.map(async (novelVolume) => {
-          await waitBrowserIdle(novelLimit, { threshold: 5 });
+          await waitBrowserIdle(chapterLimit, { threshold: 5 });
           const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
           if (!resp.ok) {
             failed++;
@@ -752,7 +755,7 @@ export const triggerUpdateNovelVolume = memo(
       for (let index = 0; index < fetchedVolume.chapters.length; index++) {
         const ch = fetchedVolume.chapters[index];
 
-        await waitBrowserIdle(novelLimit, { threshold: 5 });
+        await waitBrowserIdle(chapterLimit, { threshold: 5 });
 
         const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
 

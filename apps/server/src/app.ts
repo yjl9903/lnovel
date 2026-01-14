@@ -116,7 +116,7 @@ export async function startCron() {
     }
   });
 
-  new Cron('0 * * * *', { timezone: 'Asia/Shanghai', protect: true }, async () => {
+  const biliJob = new Cron('0 * * * *', { timezone: 'Asia/Shanghai', protect: true }, async () => {
     try {
       const req = new Request(`https://lnovel.animes.garden/bili/_/cron`, {
         method: 'POST'
@@ -127,4 +127,9 @@ export async function startCron() {
       consola.error(error);
     }
   });
+
+  // 延迟一会后, 手动触发任务执行
+  setTimeout(() => {
+    biliJob.trigger();
+  }, 1000);
 }

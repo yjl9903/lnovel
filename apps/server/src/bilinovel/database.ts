@@ -13,9 +13,12 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
  * 从数据库查询 novel 信息
  * @param nid novel id
  * @param done 数据库 novel 信息是否必须抓取完成
- * @returns 
+ * @returns
  */
-export const getNovelFromDatabase = async (nid: string, done = true): Promise<NovelPageResult | undefined> => {
+export const getNovelFromDatabase = async (
+  nid: string,
+  done = true
+): Promise<NovelPageResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
   if (novel && ((done && novel.done) || !done)) {
@@ -49,7 +52,7 @@ export const getNovelFromDatabase = async (nid: string, done = true): Promise<No
 
 /**
  * 获取数据库中的所有 novel, 根据 done 状态筛选
- * @returns 
+ * @returns
  */
 export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) => {
   const novels = await database
