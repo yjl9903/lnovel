@@ -15,6 +15,8 @@ export type FeedEntry = {
 };
 
 export type FeedOptions = {
+  id?: string
+  
   title: string;
   description: string;
   link: string;
@@ -34,7 +36,7 @@ export type FeedOptions = {
 
 export function getFeedString(options: FeedOptions): string {
   const feed = new Feed({
-    id: options.link,
+    id: options.id || options.link,
     title: options.title,
     description: options.description,
     link: options.link,
@@ -72,7 +74,7 @@ export function getFeedString(options: FeedOptions): string {
     });
   });
 
-  return feed.atom1();
+  return feed.rss2();
 }
 
 export function getFeedResponse(ctx: Context, options: FeedOptions) {
