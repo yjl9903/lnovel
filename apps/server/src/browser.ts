@@ -230,7 +230,7 @@ export async function runBrowserContext<T extends {}>(
   });
 }
 
-export async function waitBrowserIdle(
+export async function waitLimitIdle(
   limit: LimitFunction,
   {
     threshold = 0,
@@ -248,6 +248,6 @@ export async function waitBrowserIdle(
         setTimeout(waiting, timeout);
       }
     };
-    waiting();
+    setTimeout(waiting, timeout);
   });
 }

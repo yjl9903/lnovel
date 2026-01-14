@@ -21,7 +21,7 @@ import { database } from '../database';
 import { buildSite } from '../utils';
 import { setFoloFeedId } from '../folo';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
-import { launchBrowser, runBrowserContext, waitBrowserIdle } from '../browser';
+import { launchBrowser, runBrowserContext, waitLimitIdle } from '../browser';
 
 import { consola } from './utils';
 
@@ -567,7 +567,7 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
       const running = new Set<number>();
       const done = new Set<number>();
       while (done.size < pendingNids.length) {
-        await waitBrowserIdle(chapterLimit, {
+        await waitLimitIdle(chapterLimit, {
           threshold: 0,
           timeout: 10 * 1000 + 10 * 1000 * Math.random()
         });
@@ -634,7 +634,7 @@ export const triggerUpdateNovel = memo(
       // 并发更新所有 volume
       await Promise.all(
         novel.volumes.map(async (novelVolume) => {
-          await waitBrowserIdle(chapterLimit, { threshold: 5 });
+          await waitLimitIdle(chapterLimit, { threshold: 5 });
           const resp = await triggerUpdateNovelVolume(c, novel, novelVolume);
           if (!resp.ok) {
             failed++;
@@ -755,7 +755,7 @@ export const triggerUpdateNovelVolume = memo(
       for (let index = 0; index < fetchedVolume.chapters.length; index++) {
         const ch = fetchedVolume.chapters[index];
 
-        await waitBrowserIdle(chapterLimit, { threshold: 5 });
+        await waitLimitIdle(chapterLimit, { threshold: 5 });
 
         const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
 
