@@ -12,8 +12,8 @@ import {
 import type { AppEnv, Context } from '../app';
 
 import { Provider } from '../constants';
+import { getFeedResponse } from '../rss';
 import { buildSite, getFeedURL } from '../utils';
-import { getFeedResponse, getOpmlResponse } from '../rss';
 import { getFoloUserId, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
 import { consola, normalizeDescription, transformAuthor } from './utils';
@@ -415,40 +415,6 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
     });
   } else {
     return c.text(`${resp.message}`, resp.status);
-  }
-});
-
-app.get('/novel/:nid/feed.opml', async (c: Context) => {
-  const nid = c.req.param('nid');
-
-  const novel = await getNovel(c, nid);
-
-  if (novel.ok) {
-    const { data } = novel;
-
-    const resps = await Promise.all(
-      data.volumes.map(async (vol) => getNovelVolume(c, nid, '' + vol.vid))
-    );
-
-    const error = resps.find((vol) => !vol.ok);
-    if (error) {
-      return c.text(`${error.message}`, error.status);
-    }
-
-    const volumes = resps.filter((r) => r.data).map((r) => r.data!);
-
-    return getOpmlResponse(c, {
-      title: data.name,
-      description: normalizeDescription(data.description || data.name),
-      items: volumes.flatMap((vol) =>
-        vol.chapters.map((chapter) => ({
-          title: `${vol.name} ${chapter.title}`,
-          xmlUrl: buildSite(c, `/bili/novel/${nid}/chapter/${chapter.cid}/feed.xml`)
-        }))
-      )
-    });
-  } else {
-    return c.text(`${novel.message}`, novel.status);
   }
 });
 
