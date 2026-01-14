@@ -579,6 +579,10 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
               done.add(nid);
             });
           } catch {}
+          await waitLimitIdle(chapterLimit, {
+            threshold: 100,
+            timeout: 10 * 1000 + 10 * 1000 * Math.random()
+          });
         }
       }
       pending = undefined;
