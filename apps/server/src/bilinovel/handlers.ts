@@ -67,14 +67,19 @@ const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelCh
   ttl: 24 * 60 * 60 * 1000
 });
 
+type MemoFn<F extends (...args: any[]) => Promise<any>> = F & {
+  clear: () => void;
+  delete: (...args: Parameters<F>) => void;
+};
+
 function memo<F extends (...args: any[]) => Promise<any>>(
   fn: F,
   getKey: (...args: Parameters<F>) => string,
   options?: { ttl?: number }
-): F {
+): MemoFn<F> {
   const map = new Map<string, Promise<Awaited<ReturnType<F>>>>();
 
-  return (async (...args: Parameters<F>) => {
+  const wrapped = (async (...args: Parameters<F>) => {
     const key = getKey(...args);
     const existing = map.get(key);
     if (existing) return existing;
@@ -110,7 +115,18 @@ function memo<F extends (...args: any[]) => Promise<any>>(
 
       throw error;
     }
-  }) as F;
+  }) as MemoFn<F>;
+
+  wrapped.clear = () => {
+    map.clear();
+  };
+
+  wrapped.delete = (...args) => {
+    const key = getKey(...args);
+    map.delete(key);
+  };
+
+  return wrapped;
 }
 
 function getWenkuFilterKey(filter: BilinovelFetchWenkuFilter) {
@@ -623,6 +639,8 @@ export const triggerUpdateNovel = memo(
         })
       );
     } catch (error) {
+      triggerUpdateNovel.delete(c, nid, novel);
+
       consola.log(
         `Failed updating novel to database`,
         `nid:${nid}`,
@@ -630,6 +648,8 @@ export const triggerUpdateNovel = memo(
         novel.updatedAt.toLocaleString(),
         error
       );
+
+      return;
     }
 
     if (failed === 0) {
@@ -642,6 +662,8 @@ export const triggerUpdateNovel = memo(
         novel.updatedAt.toLocaleString()
       );
     } else {
+      triggerUpdateNovel.delete(c, nid, novel);
+
       consola.log(
         `Failed updating novel to database`,
         `nid:${nid}`,
@@ -789,6 +811,8 @@ export const triggerUpdateNovelVolume = memo(
           novelVolume.title
         );
 
+        triggerUpdateNovelVolume.delete(c, novel, novelVolume);
+
         return { ok: false };
       }
     } else {
@@ -799,6 +823,8 @@ export const triggerUpdateNovelVolume = memo(
         `vid:${vid}`,
         novelVolume.title
       );
+
+      triggerUpdateNovelVolume.delete(c, novel, novelVolume);
 
       return { ok: false };
     }
