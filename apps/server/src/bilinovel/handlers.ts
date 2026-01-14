@@ -712,6 +712,8 @@ export const triggerUpdateNovelVolume = memo(
         oldVolume.done &&
         oldVolume.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
       ) {
+        await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
+
         consola.log(
           `Skip updating novel volume to database`,
           `nid:${nid}`,
@@ -719,6 +721,7 @@ export const triggerUpdateNovelVolume = memo(
           `vid:${vid}`,
           novelVolume.title
         );
+
         return { ok: true };
       }
 
