@@ -409,7 +409,7 @@ export async function fetchNovelChapterPage(
   );
 
   await page.goto(novelURL.toString(), {
-    waitUntil: 'networkidle'
+    waitUntil: 'domcontentloaded'
   });
 
   if (await isCloudflarePage(page)) {
