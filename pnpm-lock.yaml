@@ -51,6 +51,8 @@ importers:
         specifier: ^4.0.17
         version: 4.0.17(@types/node@24.10.8)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
 
+  apps/landing: {}
+
   apps/server:
     dependencies:
       '@hono/node-server':

@@ -1,7 +1,7 @@
 {
   "name": "lnovel",
   "version": "0.0.4",
-  "description": "Scrapes light novels from various websites and converts them into EPUB format e-books",
+  "description": "从哔哩轻小说、轻小说文库等站点抓取书籍, 提供轻小说开放接口和 RSS 订阅",
   "keywords": [
     "cli",
     "epub",

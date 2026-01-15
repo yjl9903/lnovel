@@ -1,0 +1,30 @@
+{
+  "name": "@lnovel/landing",
+  "version": "0.0.4",
+  "private": true,
+  "description": "lnovel landing page implementation",
+  "keywords": [
+    "light-novels"
+  ],
+  "homepage": "https://github.com/yjl9903/lnovel#readme",
+  "bugs": {
+    "url": "https://github.com/yjl9903/lnovel/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yjl9903/lnovel.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "XLor",
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "engines": {
+    "node": ">=v20.8.0"
+  }
+}

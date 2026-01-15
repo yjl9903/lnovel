@@ -34,4 +34,4 @@
 
 ## 开源协议
 
-MIT License © 2023 [XLor](https://github.com/yjl9903)
+AGPL-3.0 License © 2025 [XLor](https://github.com/yjl9903)
