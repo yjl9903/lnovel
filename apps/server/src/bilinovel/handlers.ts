@@ -515,6 +515,7 @@ export const getNovelChapter = memo(
               transformBbcode: true,
               transformImgSrc: buildSite(c, '/bili/img3/'),
               logger: consola,
+              delay: 10 * 1000,
               async postmortem(page) {
                 await dumpPageScreenshot(`screenshot/chapter-${nid}-${cid}.png`, page);
               }

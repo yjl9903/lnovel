@@ -366,6 +366,11 @@ export async function fetchNovelChapters(
     let pageCount = 1;
 
     for (; ; pageCount++) {
+      if (pageCount > 1 && Math.random() <= 0.5) {
+        const delay = options?.delay || 1000;
+        await sleep(delay + Math.random() * delay);
+      }
+
       const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
 
       if (!result) break;
