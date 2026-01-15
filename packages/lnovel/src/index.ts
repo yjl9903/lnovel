@@ -1,3 +1,1 @@
-export * from './providers/base';
-
-export * from './providers/wenku8';
+export const hello = 1

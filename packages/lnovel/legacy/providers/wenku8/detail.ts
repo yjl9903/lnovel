@@ -1,4 +1,4 @@
-import { Volume } from './../base';
+import { Volume } from '../base';
 import type { Chapter, LightNovel } from '../base';
 
 import { fetch } from './fetch';
