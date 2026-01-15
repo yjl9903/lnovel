@@ -1,3 +1,5 @@
+import type { Page } from 'playwright';
+
 export interface BilinovelFetchOptions {
   /**
    * @default 'https://www.linovelib.com/'
@@ -13,6 +15,11 @@ export interface BilinovelFetchOptions {
    * logger
    */
   logger?: Pick<typeof console, 'log' | 'info' | 'warn' | 'error'>;
+
+  /**
+   * Post-mortem debugging
+   */
+  postmortem?: (page: Page) => void | Promise<void>;
 }
 
 export interface BilinovelFetchNovelOptions extends BilinovelFetchOptions {}

@@ -21,7 +21,7 @@ import { database } from '../database';
 import { buildSite } from '../utils';
 import { setFoloFeedId } from '../folo';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
-import { launchBrowser, runBrowserContext, waitLimitIdle } from '../browser';
+import { dumpPageScreenshot, launchBrowser, runBrowserContext, waitLimitIdle } from '../browser';
 
 import { consola } from './utils';
 
@@ -171,6 +171,10 @@ export const getWenku = memo(
                   consola.error('Transform img src', error, _url);
                   return _url;
                 }
+              },
+              logger: consola,
+              async postmortem(page) {
+                await dumpPageScreenshot(`screenshot/wenku.png`, page);
               }
             });
 
@@ -262,6 +266,10 @@ export const getTop = memo(
                   consola.error('Transform img src', error, _url);
                   return _url;
                 }
+              },
+              logger: consola,
+              async postmortem(page) {
+                await dumpPageScreenshot(`screenshot/top.png`, page);
               }
             });
 
@@ -354,7 +362,10 @@ export const getNovel = memo(
                   return _url;
                 }
               },
-              logger: consola
+              logger: consola,
+              async postmortem(page) {
+                await dumpPageScreenshot(`screenshot/novel-${nid}.png`, page);
+              }
             });
 
             consola.log(`Finish fetching novel page`, `nid:${nid}`, resp?.name);
@@ -434,7 +445,10 @@ export const getNovelVolume = memo(
                   return _url;
                 }
               },
-              logger: consola
+              logger: consola,
+              async postmortem(page) {
+                await dumpPageScreenshot(`screenshot/volume-${nid}-${vid}.png`, page);
+              }
             });
 
             consola.log(
@@ -500,7 +514,10 @@ export const getNovelChapter = memo(
             const resp = await fetchNovelChapters(context, +nid, +cid, {
               transformBbcode: true,
               transformImgSrc: buildSite(c, '/bili/img3/'),
-              logger: consola
+              logger: consola,
+              async postmortem(page) {
+                await dumpPageScreenshot(`screenshot/chapter-${nid}-${cid}.png`, page);
+              }
             });
 
             consola.log(

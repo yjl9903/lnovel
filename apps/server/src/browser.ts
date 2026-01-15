@@ -1,9 +1,13 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import type {
   Browser,
   BrowserContext,
   BrowserContextOptions,
   LaunchOptions,
-  ConnectOverCDPOptions
+  ConnectOverCDPOptions,
+  Page
 } from 'playwright';
 
 import stealth from 'puppeteer-extra-plugin-stealth';
@@ -228,6 +232,14 @@ export async function runBrowserContext<T extends {}>(
       );
     });
   });
+}
+
+export async function dumpPageScreenshot(filename: string, page: Page) {
+  try {
+    await fs.mkdir(path.dirname(filename), { recursive: true }).catch(() => {});
+    const buffer = await page.screenshot();
+    await fs.writeFile(filename, buffer);
+  } catch {}
 }
 
 export async function waitLimitIdle(

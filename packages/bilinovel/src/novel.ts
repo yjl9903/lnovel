@@ -66,90 +66,53 @@ export async function fetchNovelPage(
   const page = await context.newPage();
   const novelURL = new URL(`/novel/${nid}.html`, options?.baseURL || 'https://www.linovelib.com/');
 
-  await page.goto(novelURL.toString());
-
-  if (await isCloudflarePage(page)) {
-    throw new CloudflareError(novelURL);
-  }
-
-  if ((await page.getByText('抱歉，作品已下架！').count()) > 0) {
-    throw new BilinovelError(`This novel ${nid} has been taken down.`);
-  }
-
-  const name = await page.locator('.book-info > .book-name').first().textContent();
-
-  const authors = await extractAuthors(page);
-
-  const updatedAtStr = await page
-    .locator('meta[property="og:novel:update_time"]')
-    .first()
-    .getAttribute('content');
-  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
-
-  if (!name || !updatedAt) return undefined;
-
-  const labels = await page.locator('.book-info > .book-label a').allTextContents();
-  const description = await page
-    .locator('.book-info > .book-dec > p:not(.backupname)')
-    .first()
-    .innerHTML();
-
-  let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
-
-  if (cover && options?.transformImgSrc) {
-    cover = applyTransformImgSrc(cover, options.transformImgSrc);
-  }
-
-  let vols = await Promise.all(
-    (await page.locator('.book-vol-chapter > a').all()).map(async (locator) => {
-      const href = await locator.getAttribute('href');
-      const title = await locator.getAttribute('title');
-      const img = await locator.locator('.tit.fl').getAttribute('style');
-      const volume = await locator.locator('h4').first().textContent();
-
-      const vidMatch = href?.match(/vol_(\d+)\.html/);
-      const vid = vidMatch ? +vidMatch[1] : 0;
-
-      const imgMatch = img?.match(/url\(['"]?(.*?)['"]?\)/);
-      let cover = imgMatch ? imgMatch[1] : '';
-
-      if (cover) {
-        cover = applyTransformImgSrc(cover, options?.transformImgSrc);
-      }
-
-      return {
-        nid,
-        vid,
-        title,
-        cover,
-        volume
-      };
-    })
-  );
-
-  if (vols.length === 0) {
-    await sleep(1000 + 1000 * Math.random());
-
-    const catalogURL = new URL(
-      `/novel/${nid}/catalog`,
-      options?.baseURL || 'https://www.linovelib.com/'
-    );
-
-    await page.goto(catalogURL.toString());
+  try {
+    await page.goto(novelURL.toString());
 
     if (await isCloudflarePage(page)) {
-      throw new CloudflareError(catalogURL);
+      throw new CloudflareError(novelURL);
     }
 
-    vols = await Promise.all(
-      (await page.locator('.volume-list > .volume').all()).map(async (locator) => {
-        const href = await locator.locator('a').first().getAttribute('href');
-        const title = await locator.locator('h2').first().textContent();
-        let cover = (await locator.locator('img').first().getAttribute('data-original')) || '';
-        const volume = '';
+    if ((await page.getByText('抱歉，作品已下架！').count()) > 0) {
+      throw new BilinovelError(`This novel ${nid} has been taken down.`);
+    }
+
+    const name = await page.locator('.book-info > .book-name').first().textContent();
+
+    const authors = await extractAuthors(page);
+
+    const updatedAtStr = await page
+      .locator('meta[property="og:novel:update_time"]')
+      .first()
+      .getAttribute('content');
+    const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+    if (!name || !updatedAt) return undefined;
+
+    const labels = await page.locator('.book-info > .book-label a').allTextContents();
+    const description = await page
+      .locator('.book-info > .book-dec > p:not(.backupname)')
+      .first()
+      .innerHTML();
+
+    let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
+
+    if (cover && options?.transformImgSrc) {
+      cover = applyTransformImgSrc(cover, options.transformImgSrc);
+    }
+
+    let vols = await Promise.all(
+      (await page.locator('.book-vol-chapter > a').all()).map(async (locator) => {
+        const href = await locator.getAttribute('href');
+        const title = await locator.getAttribute('title');
+        const img = await locator.locator('.tit.fl').getAttribute('style');
+        const volume = await locator.locator('h4').first().textContent();
 
         const vidMatch = href?.match(/vol_(\d+)\.html/);
         const vid = vidMatch ? +vidMatch[1] : 0;
+
+        const imgMatch = img?.match(/url\(['"]?(.*?)['"]?\)/);
+        let cover = imgMatch ? imgMatch[1] : '';
 
         if (cover) {
           cover = applyTransformImgSrc(cover, options?.transformImgSrc);
@@ -164,21 +127,65 @@ export async function fetchNovelPage(
         };
       })
     );
-  }
 
-  return {
-    nid: nid,
-    name,
-    authors,
-    labels,
-    description,
-    cover,
-    volumes: vols
-      .filter((v) => v.vid && v.title && v.cover)
-      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
-    updatedAt,
-    fetchedAt: new Date()
-  };
+    if (vols.length === 0) {
+      await sleep(1000 + 1000 * Math.random());
+
+      const catalogURL = new URL(
+        `/novel/${nid}/catalog`,
+        options?.baseURL || 'https://www.linovelib.com/'
+      );
+
+      await page.goto(catalogURL.toString());
+
+      if (await isCloudflarePage(page)) {
+        throw new CloudflareError(catalogURL);
+      }
+
+      vols = await Promise.all(
+        (await page.locator('.volume-list > .volume').all()).map(async (locator) => {
+          const href = await locator.locator('a').first().getAttribute('href');
+          const title = await locator.locator('h2').first().textContent();
+          let cover = (await locator.locator('img').first().getAttribute('data-original')) || '';
+          const volume = '';
+
+          const vidMatch = href?.match(/vol_(\d+)\.html/);
+          const vid = vidMatch ? +vidMatch[1] : 0;
+
+          if (cover) {
+            cover = applyTransformImgSrc(cover, options?.transformImgSrc);
+          }
+
+          return {
+            nid,
+            vid,
+            title,
+            cover,
+            volume
+          };
+        })
+      );
+    }
+
+    return {
+      nid: nid,
+      name,
+      authors,
+      labels,
+      description,
+      cover,
+      volumes: vols
+        .filter((v) => v.vid && v.title && v.cover)
+        .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
+      updatedAt,
+      fetchedAt: new Date()
+    };
+  } catch (error) {
+    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
+      await options?.postmortem?.(page);
+    }
+    throw error;
+  }
 }
 
 export async function fetchNovelVolumePage(
@@ -195,66 +202,73 @@ export async function fetchNovelVolumePage(
     options?.baseURL || 'https://www.linovelib.com/'
   );
 
-  await blockRoutes(page);
+  try {
+    await blockRoutes(page);
 
-  await page.goto(novelURL.toString());
+    await page.goto(novelURL.toString());
 
-  if (await isCloudflarePage(page)) {
-    throw new CloudflareError(novelURL);
+    if (await isCloudflarePage(page)) {
+      throw new CloudflareError(novelURL);
+    }
+
+    const name = await page.locator('.book-info > .book-name').first().textContent();
+
+    const updatedAtStr = await page
+      .locator('meta[property="og:novel:update_time"]')
+      .first()
+      .getAttribute('content');
+    const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+    if (!name || !updatedAt) throw new Error(`missing info`);
+
+    const authors = await extractAuthors(page);
+
+    const labels = await page.locator('.book-info > .book-label a').allTextContents();
+    const description = await page
+      .locator('.book-info > .book-dec > p:not(.backupname)')
+      .first()
+      .innerHTML();
+
+    let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
+
+    if (cover && options?.transformImgSrc) {
+      cover = applyTransformImgSrc(cover, options.transformImgSrc);
+    }
+
+    const chapters = await Promise.all(
+      (await page.locator('.book-new-chapter > .tit > a').all()).map(async (locator) => {
+        const title = await locator.textContent();
+        const href = await locator.getAttribute('href');
+        const cidMatch = href?.match(/\/(\d+)\.html$/);
+        const cid = cidMatch ? +cidMatch[1] : 0;
+
+        return {
+          nid,
+          vid,
+          cid,
+          title
+        };
+      })
+    );
+
+    return {
+      nid,
+      vid,
+      name,
+      authors,
+      labels,
+      description,
+      cover,
+      chapters: chapters.filter((c) => c.cid && c.title) as any,
+      updatedAt,
+      fetchedAt: new Date()
+    };
+  } catch (error) {
+    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
+      await options?.postmortem?.(page);
+    }
+    throw error;
   }
-
-  const name = await page.locator('.book-info > .book-name').first().textContent();
-
-  const updatedAtStr = await page
-    .locator('meta[property="og:novel:update_time"]')
-    .first()
-    .getAttribute('content');
-  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
-
-  if (!name || !updatedAt) throw new Error(`missing info`);
-
-  const authors = await extractAuthors(page);
-
-  const labels = await page.locator('.book-info > .book-label a').allTextContents();
-  const description = await page
-    .locator('.book-info > .book-dec > p:not(.backupname)')
-    .first()
-    .innerHTML();
-
-  let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
-
-  if (cover && options?.transformImgSrc) {
-    cover = applyTransformImgSrc(cover, options.transformImgSrc);
-  }
-
-  const chapters = await Promise.all(
-    (await page.locator('.book-new-chapter > .tit > a').all()).map(async (locator) => {
-      const title = await locator.textContent();
-      const href = await locator.getAttribute('href');
-      const cidMatch = href?.match(/\/(\d+)\.html$/);
-      const cid = cidMatch ? +cidMatch[1] : 0;
-
-      return {
-        nid,
-        vid,
-        cid,
-        title
-      };
-    })
-  );
-
-  return {
-    nid,
-    vid,
-    name,
-    authors,
-    labels,
-    description,
-    cover,
-    chapters: chapters.filter((c) => c.cid && c.title) as any,
-    updatedAt,
-    fetchedAt: new Date()
-  };
 }
 
 async function extractAuthors(page: Page) {
@@ -336,37 +350,44 @@ export async function fetchNovelChapters(
 
   const page = await context.newPage();
 
-  await blockRoutes(page);
+  try {
+    await blockRoutes(page);
 
-  const contents = [];
-  const images = [];
+    const contents = [];
+    const images = [];
 
-  let title = '';
-  let pageCount = 1;
+    let title = '';
+    let pageCount = 1;
 
-  for (; ; pageCount++) {
-    const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
+    for (; ; pageCount++) {
+      const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
 
-    if (!result) break;
+      if (!result) break;
 
-    title = result.title;
-    contents.push(result.content);
-    images.push(...result.images);
+      title = result.title;
+      contents.push(result.content);
+      images.push(...result.images);
 
-    if (result.pagination.complete) break;
+      if (result.pagination.complete) break;
 
-    const delay = options?.delay || 1000;
-    await sleep(delay / 2 + (Math.random() * delay) / 2);
+      const delay = options?.delay || 1000;
+      await sleep(delay / 2 + (Math.random() * delay) / 2);
+    }
+
+    return {
+      nid,
+      cid,
+      title,
+      content: contents.join(''),
+      images,
+      fetchedAt: new Date()
+    };
+  } catch (error) {
+    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
+      await options?.postmortem?.(page);
+    }
+    throw error;
   }
-
-  return {
-    nid,
-    cid,
-    title,
-    content: contents.join(''),
-    images,
-    fetchedAt: new Date()
-  };
 }
 
 export async function fetchNovelChapterPage(
