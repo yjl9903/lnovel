@@ -67,7 +67,9 @@ export async function fetchNovelPage(
   const novelURL = new URL(`/novel/${nid}.html`, options?.baseURL || 'https://www.linovelib.com/');
 
   try {
-    await page.goto(novelURL.toString());
+    await page.goto(novelURL.toString(), {
+      waitUntil: 'networkidle'
+    });
 
     if (await isCloudflarePage(page)) {
       throw new CloudflareError(novelURL);
@@ -136,7 +138,9 @@ export async function fetchNovelPage(
         options?.baseURL || 'https://www.linovelib.com/'
       );
 
-      await page.goto(catalogURL.toString());
+      await page.goto(catalogURL.toString(), {
+        waitUntil: 'networkidle'
+      });
 
       if (await isCloudflarePage(page)) {
         throw new CloudflareError(catalogURL);
@@ -205,7 +209,9 @@ export async function fetchNovelVolumePage(
   try {
     await blockRoutes(page);
 
-    await page.goto(novelURL.toString());
+    await page.goto(novelURL.toString(), {
+      waitUntil: 'networkidle'
+    });
 
     if (await isCloudflarePage(page)) {
       throw new CloudflareError(novelURL);
@@ -402,7 +408,9 @@ export async function fetchNovelChapterPage(
     options?.baseURL || 'https://www.linovelib.com/'
   );
 
-  await page.goto(novelURL.toString());
+  await page.goto(novelURL.toString(), {
+    waitUntil: 'networkidle'
+  });
 
   if (await isCloudflarePage(page)) {
     throw new CloudflareError(novelURL);

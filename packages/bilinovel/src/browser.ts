@@ -26,6 +26,7 @@ export async function blockRoutes(page: Page, list = BLOCK_LIST) {
       route.continue(); // 放行其他请求
     }
   });
+
   return page;
 }
 
