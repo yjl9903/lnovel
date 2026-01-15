@@ -68,7 +68,7 @@ export async function fetchNovelPage(
 
   try {
     await page.goto(novelURL.toString(), {
-      waitUntil: 'networkidle'
+      waitUntil: 'domcontentloaded'
     });
 
     if (await isCloudflarePage(page)) {
@@ -139,7 +139,7 @@ export async function fetchNovelPage(
       );
 
       await page.goto(catalogURL.toString(), {
-        waitUntil: 'networkidle'
+        waitUntil: 'domcontentloaded'
       });
 
       if (await isCloudflarePage(page)) {
@@ -210,7 +210,7 @@ export async function fetchNovelVolumePage(
     await blockRoutes(page);
 
     await page.goto(novelURL.toString(), {
-      waitUntil: 'networkidle'
+      waitUntil: 'domcontentloaded'
     });
 
     if (await isCloudflarePage(page)) {
