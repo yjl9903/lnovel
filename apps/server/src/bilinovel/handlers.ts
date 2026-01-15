@@ -681,7 +681,7 @@ export const triggerUpdateNovel = memo(
   },
   (_, nid) => nid,
   {
-    ttl: 24 * 60 * 60 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -838,6 +838,6 @@ export const triggerUpdateNovelVolume = memo(
   },
   (_, novel, novelVolume) => `${novel.nid}/${novelVolume.vid}`,
   {
-    ttl: 24 * 60 * 60 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
