@@ -81,6 +81,7 @@ export async function runBrowserContext<T extends {}>(
   key: string,
   fn: (context: BrowserContext, task: BrowserTask) => Promise<Awaited<T> | null | undefined>,
   options: {
+    interval?: number;
     cache?: LRUCache<string, Awaited<T>>;
     limit?: LimitFunction;
     context?: BrowserContextOptions | undefined;
@@ -101,6 +102,11 @@ export async function runBrowserContext<T extends {}>(
       if (task.aborted) {
         rej(new Error(`Task "${key}" is aborted`));
         return;
+      }
+
+      if (limit.pendingCount > 0) {
+        const interval = options.interval || 1000;
+        await sleep(interval + Math.random() * interval);
       }
 
       await task.start();
