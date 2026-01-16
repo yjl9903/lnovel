@@ -385,7 +385,7 @@ export async function fetchWenkuPage(
 
   const target = buildWenkuURL(filter, options);
 
-  await page.goto(target.toString());
+  await page.goto(target.toString(), { waitUntil: 'domcontentloaded' });
 
   if (await isCloudflarePage(page)) {
     throw new Error(`"${target.toString()}" was blocked by cloudflare`);

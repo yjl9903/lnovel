@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
+import foloIcon from './assets/folo.svg';
+
 type TopNovelItem = {
   nid: number;
   title: string;
@@ -75,9 +77,36 @@ function RssButton({ href }: RssButtonProps) {
     <a
       href={href}
       target="_blank"
-      className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
+      className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
     >
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 24 24"
+        className="h-3 w-3"
+        fill="currentColor"
+      >
+        <path d="M5.07 2.82a1 1 0 0 0 0 2 13.11 13.11 0 0 1 13.11 13.1 1 1 0 1 0 2 0c0-8.34-6.78-15.1-15.1-15.1Z" />
+        <path d="M5.07 8.64a1 1 0 1 0 0 2 7.29 7.29 0 0 1 7.29 7.28 1 1 0 0 0 2 0 9.29 9.29 0 0 0-9.29-9.28Z" />
+        <circle cx="6.29" cy="17.71" r="2.29" />
+      </svg>
       RSS
+    </a>
+  );
+}
+
+type FoloButtonProps = {
+  href: string;
+};
+
+function FoloButton({ href }: FoloButtonProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      className="inline-flex items-center gap-1 rounded-full border border-[#ff6e2d]/40 bg-[#ff6e2d]/15 px-2 py-0.5 text-[10px] font-medium text-[#ff6e2d] hover:border-[#ff6e2d]/60 hover:bg-[#ff6e2d]/25"
+    >
+      <img src={foloIcon} alt="" className="h-3 w-3" />
+      Folo
     </a>
   );
 }
@@ -109,13 +138,19 @@ export default function App() {
       <div className="relative overflow-hidden">
         <div className="mx-auto flex min-h-screen max-w-md flex-col px-6 pb-10 pt-8 sm:max-w-[90vw] md:max-w-3xl lg:max-w-5xl">
           <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-2">
-            <h1 className="select-none text-xl font-semibold text-slate-900">lnovel</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="select-none text-2xl font-semibold text-slate-900">lnovel</h1>
+              <div className="flex items-center gap-2">
+                <RssButton href="/bili/top/weekvisit/feed.xml"></RssButton>
+                <FoloButton href="https://app.folo.is/share/feeds/231789721946592256" />
+              </div>
+            </div>
             <label className="flex flex-1 justify-end">
               <input
                 type="search"
-                placeholder="开发中"
+                placeholder="开发中..."
                 disabled
-                className="w-40 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-xs text-slate-600 placeholder:text-slate-400"
+                className="w-40 rounded-md border border-slate-200 bg-white/80 px-3 py-1 text-xs text-slate-600 placeholder:text-slate-400"
               />
             </label>
           </header>
@@ -169,6 +204,7 @@ export default function App() {
                               {activeItem.title}
                             </a>
                             <RssButton href={buildFeedUrl(activeItem.nid)} />
+                            {/* <FoloButton href={buildFeedUrl(activeItem.nid)} /> */}
                           </h3>
                           <p className="mt-2 text-sm text-slate-500">
                             作者 {activeItem.author ?? '未知'}
@@ -249,6 +285,7 @@ export default function App() {
                                   {item.title}
                                 </a>
                                 <RssButton href={buildFeedUrl(item.nid)} />
+                                {/* <FoloButton href={buildFeedUrl(item.nid)} /> */}
                               </p>
                               <p className="mt-1 text-xs text-slate-500">
                                 {item.author ? `${item.author} · ` : ''}

@@ -83,7 +83,7 @@ export async function fetchTopPage(
 
   const target = buildTopURL(filter, options);
 
-  await page.goto(target.toString());
+  await page.goto(target.toString(), { waitUntil: 'domcontentloaded' });
 
   if (await isCloudflarePage(page)) {
     throw new Error(`"${target.toString()}" was blocked by cloudflare`);
