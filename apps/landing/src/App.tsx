@@ -66,6 +66,22 @@ function Cover({ src, title, className }: CoverProps) {
   );
 }
 
+type RssButtonProps = {
+  href: string;
+};
+
+function RssButton({ href }: RssButtonProps) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
+    >
+      RSS
+    </a>
+  );
+}
+
 export default function App() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['top-weekvisit'],
@@ -97,7 +113,7 @@ export default function App() {
             <label className="flex flex-1 justify-end">
               <input
                 type="search"
-                placeholder="开放中"
+                placeholder="开发中"
                 disabled
                 className="w-40 rounded-full border border-slate-200 bg-white/80 px-2 py-1 text-xs text-slate-600 placeholder:text-slate-400"
               />
@@ -152,12 +168,7 @@ export default function App() {
                             >
                               {activeItem.title}
                             </a>
-                            <a
-                              href={buildFeedUrl(activeItem.nid)}
-                              className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
-                            >
-                              RSS
-                            </a>
+                            <RssButton href={buildFeedUrl(activeItem.nid)} />
                           </h3>
                           <p className="mt-2 text-sm text-slate-500">
                             作者 {activeItem.author ?? '未知'}
@@ -237,12 +248,7 @@ export default function App() {
                                 >
                                   {item.title}
                                 </a>
-                                <a
-                                  href={buildFeedUrl(item.nid)}
-                                  className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
-                                >
-                                  RSS
-                                </a>
+                                <RssButton href={buildFeedUrl(item.nid)} />
                               </p>
                               <p className="mt-1 text-xs text-slate-500">
                                 {item.author ? `${item.author} · ` : ''}
