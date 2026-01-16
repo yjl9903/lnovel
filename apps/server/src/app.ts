@@ -76,13 +76,6 @@ function createHono() {
     }
   });
 
-  app.get('/', (c) =>
-    c.json({
-      ok: true,
-      message: 'lnovel.animes.garden'
-    })
-  );
-
   app.get('/health', (c) =>
     c.json({
       ok: true,

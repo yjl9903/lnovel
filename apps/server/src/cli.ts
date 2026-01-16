@@ -7,7 +7,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici';
 import { version } from '../package.json';
 
 import { startServer } from './server';
-import { createApp, startCron } from './app';
+import { createApp, startCron } from './index';
 
 const app = breadc('lnovel-server', { description: 'lnovel API server', version })
   .option('--secret <string>', 'Admin auth secret')

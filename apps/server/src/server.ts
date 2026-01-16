@@ -1,7 +1,4 @@
-import path from 'node:path';
-
 import { serve } from '@hono/node-server';
-import { serveStatic } from '@hono/node-server/serve-static';
 
 import { createApp, consola } from './app';
 
@@ -14,8 +11,6 @@ export interface ListenOptions {
 export function startServer(app: ReturnType<typeof createApp>, options: ListenOptions) {
   const host = options.host ?? '0.0.0.0';
   const port = options.port ? +options.port : 3000;
-
-  app.use('/*', serveStatic({ root: path.join(import.meta.dirname, '../public/') }));
 
   const server = serve(
     {

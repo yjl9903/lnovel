@@ -1,7 +1,13 @@
-import { ComponentExample } from '@/components/component-example';
-
 export function App() {
-  return <ComponentExample />;
+  return (
+    <div>
+      <header>
+        <h1>lnovel</h1>
+      </header>
+      <main></main>
+      <footer></footer>
+    </div>
+  );
 }
 
 export default App;
