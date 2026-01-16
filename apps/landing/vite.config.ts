@@ -10,6 +10,11 @@ export default defineConfig({
     outDir: '../server/public',
     emptyOutDir: true
   },
+  server: {
+    proxy: {
+      '/bili': 'https://lnovel.animes.garden'
+    }
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
