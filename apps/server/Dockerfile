@@ -32,6 +32,7 @@ RUN apt-get update -qq && \
 # Install node modules
 COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .npmrc .node-version ./
 COPY ./apps/server/package.json ./apps/server/
+COPY ./apps/landing/package.json ./apps/landing/
 COPY ./packages/lnovel/package.json ./packages/lnovel/
 COPY ./packages/bilinovel/package.json ./packages/bilinovel/
 
