@@ -95,9 +95,15 @@ app.get('/wenku', async (c: Context) => {
   const filter = parseWenkuFilter(url.searchParams);
   const resp = await getWenku(c, filter);
 
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, filter, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  if (resp.ok) {
+    const data = {
+      ...resp.data,
+      items: await attachFoloFeedIds(c, resp.data.items)
+    };
+    return c.json({ ok: true, provider: Provider.bilinovel, filter, data });
+  }
+
+  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
 app.get('/top/:sort', async (c: Context) => {
@@ -105,15 +111,22 @@ app.get('/top/:sort', async (c: Context) => {
   const filter = parseTopFilter(url);
   const resp = await getTop(c, filter);
 
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, filter, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  if (resp.ok) {
+    const data = {
+      ...resp.data,
+      items: await attachFoloFeedIds(c, resp.data.items)
+    };
+    return c.json({ ok: true, provider: Provider.bilinovel, filter, data });
+  }
+
+  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
 app.get('/novels', async (c: Context) => {
   try {
     const novels = await getNovelsFromDatabase();
-    return c.json({ ok: true, provider: Provider.bilinovel, data: novels });
+    const data = await attachFoloFeedIds(c, novels);
+    return c.json({ ok: true, provider: Provider.bilinovel, data });
   } catch (error) {
     consola.error(error);
     return c.json(
@@ -132,16 +145,20 @@ app.get('/novel/:nid', async (c: Context) => {
   const db = await getNovelFromDatabase(nid, false);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
-    return c.json({ ok: true, provider: Provider.bilinovel, data: db });
+    const data = await attachFoloFeedId(c, db);
+    return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
   const resp = await getNovel(c, nid);
 
   updateNovelAndFeedId(c, nid);
 
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  if (resp.ok) {
+    const data = await attachFoloFeedId(c, resp.data);
+    return c.json({ ok: true, provider: Provider.bilinovel, data });
+  }
+
+  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
 app.get('/novel/:nid/vol/:vid', async (c: Context) => {
@@ -154,16 +171,20 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const db = await getNovelVolumeFromDatabase(nid, vid, false);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
-    return c.json({ ok: true, provider: Provider.bilinovel, data: db });
+    const data = await attachFoloVolumeFeedId(c, db);
+    return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
   const resp = await getNovelVolume(c, nid, vid);
 
   updateNovelAndFeedId(c, nid);
 
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  if (resp.ok) {
+    const data = await attachFoloVolumeFeedId(c, resp.data);
+    return c.json({ ok: true, provider: Provider.bilinovel, data });
+  }
+
+  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
 });
 
 app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
@@ -393,7 +414,7 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
           id: `/bili/novel/${nid}/vol/${vol.vid}`,
           link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
           // author: data.authors.map((author) => transformAuthor(author)),
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p><p><img src="${vol.cover}" alt="cover" /></p>${dbVol?.description ? `<p>${dbVol.description}</p>` : ''}`,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>${dbVol?.description ? `<p>${dbVol.description}</p>` : ''}<p><img src="${vol.cover}" alt="cover" /></p>`,
           image: dbVol?.cover || vol.cover,
           // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
           date: new Date(data.updatedAt.getTime() + 1000 * index),
@@ -492,6 +513,31 @@ async function updateNovelAndFeedId(c: Context, nid: string) {
       }
     }, 1000);
   });
+}
+
+async function attachFoloFeedId<T extends { nid: number | string }>(c: Context, item: T) {
+  const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
+  const foloFeedId = await getFoloFeedId(feedUrl);
+  return { ...item, foloFeedId: foloFeedId ?? null };
+}
+
+async function attachFoloVolumeFeedId<T extends { nid: number | string; vid: number | string }>(
+  c: Context,
+  item: T
+) {
+  const feedUrl = buildSite(c, `/bili/novel/${item.nid}/vol/${item.vid}/feed.xml`);
+  const foloFeedId = await getFoloFeedId(feedUrl);
+  return { ...item, foloFeedId: foloFeedId ?? null };
+}
+
+async function attachFoloFeedIds<T extends { nid: number | string }>(c: Context, items: T[]) {
+  return Promise.all(
+    items.map(async (item) => {
+      const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
+      const foloFeedId = await getFoloFeedId(feedUrl);
+      return { ...item, foloFeedId: foloFeedId ?? null };
+    })
+  );
 }
 
 export async function updatePendingNovels(c: Context) {

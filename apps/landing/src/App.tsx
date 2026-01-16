@@ -14,6 +14,7 @@ type TopNovelItem = {
   latestChapter?: string;
   description?: string;
   rank?: number;
+  foloFeedId?: string | null;
 };
 
 type TopResponse = {
@@ -47,6 +48,7 @@ const fetchTopWeekvisit = async () => {
 
 const buildNovelUrl = (nid: number) => `https://www.linovelib.com/novel/${nid}.html`;
 const buildFeedUrl = (nid: number) => `/bili/novel/${nid}/feed.xml`;
+const buildFoloShareUrl = (feedId: string) => `https://app.folo.is/share/feeds/${feedId}`;
 
 type CoverProps = {
   src?: string;
@@ -79,12 +81,7 @@ function RssButton({ href }: RssButtonProps) {
       target="_blank"
       className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
     >
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 24 24"
-        className="h-3 w-3"
-        fill="currentColor"
-      >
+      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor">
         <path d="M5.07 2.82a1 1 0 0 0 0 2 13.11 13.11 0 0 1 13.11 13.1 1 1 0 1 0 2 0c0-8.34-6.78-15.1-15.1-15.1Z" />
         <path d="M5.07 8.64a1 1 0 1 0 0 2 7.29 7.29 0 0 1 7.29 7.28 1 1 0 0 0 2 0 9.29 9.29 0 0 0-9.29-9.28Z" />
         <circle cx="6.29" cy="17.71" r="2.29" />
@@ -177,7 +174,7 @@ export default function App() {
               <>
                 {featured.length > 0 && activeItem ? (
                   <section className="mt-4">
-                    <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
+                    <div className="grid gap-6 sm:grid-cols-[220px_1fr]">
                       <div className="flex flex-col gap-3">
                         <a
                           href={buildNovelUrl(activeItem.nid)}
@@ -204,7 +201,9 @@ export default function App() {
                               {activeItem.title}
                             </a>
                             <RssButton href={buildFeedUrl(activeItem.nid)} />
-                            {/* <FoloButton href={buildFeedUrl(activeItem.nid)} /> */}
+                            {activeItem.foloFeedId ? (
+                              <FoloButton href={buildFoloShareUrl(activeItem.foloFeedId)} />
+                            ) : null}
                           </h3>
                           <p className="mt-2 text-sm text-slate-500">
                             作者 {activeItem.author ?? '未知'}
@@ -285,21 +284,21 @@ export default function App() {
                                   {item.title}
                                 </a>
                                 <RssButton href={buildFeedUrl(item.nid)} />
-                                {/* <FoloButton href={buildFeedUrl(item.nid)} /> */}
+                                {item.foloFeedId ? (
+                                  <FoloButton href={buildFoloShareUrl(item.foloFeedId)} />
+                                ) : null}
                               </p>
-                              <p className="mt-1 text-xs text-slate-500">
-                                {item.author ? `${item.author} · ` : ''}
-                                {item.status ?? '连载中'}
+                              <p className="mt-2 text-xs text-slate-500">
+                                <span>{item.author ? `${item.author} · ` : ''}</span>
+                                <span>{item.status ?? '连载中'}</span>
+                                <span className="ml-4 rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600">
+                                  {item.latestChapter}
+                                </span>
                               </p>
                             </div>
-                            {item.latestChapter ? (
-                              <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600">
-                                {item.latestChapter}
-                              </span>
-                            ) : null}
                           </div>
                           {item.description ? (
-                            <p className="mt-2 line-clamp-4 text-xs text-slate-600">
+                            <p className="mt-3 line-clamp-4 text-xs text-slate-600">
                               {item.description}
                             </p>
                           ) : null}
