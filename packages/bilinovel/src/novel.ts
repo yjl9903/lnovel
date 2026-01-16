@@ -75,7 +75,10 @@ export async function fetchNovelPage(
       throw new CloudflareError(novelURL);
     }
 
-    if ((await page.getByText('抱歉，作品已下架！').count()) > 0) {
+    if (
+      (await page.getByText('抱歉，作品已下架！').count()) > 0 ||
+      (await page.getByText('小说下架了').count()) > 0
+    ) {
       throw new BilinovelError(`This novel ${nid} has been taken down.`);
     }
 
@@ -280,7 +283,7 @@ export async function fetchNovelVolumePage(
 async function extractAuthors(page: Page) {
   let authors = await page
     .locator('.book-author .au-name a')
-    .evaluateAll<AuthorResult[]>((links) => {
+    .evaluateAll<AuthorResult[]>((links: any[]) => {
       eval('var __name = t => t');
 
       const items: AuthorResult[] = [];
@@ -421,6 +424,10 @@ export async function fetchNovelChapterPage(
     throw new CloudflareError(novelURL);
   }
 
+  if ((await page.getByText('沒有可閱讀的章節').count()) > 0) {
+    throw new BilinovelError(`This novel ${nid} and chapter ${cid} has been taken down.`);
+  }
+
   const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
   if (!rawTitle) return undefined;
 
@@ -430,7 +437,7 @@ export async function fetchNovelChapterPage(
   let content = await page
     .locator('#mlfy_main_text > #TextContent')
     .first()
-    .evaluate<string>((container) => {
+    .evaluate<string>((container: any) => {
       try {
         // Under tsx / esbuild environment, all the functions will be wrapped by __name(<fn>, '<name>')
         // hacked by evalling a script to "polyfill" __name function
