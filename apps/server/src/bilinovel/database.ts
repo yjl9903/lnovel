@@ -78,14 +78,15 @@ export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) =
 
 export const getNovelVolumeFromDatabase = async (
   nid: string,
-  vid: string
+  vid: string,
+  done = true
 ): Promise<NovelVolumePageResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
   if (novel) {
     const [volume] = await database.select().from(biliVolumes).where(eq(biliVolumes.vid, +vid));
 
-    if (volume && volume.done) {
+    if (volume && ((done && volume.done) || !done)) {
       const chapters = await database
         .select()
         .from(biliChapters)

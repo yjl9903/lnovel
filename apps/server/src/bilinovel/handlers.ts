@@ -233,7 +233,7 @@ export const getWenku = memo(
     return getWenkuFilterKey(filter);
   },
   {
-    ttl: 10 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -328,7 +328,7 @@ export const getTop = memo(
     return getTopFilterKey(filter);
   },
   {
-    ttl: 10 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -411,7 +411,7 @@ export const getNovel = memo(
   },
   (_, nid) => nid,
   {
-    ttl: 10 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -497,7 +497,7 @@ export const getNovelVolume = memo(
   },
   (_, nid, vid) => `${nid}/${vid}`,
   {
-    ttl: 10 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -567,7 +567,7 @@ export const getNovelChapter = memo(
   },
   (_, nid, cid) => `${nid}/${cid}`,
   {
-    ttl: 10 * 1000
+    ttl: 60 * 60 * 1000
   }
 );
 
@@ -779,6 +779,17 @@ export const triggerUpdateNovelVolume = memo(
 
         await waitLimitIdle(chapterLimit, { threshold: 5 });
 
+        consola.log(
+          `Start updating novel chapter to database`,
+          `nid:${nid}`,
+          novel.name,
+          `vid:${vid}`,
+          novelVolume.title,
+          `cid:${ch.cid}`,
+          ch.title,
+          `(${index + 1} / ${fetchedVolume.chapters.length})`
+        );
+
         const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
 
         if (resp.ok) {
@@ -806,8 +817,31 @@ export const triggerUpdateNovelVolume = memo(
                 fetchedAt: new Date()
               }
             });
+
+          consola.log(
+            `Finish updating novel chapter to database`,
+            `nid:${nid}`,
+            novel.name,
+            `vid:${vid}`,
+            novelVolume.title,
+            `cid:${ch.cid}`,
+            ch.title,
+            `(${index + 1} / ${fetchedVolume.chapters.length})`
+          );
         } else {
           isFailed = true;
+
+          consola.log(
+            `Failed updating novel chapter to database`,
+            `nid:${nid}`,
+            novel.name,
+            `vid:${vid}`,
+            novelVolume.title,
+            `cid:${ch.cid}`,
+            ch.title,
+            `(${index + 1} / ${fetchedVolume.chapters.length})`
+          );
+
           break;
         }
       }
@@ -819,7 +853,7 @@ export const triggerUpdateNovelVolume = memo(
         await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
 
         consola.log(
-          `Finish updating novel volume to database`,
+          `Finish updating novel volume and chapters to database`,
           `nid:${nid}`,
           novel.name,
           `vid:${vid}`,
@@ -829,7 +863,7 @@ export const triggerUpdateNovelVolume = memo(
         return { ok: true };
       } else {
         consola.log(
-          `Failed updating novel volume to database`,
+          `Failed updating novel volume and chapters to database`,
           `nid:${nid}`,
           novel.name,
           `vid:${vid}`,

@@ -129,7 +129,7 @@ app.get('/novel/:nid', async (c: Context) => {
 
   const nid = c.req.param('nid');
 
-  const db = await getNovelFromDatabase(nid);
+  const db = await getNovelFromDatabase(nid, false);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
@@ -151,7 +151,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
-  const db = await getNovelVolumeFromDatabase(nid, vid);
+  const db = await getNovelVolumeFromDatabase(nid, vid, false);
   if (db && !force) {
     updateNovelAndFeedId(c, nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
@@ -386,13 +386,15 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
         const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
         const feedUrl = rawFeedURL;
 
+        const dbVol = await getNovelVolumeFromDatabase(nid, '' + vol.vid, false);
+
         return {
           title: vol.title || vol.volume,
           id: `/bili/novel/${nid}/vol/${vol.vid}`,
           link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
           // author: data.authors.map((author) => transformAuthor(author)),
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p><p><img src="${vol.cover}" alt="cover" /></p>`,
-          image: vol.cover,
+          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p><p><img src="${vol.cover}" alt="cover" /></p>${dbVol?.description ? `<p>${dbVol.description}</p>` : ''}`,
+          image: dbVol?.cover || vol.cover,
           // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
           date: new Date(data.updatedAt.getTime() + 1000 * index),
           categories: data.labels
