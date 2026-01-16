@@ -315,8 +315,13 @@ export default function App() {
             ) : null}
           </main>
 
-          <footer className="border-t border-slate-200 pt-6 text-center text-xs text-slate-500">
-            <p>© 2025 lnovel</p>
+          <footer className="mt-12 border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
+            <p>
+              © 2025{' '}
+              <a href="https://github.com/yjl9903/lnovel" target="_blank">
+                lnovel
+              </a>
+            </p>
           </footer>
         </div>
       </div>
