@@ -1,6 +1,8 @@
+import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type MouseEvent } from 'react';
 
+import feedIcon from './assets/feed.svg';
 import foloIcon from './assets/folo.svg';
 
 type TopNovelItem = {
@@ -49,6 +51,10 @@ const fetchTopWeekvisit = async () => {
 const buildNovelUrl = (nid: number) => `https://www.linovelib.com/novel/${nid}.html`;
 const buildFeedUrl = (nid: number) => `/bili/novel/${nid}/feed.xml`;
 const buildFoloShareUrl = (feedId: string) => `https://app.folo.is/share/feeds/${feedId}`;
+const buildFoloDeeplink = (feedId: string, view = 'timeline') => `feed?id=${feedId}&view=${view}`;
+
+const FOLO_APP_PROTOCOL = 'folo';
+const FOLO_DEEPLINK_SCHEME = `${FOLO_APP_PROTOCOL}://`;
 
 type CoverProps = {
   src?: string;
@@ -72,35 +78,71 @@ function Cover({ src, title, className }: CoverProps) {
 
 type RssButtonProps = {
   href: string;
+  className?: string;
 };
 
-function RssButton({ href }: RssButtonProps) {
+function RssButton({ href, className }: RssButtonProps) {
   return (
     <a
       href={href}
       target="_blank"
-      className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-300 hover:bg-amber-200"
+      className={clsx(
+        'inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-500 hover:bg-amber-200',
+        className
+      )}
     >
-      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor">
-        <path d="M5.07 2.82a1 1 0 0 0 0 2 13.11 13.11 0 0 1 13.11 13.1 1 1 0 1 0 2 0c0-8.34-6.78-15.1-15.1-15.1Z" />
-        <path d="M5.07 8.64a1 1 0 1 0 0 2 7.29 7.29 0 0 1 7.29 7.28 1 1 0 0 0 2 0 9.29 9.29 0 0 0-9.29-9.28Z" />
-        <circle cx="6.29" cy="17.71" r="2.29" />
-      </svg>
+      <img src={feedIcon} alt="" className="h-3 w-3" />
       RSS
     </a>
   );
 }
 
-type FoloButtonProps = {
-  href: string;
+const openInFoloApp = ({ deeplink, fallbackUrl }: { deeplink: string; fallbackUrl?: string }) => {
+  const timeout = 500;
+  let isAppOpened = false;
+
+  const handleBlur = () => {
+    isAppOpened = true;
+    window.removeEventListener('blur', handleBlur);
+  };
+
+  window.addEventListener('blur', handleBlur);
+  window.location.href = `${FOLO_DEEPLINK_SCHEME}${deeplink}`;
+
+  window.setTimeout(() => {
+    window.removeEventListener('blur', handleBlur);
+    if (!isAppOpened && fallbackUrl) {
+      window.location.href = fallbackUrl;
+    }
+  }, timeout);
 };
 
-function FoloButton({ href }: FoloButtonProps) {
+type FoloButtonProps = {
+  feedId: string;
+  className?: string;
+};
+
+function FoloButton({ feedId, className }: FoloButtonProps) {
+  const feedURL = buildFoloShareUrl(feedId);
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!feedId) return;
+    event.preventDefault();
+    openInFoloApp({
+      deeplink: buildFoloDeeplink(feedId),
+      fallbackUrl: feedURL
+    });
+  };
+
   return (
     <a
-      href={href}
+      href={feedURL}
+      onClick={handleClick}
       target="_blank"
-      className="inline-flex items-center gap-1 rounded-full border border-[#ff6e2d]/40 bg-[#ff6e2d]/15 px-2 py-0.5 text-[10px] font-medium text-[#ff6e2d] hover:border-[#ff6e2d]/60 hover:bg-[#ff6e2d]/25"
+      className={clsx(
+        'inline-flex items-center gap-1 rounded-full border border-[#ff6e2d]/40 bg-[#ff6e2d]/15 px-2 py-0.5 text-[10px] font-medium text-[#ff6e2d] hover:border-[#ff6e2d]/60 hover:bg-[#ff6e2d]/25',
+        className
+      )}
     >
       <img src={foloIcon} alt="" className="h-3 w-3" />
       Folo
@@ -125,6 +167,10 @@ export default function App() {
     }
   }, [activeIndex, featured.length]);
 
+  const feedURL = `/bili/top/weekvisit/feed.xml`;
+  const foloFeedId = '231789721946592256';
+  const foloURL = buildFoloShareUrl(foloFeedId);
+
   const activeItem = featured[activeIndex];
   const descriptionLineCount = activeItem?.description
     ? activeItem.description.split(/\r?\n+/).filter(Boolean).length
@@ -138,8 +184,8 @@ export default function App() {
             <div className="flex items-center gap-4">
               <h1 className="select-none text-2xl font-semibold text-slate-900">lnovel</h1>
               <div className="flex items-center gap-2">
-                <RssButton href="/bili/top/weekvisit/feed.xml"></RssButton>
-                <FoloButton href="https://app.folo.is/share/feeds/231789721946592256" />
+                <RssButton href={feedURL} className="shrink-0" />
+                <FoloButton feedId={foloFeedId} className="shrink-0" />
               </div>
             </div>
             <label className="flex flex-1 justify-end">
@@ -147,7 +193,7 @@ export default function App() {
                 type="search"
                 placeholder="开发中..."
                 disabled
-                className="w-40 rounded-md border border-slate-200 bg-white/80 px-3 py-1 text-xs text-slate-600 placeholder:text-slate-400"
+                className="w-32 lg:w-40 rounded-md border border-slate-200 bg-white/80 px-3 py-1 text-xs text-slate-600 placeholder:text-slate-400"
               />
             </label>
           </header>
@@ -191,7 +237,7 @@ export default function App() {
                       </div>
                       <div className="flex flex-col gap-4">
                         <div>
-                          <h3 className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-slate-900">
+                          <h3 className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-slate-900 line-clamp-1">
                             <a
                               href={buildNovelUrl(activeItem.nid)}
                               target="_blank"
@@ -200,9 +246,9 @@ export default function App() {
                             >
                               {activeItem.title}
                             </a>
-                            <RssButton href={buildFeedUrl(activeItem.nid)} />
+                            <RssButton href={buildFeedUrl(activeItem.nid)} className="shrink-0" />
                             {activeItem.foloFeedId ? (
-                              <FoloButton href={buildFoloShareUrl(activeItem.foloFeedId)} />
+                              <FoloButton feedId={activeItem.foloFeedId} className="shrink-0" />
                             ) : null}
                           </h3>
                           <p className="mt-2 text-sm text-slate-500">
@@ -234,7 +280,7 @@ export default function App() {
                                 <Cover
                                   src={item.cover}
                                   title={item.title}
-                                  className={`aspect-[3/4] rounded-xl shadow-sm transition ${
+                                  className={`aspect-3/4 rounded-xl shadow-sm transition ${
                                     index === activeIndex
                                       ? 'ring-2 ring-slate-300'
                                       : 'hover:ring-2 hover:ring-slate-200'
@@ -253,11 +299,11 @@ export default function App() {
                 ) : null}
 
                 {rest.length > 0 ? (
-                  <ul className="mt-6 space-y-4">
+                  <ul className="mt-6 space-y-4 max-w-full">
                     {rest.map((item) => (
                       <li
                         key={item.nid}
-                        className="flex gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm"
+                        className="flex gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm max-w-full"
                       >
                         <a
                           href={buildNovelUrl(item.nid)}
@@ -268,10 +314,10 @@ export default function App() {
                           <Cover
                             src={item.cover}
                             title={item.title}
-                            className="aspect-[3/4] w-24 rounded-xl"
+                            className="aspect-3/4 w-16 lg:w-24 rounded-xl"
                           />
                         </a>
-                        <div className="flex-1">
+                        <div className="flex-auto grow-0">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
@@ -279,13 +325,13 @@ export default function App() {
                                   href={buildNovelUrl(item.nid)}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="min-w-0 truncate hover:underline"
+                                  className="min-w-0 max-w-40 lg:max-w-full truncate hover:underline"
                                 >
                                   {item.title}
                                 </a>
-                                <RssButton href={buildFeedUrl(item.nid)} />
+                                <RssButton href={buildFeedUrl(item.nid)} className="shrink-0" />
                                 {item.foloFeedId ? (
-                                  <FoloButton href={buildFoloShareUrl(item.foloFeedId)} />
+                                  <FoloButton feedId={item.foloFeedId} className="shrink-0" />
                                 ) : null}
                               </p>
                               <p className="mt-2 text-xs text-slate-500">
@@ -315,12 +361,33 @@ export default function App() {
             ) : null}
           </main>
 
-          <footer className="mt-12 border-t border-slate-200 pt-6 text-center text-sm text-slate-500">
+          <footer className="mt-12 border-t border-slate-200 pt-6 text-center text-sm text-slate-500 [&_a]:hover:underline">
             <p>
-              © 2025{' '}
-              <a href="https://github.com/yjl9903/lnovel" target="_blank">
-                lnovel
-              </a>
+              <span>
+                © 2025{' '}
+                <a href="https://github.com/animegarden" target="_blank">
+                  Anime Space
+                </a>
+                .
+              </span>
+              <span> | </span>
+              <span>
+                <a href={`https://github.com/yjl9903/lnvoel`} target="_blank">
+                  GitHub
+                </a>
+              </span>
+              <span> | </span>
+              <span>
+                <a href={feedURL} target="_blank">
+                  RSS
+                </a>
+              </span>
+              <span> | </span>
+              <span>
+                <a href={foloURL} target="_blank">
+                  Folo
+                </a>
+              </span>
             </p>
           </footer>
         </div>
