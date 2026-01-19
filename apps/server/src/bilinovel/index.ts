@@ -543,13 +543,13 @@ async function attachFoloFeedIds<T extends { nid: number | string }>(c: Context,
 export async function updatePendingNovels(c: Context) {
   const now = new Date().toLocaleString();
   try {
-    const novels = await getNovelsFromDatabase({ done: false });
+    const novels = (await getNovelsFromDatabase({ done: false })).sort(
+      (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
+    );
     consola.log(
       'Trigger updating pending novels',
       now,
-      novels
-        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-        .map((n) => ({ nid: n.nid, name: n.name }))
+      novels.map((n) => ({ nid: n.nid, name: n.name }))
     );
     await triggerUpdateNovels(
       c,

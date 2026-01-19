@@ -590,6 +590,7 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
           threshold: 0,
           timeout: 10 * 1000 + 10 * 1000 * Math.random()
         });
+        pendingNids.sort((lhs, rhs) => rhs - lhs);
         for (const nid of pendingNids) {
           if (running.has(nid)) continue;
           running.add(nid);

@@ -132,7 +132,6 @@ export async function runBrowserContext<T extends {}>(
       let delay = 5000;
       let hacked = 0;
 
-
       for (let turn = 0; turn < MAX_RETRY; turn++) {
         try {
           if (task.aborted) break;
