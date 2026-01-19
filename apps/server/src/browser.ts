@@ -126,9 +126,12 @@ export async function runBrowserContext<T extends {}>(
           : options.maxRetry
         : 1;
 
+      const MAX_HACK = 3;
+
       let error: unknown;
       let delay = 5000;
-      let hacked = false;
+      let hacked = 0;
+
 
       for (let turn = 0; turn < MAX_RETRY; turn++) {
         try {
@@ -154,13 +157,13 @@ export async function runBrowserContext<T extends {}>(
           if (
             error instanceof CloudflareError &&
             FLARESOLVERR_URL &&
-            (!hacked || turn + 1 < MAX_RETRY)
+            (hacked < MAX_HACK || turn + 1 < MAX_RETRY)
           ) {
             try {
               consola.log('Proxy to flaresolverr', error.url.toString());
 
-              if (!hacked) {
-                hacked = true;
+              if (hacked < MAX_HACK) {
+                hacked++;
                 turn -= 1;
               }
 
@@ -215,6 +218,8 @@ export async function runBrowserContext<T extends {}>(
             } catch (error) {
               consola.error('Receive from flaresolverr', error);
             }
+          } else if (error instanceof CloudflareError) {
+            break;
           }
 
           if (turn + 1 < MAX_RETRY) {

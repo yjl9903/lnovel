@@ -547,7 +547,9 @@ export async function updatePendingNovels(c: Context) {
     consola.log(
       'Trigger updating pending novels',
       now,
-      novels.map((n) => ({ nid: n.nid, name: n.name }))
+      novels
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
+        .map((n) => ({ nid: n.nid, name: n.name }))
     );
     await triggerUpdateNovels(
       c,
