@@ -82,7 +82,7 @@ export async function fetchNovelPage(
       throw new BilinovelError(`This novel ${nid} has been taken down.`);
     }
 
-    if (await page.locator('.book-info > .book-name').count()) {
+    if ((await page.locator('.book-info > .book-name').count()) === 0) {
       throw new CloudflareError(novelURL);
     }
 
