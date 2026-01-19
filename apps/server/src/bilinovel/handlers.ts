@@ -25,7 +25,7 @@ import { dumpPageScreenshot, launchBrowser, runBrowserContext, waitLimitIdle } f
 
 import { consola } from './utils';
 
-const MAX_RETRY = 1;
+const MAX_RETRY = 3;
 
 const browser = launchBrowser({
   headless: true,
