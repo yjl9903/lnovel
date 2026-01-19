@@ -127,7 +127,7 @@ export async function runBrowserContext<T extends {}>(
         : 1;
 
       let error: unknown;
-      let delay = 500;
+      let delay = 5000;
       let hacked = false;
 
       for (let turn = 0; turn < MAX_RETRY; turn++) {
@@ -221,7 +221,7 @@ export async function runBrowserContext<T extends {}>(
             consola.error(`Retry ${turn + 1} / ${MAX_RETRY}, due to:`, error);
 
             await sleep(delay);
-            delay = Math.min(delay * 2, 30 * 1000);
+            delay = Math.min(delay * 2, 60 * 1000);
           }
         }
       }
