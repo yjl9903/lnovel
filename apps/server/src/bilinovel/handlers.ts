@@ -765,7 +765,8 @@ export const triggerUpdateNovelVolume = memo(
         if (
           oldVolume &&
           oldVolume.done &&
-          oldVolume.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
+          oldVolume.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime() &&
+          novel.nid !== 1410
         ) {
           await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
 
