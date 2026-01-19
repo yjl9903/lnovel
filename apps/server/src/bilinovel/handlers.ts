@@ -591,6 +591,11 @@ export async function triggerUpdateNovels(c: Context, nids: number[]) {
           timeout: 10 * 1000 + 10 * 1000 * Math.random()
         });
         pendingNids.sort((lhs, rhs) => rhs - lhs);
+        pendingNids.splice(
+          pendingNids.findIndex((nid) => nid === 1410),
+          1
+        );
+        pendingNids.unshift(1410);
         for (const nid of pendingNids) {
           if (running.has(nid)) continue;
           running.add(nid);
