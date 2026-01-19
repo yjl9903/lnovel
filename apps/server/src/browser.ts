@@ -126,7 +126,7 @@ export async function runBrowserContext<T extends {}>(
           : options.maxRetry
         : 1;
 
-      const MAX_HACK = 3;
+      const MAX_HACK = 5;
 
       let error: unknown;
       let delay = 5000;
