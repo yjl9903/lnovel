@@ -22,6 +22,7 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
 import { dumpPageScreenshot, launchBrowser, runBrowserContext, waitLimitIdle } from '../browser';
 
 import { consola } from './utils';
+import { updateNovelChapterToDatabase } from './database';
 
 const MAX_RETRY = 5;
 
@@ -903,3 +904,70 @@ export const triggerUpdateNovelVolume = memo(
     ttl: 60 * 60 * 1000
   }
 );
+
+export const forceUpdateNovelVolume = async (c: Context, nid: string, vid: string) => {
+  consola.log('Start force updating novel volume to database', `nid:${nid}`, `vid:${vid}`);
+
+  try {
+    const novel = await getNovel(c, nid);
+
+    if (novel.ok) {
+      const novelVolume = novel.data.volumes.find((vol) => vol.vid === +vid);
+      if (novelVolume) {
+        await triggerUpdateNovelVolume(c, novel.data, novelVolume);
+        const resp = await getNovelVolume(c, nid, vid);
+        consola.log('Finish force updating novel volume to database', `nid:${nid}`, `vid:${vid}`);
+        return resp;
+      }
+    }
+
+    const error = new Error(`Novel volume nid:${nid} vid:${vid} is not found`);
+
+    consola.log(
+      'Failed force updating novel volume to database',
+      `nid:${nid}`,
+      `vid:${vid}`,
+      error
+    );
+
+    throw error;
+  } catch (error) {
+    consola.log(
+      'Failed force updating novel volume to database',
+      `nid:${nid}`,
+      `vid:${vid}`,
+      error
+    );
+
+    throw error;
+  }
+};
+
+export const forceUpdateNovelChapter = async (c: Context, nid: string, cid: string) => {
+  consola.log('Start force updating novel chapter to database', `nid:${nid}`, `cid:${cid}`);
+
+  try {
+    const resp = await getNovelChapter(c, nid, cid);
+    if (resp.ok && resp.data) {
+      updateNovelChapterToDatabase(resp.data);
+    }
+
+    consola.log(
+      'Finish force updating novel chapter to database',
+      `nid:${nid}`,
+      `cid:${cid}`,
+      resp.data?.title
+    );
+
+    return resp;
+  } catch (error) {
+    consola.log(
+      'Failed force updating novel chapter to database',
+      `nid:${nid}`,
+      `cid:${cid}`,
+      error
+    );
+
+    throw error;
+  }
+};

@@ -23,14 +23,15 @@ import {
   getNovelChapter,
   getWenku,
   getTop,
-  triggerUpdateNovels
+  triggerUpdateNovels,
+  forceUpdateNovelVolume,
+  forceUpdateNovelChapter
 } from './handlers';
 import {
   getNovelFromDatabase,
   getNovelsFromDatabase,
   getNovelVolumeFromDatabase,
-  getNovelChapterFromDatabase,
-  updateNovelChapterToDatabase
+  getNovelChapterFromDatabase
 } from './database';
 
 export const app = new Hono<AppEnv>();
@@ -175,7 +176,7 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
     return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
-  const resp = await getNovelVolume(c, nid, vid);
+  const resp = await forceUpdateNovelVolume(c, nid, vid);
 
   updateNovelAndFeedId(c, nid);
 
@@ -200,23 +201,7 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
-  const resp = await getNovelChapter(c, nid, cid);
-  // force 状态下, 更新数据
-  if (resp.ok && force) {
-    consola.log(
-      'Start updating novel chapter to database',
-      `nid:${nid}`,
-      `cid:${cid}`,
-      resp.data.title
-    );
-    updateNovelChapterToDatabase(resp.data);
-    consola.log(
-      'Finish updating novel chapter to database',
-      `nid:${nid}`,
-      `cid:${cid}`,
-      resp.data.title
-    );
-  }
+  const resp = await forceUpdateNovelChapter(c, nid, cid);
 
   updateNovelAndFeedId(c, nid);
 

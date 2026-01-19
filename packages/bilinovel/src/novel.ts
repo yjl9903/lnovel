@@ -400,7 +400,7 @@ export async function fetchNovelChapters(
           `Finish fetching novel chapter single page`,
           `nid:${nid}`,
           `cid:${cid}`,
-          `page:${pageCount} / total:${result?.pagination.total || 0}`
+          `page:${pageCount} / total:${result?.pagination.total === Number.MAX_SAFE_INTEGER ? 1 : result?.pagination.total || 0}`
         );
 
         if (!result) break;
