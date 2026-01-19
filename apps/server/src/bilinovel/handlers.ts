@@ -44,7 +44,7 @@ const novelLimit = pLimit(1);
 const chapterLimit = pLimit(1);
 
 // 抓取 novel volume 的并发控制
-const triggerNovelVolumeLimit = pLimit(3);
+const triggerNovelVolumeLimit = pLimit(1);
 
 const wenkuCache = new LRUCache<string, Awaited<ReturnType<typeof fetchWenkuPage>> & {}>({
   max: 1000,
