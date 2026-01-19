@@ -41,7 +41,7 @@ export interface NovelVolumePageResult {
   fetchedAt: Date;
 }
 
-export interface NovelChaptersResult {
+export interface NovelChapterPagesResult {
   nid: number;
   cid: number;
   title: string;
@@ -354,7 +354,7 @@ export async function fetchNovelChapters(
   nid: number,
   cid: number,
   options?: BilinovelFetchChapterOptions
-): Promise<NovelChaptersResult | undefined> {
+): Promise<NovelChapterPagesResult | undefined> {
   if (!nid || !cid) return undefined;
 
   const page = await context.newPage();

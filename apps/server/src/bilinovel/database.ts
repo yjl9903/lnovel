@@ -3,11 +3,17 @@ import { and, asc, eq, ne } from 'drizzle-orm';
 import {
   type NovelPageResult,
   type NovelVolumePageResult,
-  type NovelChaptersResult
+  type NovelChapterPagesResult
 } from 'bilinovel';
 
 import { database } from '../database';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
+
+export type NovelResult = NovelPageResult & { done: boolean };
+
+export type NovelVolumeResult = NovelVolumePageResult & { done: boolean };
+
+export type NovelChaptersResult = NovelChapterPagesResult & { vid: number };
 
 /**
  * 从数据库查询 novel 信息
@@ -18,7 +24,7 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
 export const getNovelFromDatabase = async (
   nid: string,
   done = true
-): Promise<NovelPageResult | undefined> => {
+): Promise<NovelResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
   if (novel && ((done && novel.done) || !done)) {
@@ -37,6 +43,7 @@ export const getNovelFromDatabase = async (
       labels: novel.labels || [],
       updatedAt: novel.updatedAt,
       fetchedAt: novel.fetchedAt,
+      done: novel.done || false,
       volumes: volumes.map((vol) => ({
         nid: +nid,
         vid: vol.vid,
@@ -54,7 +61,9 @@ export const getNovelFromDatabase = async (
  * 获取数据库中的所有 novel, 根据 done 状态筛选
  * @returns
  */
-export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) => {
+export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}): Promise<
+  Omit<NovelResult, 'volumes'>[]
+> => {
   const novels = await database
     .select()
     .from(biliNovels)
@@ -71,7 +80,7 @@ export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}) =
       labels: novel.labels || [],
       updatedAt: novel.updatedAt,
       fetchedAt: novel.fetchedAt,
-      done: novel.done
+      done: novel.done || false
     };
   });
 };
@@ -80,7 +89,7 @@ export const getNovelVolumeFromDatabase = async (
   nid: string,
   vid: string,
   done = true
-): Promise<NovelVolumePageResult | undefined> => {
+): Promise<NovelVolumeResult | undefined> => {
   const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
 
   if (novel) {
@@ -103,7 +112,8 @@ export const getNovelVolumeFromDatabase = async (
         cover: volume.cover || '',
         chapters: chapters.map((ch) => ({ nid: +nid, vid: +vid, cid: ch.cid, title: ch.title })),
         updatedAt: volume.updatedAt,
-        fetchedAt: volume.fetchedAt
+        fetchedAt: volume.fetchedAt,
+        done: volume.done || false
       };
     }
   }
@@ -123,6 +133,7 @@ export const getNovelChapterFromDatabase = async (
     if (chapter) {
       return {
         nid: +nid,
+        vid: chapter.vid,
         cid: +cid,
         title: chapter.title,
         content: chapter.content,
@@ -135,7 +146,7 @@ export const getNovelChapterFromDatabase = async (
   return undefined;
 };
 
-export const updateNovelChapterToDatabase = async (chapter: NovelChaptersResult) => {
+export const updateNovelChapterToDatabase = async (chapter: NovelChapterPagesResult) => {
   const resp = await database
     .update(biliChapters)
     .set({

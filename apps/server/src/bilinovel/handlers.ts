@@ -4,15 +4,13 @@ import { LRUCache } from 'lru-cache';
 
 import {
   type NovelPageResult,
-  type NovelVolumePageResult,
-  type NovelChaptersResult,
   type BilinovelFetchTopFilter,
   type BilinovelFetchWenkuFilter,
-  fetchNovelChapters,
+  fetchTopPage,
+  fetchWenkuPage,
   fetchNovelPage,
   fetchNovelVolumePage,
-  fetchTopPage,
-  fetchWenkuPage
+  fetchNovelChapters
 } from 'bilinovel';
 
 import type { Context } from '../app';
@@ -25,7 +23,7 @@ import { dumpPageScreenshot, launchBrowser, runBrowserContext, waitLimitIdle } f
 
 import { consola } from './utils';
 
-const MAX_RETRY = 3;
+const MAX_RETRY = 5;
 
 const browser = launchBrowser({
   headless: true,
