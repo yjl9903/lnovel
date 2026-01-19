@@ -386,15 +386,41 @@ export async function fetchNovelChapters(
         await sleep(delay + Math.random() * delay);
       }
 
-      const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
+      try {
+        options?.logger?.log(
+          `Start fetching novel chapter single page`,
+          `nid:${nid}`,
+          `cid:${cid}`,
+          `page:${pageCount}`
+        );
 
-      if (!result) break;
+        const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
 
-      title = result.title;
-      contents.push(result.content);
-      images.push(...result.images);
+        options?.logger?.log(
+          `Finish fetching novel chapter single page`,
+          `nid:${nid}`,
+          `cid:${cid}`,
+          `page:${pageCount} / total:${result?.pagination.total || 0}`
+        );
 
-      if (result.pagination.complete) break;
+        if (!result) break;
+
+        title = result.title;
+        contents.push(result.content);
+        images.push(...result.images);
+
+        if (result.pagination.complete) break;
+      } catch (error) {
+        options?.logger?.log(
+          `Failed fetching novel chapter single page`,
+          `nid:${nid}`,
+          `cid:${cid}`,
+          `page:${pageCount}`,
+          error
+        );
+
+        throw error;
+      }
 
       const delay = options?.delay || 1000;
       await sleep(delay / 2 + (Math.random() * delay) / 2);
@@ -456,11 +482,28 @@ export async function fetchNovelChapterPage(
   let content = await page
     .locator('#mlfy_main_text > #TextContent')
     .first()
-    .evaluate<string>((container: any) => {
+    .evaluate<string>(async (container: any) => {
       try {
         // Under tsx / esbuild environment, all the functions will be wrapped by __name(<fn>, '<name>')
         // hacked by evalling a script to "polyfill" __name function
         eval('var __name = t => t');
+
+        // 等待重排完成
+        await new Promise<void>((res) => {
+          let count = 0;
+          const check = () => {
+            if (count >= 12) return res();
+            const p = container.querySelector('p');
+            if (p) {
+              const attrs = p.getAttributeNames()[0];
+              if (attrs && attrs.startsWith('data-')) {
+                return res();
+              }
+            }
+            setTimeout(check, 1000);
+          };
+          setTimeout(check, 1000);
+        });
 
         // @ts-ignore
         const getString = (dom) => {
