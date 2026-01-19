@@ -785,7 +785,32 @@ export const triggerUpdateNovelVolume = memo(
         let isFailed = false;
 
         for (let index = 0; index < fetchedVolume.chapters.length; index++) {
-          const ch = fetchedVolume.chapters[index];
+          const fetchedChapter = fetchedVolume.chapters[index];
+          const cid = fetchedChapter.cid;
+
+          const [oldChapter] = await database
+            .select()
+            .from(biliChapters)
+            .where(eq(biliChapters.cid, +cid));
+
+          // 视为数据一致: 数据库条目存在 且 数据库条目更新时间 >= 抓取的更新时间
+          if (
+            oldChapter &&
+            oldChapter.updatedAt &&
+            oldChapter.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
+          ) {
+            consola.log(
+              `Skip updating novel chapter to database`,
+              `nid:${nid}`,
+              novel.name,
+              `vid:${vid}`,
+              novelVolume.title,
+              `cid:${cid}`,
+              fetchedChapter.title
+            );
+
+            return { ok: true };
+          }
 
           await waitLimitIdle(chapterLimit, { threshold: 5 });
 
@@ -795,12 +820,12 @@ export const triggerUpdateNovelVolume = memo(
             novel.name,
             `vid:${vid}`,
             novelVolume.title,
-            `cid:${ch.cid}`,
-            ch.title,
+            `cid:${fetchedChapter.cid}`,
+            fetchedChapter.title,
             `(${index + 1} / ${fetchedVolume.chapters.length})`
           );
 
-          const resp = await getNovelChapter(c, '' + nid, '' + ch.cid);
+          const resp = await getNovelChapter(c, '' + nid, '' + cid);
 
           if (resp.ok) {
             const { data: chapter } = resp;
@@ -808,22 +833,24 @@ export const triggerUpdateNovelVolume = memo(
             await database
               .insert(biliChapters)
               .values({
-                cid: ch.cid,
+                cid: fetchedChapter.cid,
                 vid: novelVolume.vid,
                 nid: +nid,
-                title: ch.title,
+                title: fetchedChapter.title,
                 content: chapter.content,
                 images: chapter.images,
                 index,
+                updatedAt: fetchedVolume.updatedAt,
                 fetchedAt: new Date()
               })
               .onConflictDoUpdate({
                 target: biliChapters.cid,
                 set: {
-                  title: ch.title,
+                  title: fetchedChapter.title,
                   content: chapter.content,
                   images: chapter.images,
                   index,
+                  updatedAt: fetchedVolume.updatedAt,
                   fetchedAt: new Date()
                 }
               });
@@ -834,8 +861,8 @@ export const triggerUpdateNovelVolume = memo(
               novel.name,
               `vid:${vid}`,
               novelVolume.title,
-              `cid:${ch.cid}`,
-              ch.title,
+              `cid:${fetchedChapter.cid}`,
+              fetchedChapter.title,
               `(${index + 1} / ${fetchedVolume.chapters.length})`
             );
           } else {
@@ -847,8 +874,8 @@ export const triggerUpdateNovelVolume = memo(
               novel.name,
               `vid:${vid}`,
               novelVolume.title,
-              `cid:${ch.cid}`,
-              ch.title,
+              `cid:${fetchedChapter.cid}`,
+              fetchedChapter.title,
               `(${index + 1} / ${fetchedVolume.chapters.length})`
             );
 

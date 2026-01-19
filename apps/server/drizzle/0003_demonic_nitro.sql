@@ -1,0 +1,1 @@
+ALTER TABLE `bili_chapters` ADD `updated_at` integer;

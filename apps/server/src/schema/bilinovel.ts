@@ -44,5 +44,6 @@ export const biliChapters = sqliteTable('bili_chapters', {
     .notNull()
     .default([]),
   index: integer('index').notNull().default(0),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });
