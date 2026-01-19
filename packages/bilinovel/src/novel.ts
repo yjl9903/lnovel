@@ -428,6 +428,10 @@ export async function fetchNovelChapterPage(
     throw new BilinovelError(`This novel ${nid} and chapter ${cid} has been taken down.`);
   }
 
+  if ((await page.locator('#mlfy_main_text').count()) === 0) {
+    throw new CloudflareError(novelURL);
+  }
+
   const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
   if (!rawTitle) return undefined;
 
