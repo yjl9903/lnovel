@@ -82,6 +82,10 @@ export async function fetchNovelPage(
       throw new BilinovelError(`This novel ${nid} has been taken down.`);
     }
 
+    if (await page.locator('.book-info > .book-name').count()) {
+      throw new CloudflareError(novelURL);
+    }
+
     const name = await page.locator('.book-info > .book-name').first().textContent();
 
     const authors = await extractAuthors(page);
@@ -146,6 +150,10 @@ export async function fetchNovelPage(
       });
 
       if (await isCloudflarePage(page)) {
+        throw new CloudflareError(catalogURL);
+      }
+
+      if ((await page.locator('.volume-list > .volume').count()) === 0) {
         throw new CloudflareError(catalogURL);
       }
 
@@ -217,6 +225,10 @@ export async function fetchNovelVolumePage(
     });
 
     if (await isCloudflarePage(page)) {
+      throw new CloudflareError(novelURL);
+    }
+
+    if ((await page.locator('.book-info > .book-name').count()) === 0) {
       throw new CloudflareError(novelURL);
     }
 
