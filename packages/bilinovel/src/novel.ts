@@ -519,8 +519,11 @@ export async function fetchNovelChapterPage(
               // @ts-ignore
               const style = window.getComputedStyle(dom);
               const position = style.getPropertyValue('position');
+              const attrs = dom.getAttributeNames()[0];
               return position === 'static' && dom.textContent.length > 0
-                ? `<p>${dom.innerHTML}</p>`
+                ? attrs
+                  ? `<p ${attrs}>${dom.innerHTML}</p>`
+                  : `<p>${dom.innerHTML}</p>`
                 : '';
             }
             if (dom.nodeName === 'IMG') {
