@@ -797,7 +797,8 @@ export const triggerUpdateNovelVolume = memo(
           if (
             oldChapter &&
             oldChapter.updatedAt &&
-            oldChapter.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
+            oldChapter.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime() &&
+            novel.nid !== 1410
           ) {
             consola.log(
               `Skip updating novel chapter to database`,
