@@ -8,7 +8,7 @@ ARG APP_HOST=lnovel.animes.garden
 ARG PORT=3000
 
 # Build dummy packages to skip installing them and their dependencies
-FROM python:3.13-slim-bookworm AS flaresolverr-builder
+FROM python:3.14-slim-bookworm AS flaresolverr-builder
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends equivs \
