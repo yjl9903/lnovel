@@ -76,6 +76,10 @@ export function connectBrowserOverCDP(
   return chromium.connectOverCDP(wsEndpointOrOptions, wsOptions);
 }
 
+// 缓存 flaresolverr solution
+let flaresolverrSolution: any;
+let flaresolverrExpire: Date | undefined;
+
 export async function runBrowserContext<T extends {}>(
   browserPromise: Browser | Promise<Browser>,
   key: string,
@@ -117,8 +121,27 @@ export async function runBrowserContext<T extends {}>(
         ...devices['Desktop Chrome HiDPI'],
         ...options.context,
         userAgent:
+          flaresolverrSolution?.solution ??
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0'
       });
+
+      if (
+        flaresolverrSolution?.cookies &&
+        (flaresolverrExpire?.getTime() || 0) < new Date().getTime()
+      ) {
+        await context.addCookies(
+          flaresolverrSolution.cookies.map((cookie: any) => ({
+            name: cookie.name,
+            value: cookie.value,
+            domain: cookie.domain,
+            path: cookie.path,
+            expires: cookie.expiry,
+            httpOnly: cookie.httpOnly,
+            secure: cookie.secure,
+            sameSite: cookie.sameSite
+          }))
+        );
+      }
 
       const MAX_RETRY = options.maxRetry
         ? options.maxRetry < 0
@@ -189,6 +212,10 @@ export async function runBrowserContext<T extends {}>(
                   });
 
                   await context.close().catch(() => {});
+
+                  // 缓存 solution 1 分钟
+                  flaresolverrSolution = solution;
+                  flaresolverrExpire = new Date(new Date().getTime() + 60 * 1000);
 
                   context = await browser.newContext({
                     locale: 'zh-CN',
