@@ -197,7 +197,7 @@ export async function runBrowserContext<T extends {}>(
                 body: JSON.stringify({
                   cmd: 'request.get',
                   url: error.url.toString(),
-                  maxTimeout: 60 * 1000
+                  maxTimeout: 5 * 60 * 1000
                 })
               });
               if (resp.ok) {

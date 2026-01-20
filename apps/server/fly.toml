@@ -15,7 +15,7 @@ PNPM_VERSION = '10.27.0'
 APP_HOST = 'lnvoel.animes.garden'
 
 [processes]
-server = 'node apps/server/cli.mjs start'
+server = 'sh apps/server/start.sh'
 
 [http_service]
 internal_port = 3000
@@ -41,7 +41,7 @@ retries = 10
 processes = ['server']
 
 [[vm]]
-memory = '1g'
+memory = '2g'
 cpu_kind = 'shared'
 cpus = 1
 processes = ['server']
