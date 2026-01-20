@@ -149,7 +149,7 @@ export async function runBrowserContext<T extends {}>(
           : options.maxRetry
         : 1;
 
-      const MAX_HACK = 5;
+      const MAX_HACK = 1;
 
       let error: unknown;
       let delay = 5000;
@@ -197,7 +197,7 @@ export async function runBrowserContext<T extends {}>(
                 body: JSON.stringify({
                   cmd: 'request.get',
                   url: error.url.toString(),
-                  maxTimeout: 5 * 60 * 1000
+                  maxTimeout: 1 * 60 * 1000
                 })
               });
               if (resp.ok) {
