@@ -24,7 +24,7 @@ import { dumpPageScreenshot, launchBrowser, runBrowserContext, waitLimitIdle } f
 import { consola } from './utils';
 import { updateNovelChapterToDatabase } from './database';
 
-const MAX_RETRY = 5;
+const MAX_RETRY = 3;
 
 const browser = launchBrowser({
   headless: true,
@@ -68,7 +68,7 @@ const volCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelVolume
 });
 
 const chapterCache = new LRUCache<string, Awaited<ReturnType<typeof fetchNovelChapters>> & {}>({
-  max: 100,
+  max: 1000,
   ttl: 24 * 60 * 60 * 1000
 });
 
