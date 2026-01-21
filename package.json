@@ -23,7 +23,7 @@
     "@types/node": "^24.10.9",
     "@types/set-cookie-parser": "^2.4.10",
     "bumpp": "latest",
-    "prettier": "^3.8.0",
+    "prettier": "^3.8.1",
     "tsdown": "^0.19.0",
     "tsx": "^4.21.0",
     "turbo": "^2.7.5",
