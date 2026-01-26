@@ -1,10 +1,11 @@
-export class CloudflareError extends Error {
-  public url: URL;
+export class BilinovelError extends Error {
+  public readonly pathname: string;
 
-  constructor(url: URL) {
-    super(`"${url.toString()}" was blocked by cloudflare`);
-    this.url = url;
+  public readonly reason: string;
+
+  constructor(pathname: string, reason: string = 'unknown') {
+    super(`Failed resolving "${pathname}": ${reason || 'unknown'}`);
+    this.pathname = pathname;
+    this.reason = reason;
   }
 }
-
-export class BilinovelError extends Error {}

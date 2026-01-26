@@ -147,6 +147,9 @@ importers:
       feed:
         specifier: 5.2.0
         version: 5.2.0
+      flomise:
+        specifier: 0.0.1
+        version: 0.0.1
       hono:
         specifier: 4.11.4
         version: 4.11.4
@@ -163,7 +166,7 @@ importers:
         specifier: 4.3.6
         version: 4.3.6(playwright-core@1.57.0)(playwright@1.57.0)
       puppeteer-core:
-        specifier: ^24.35.0
+        specifier: 24.35.0
         version: 24.35.0
       puppeteer-extra-plugin-stealth:
         specifier: 2.11.2
@@ -2556,6 +2559,10 @@ packages:
 
   fix-dts-default-cjs-exports@1.0.1:
     resolution: {integrity: sha512-pVIECanWFC61Hzl2+oOCtoJ3F17kglZC/6N94eRWycFgBH35hHx0Li604ZIzhseh97mf2p0cv7vVrOZGoqhlEg==}
+
+  flomise@0.0.1:
+    resolution: {integrity: sha512-bEjJexks+S7VlNicKWWuH+phER+RHfkOC1ULBTRbGNoDO2Oij/p7MKQLFEQCxQM/o+Rzq7pboJwQwLqmxxnzyw==}
+    engines: {node: '>=v20.10.0'}
 
   follow-redirects@1.15.11:
     resolution: {integrity: sha512-deG2P0JfjrTxl50XGCDyfI97ZGVCxIpfKYmfyrQ54n5FO/0gfIES8C/Psl6kWVDolizcaaxZJnTS0QSMxvnsBQ==}
@@ -6663,6 +6670,8 @@ snapshots:
       magic-string: 0.30.21
       mlly: 1.8.0
       rollup: 4.55.2
+
+  flomise@0.0.1: {}
 
   follow-redirects@1.15.11: {}
 

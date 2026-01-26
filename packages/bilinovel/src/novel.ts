@@ -2,17 +2,11 @@ import type {
   BilinovelFetch,
   BilinovelFetchNovelOptions,
   BilinovelFetchNovelVolumeOptions,
-  BilinovelFetchChapterOptions
+  BilinovelFetchNovelChapterOptions
 } from './types';
 
-import { BilinovelError, CloudflareError } from './error';
-import {
-  sleep,
-  createDocument,
-  applyTransformImgSrc,
-  isCloudflareDocument,
-  parseShanghaiDateTime
-} from './utils';
+import { BilinovelError } from './error';
+import { createDocument, applyTransformImgSrc, parseShanghaiDateTime } from './utils';
 
 export interface NovelPageResult {
   nid: number;
@@ -29,7 +23,6 @@ export interface NovelPageResult {
     volume: string;
   }>;
   updatedAt: Date;
-  fetchedAt: Date;
 }
 
 export interface NovelVolumePageResult {
@@ -42,7 +35,6 @@ export interface NovelVolumePageResult {
   cover: string | undefined;
   chapters: Array<{ nid: number; vid: number; cid: number; title: string }>;
   updatedAt: Date;
-  fetchedAt: Date;
 }
 
 export interface NovelChapterPagesResult {
@@ -51,7 +43,6 @@ export interface NovelChapterPagesResult {
   title: string;
   content: string;
   images: Array<{ src: string; alt: string | null | undefined }>;
-  fetchedAt: Date;
 }
 
 export interface AuthorResult {
@@ -65,22 +56,17 @@ export async function fetchNovelPage(
   nid: number,
   options?: BilinovelFetchNovelOptions
 ): Promise<NovelPageResult | undefined> {
-  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
-  const novelURL = new URL(`/novel/${nid}.html`, baseURL);
-  const html = await fetch(`/novel/${nid}.html`);
+  const pathname = `/novel/${nid}.html`;
+  const html = await fetch(pathname, { selector: '.wrap' });
   if (!html) return undefined;
   const document = createDocument(html);
 
-  if (isCloudflareDocument(document)) {
-    throw new CloudflareError(novelURL);
-  }
-
   if (hasText(document, '抱歉，作品已下架！') || hasText(document, '小说下架了')) {
-    throw new BilinovelError(`This novel ${nid} has been taken down.`);
+    throw new BilinovelError(pathname, `This novel ${nid} has been taken down.`);
   }
 
   if (!document.querySelector('.book-info > .book-name')) {
-    throw new CloudflareError(novelURL);
+    throw new BilinovelError(pathname);
   }
 
   const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
@@ -107,18 +93,15 @@ export async function fetchNovelPage(
   let vols = parseVolumesFromNovelDocument(document, nid, options?.transformImgSrc);
 
   if (vols.length === 0) {
-    await sleep(1000 + 1000 * Math.random());
-    const catalogHtml = await fetch(`/novel/${nid}/catalog`);
+    // TODO: 迁移到 fetch 逻辑内
+    // await sleep(1000 + 1000 * Math.random());
+
+    const catalogHtml = await fetch(`/novel/${nid}/catalog`, { selector: '.wrap' });
     if (!catalogHtml) return undefined;
     const catalogDocument = createDocument(catalogHtml);
-    const catalogURL = new URL(`/novel/${nid}/catalog`, baseURL);
-
-    if (isCloudflareDocument(catalogDocument)) {
-      throw new CloudflareError(catalogURL);
-    }
 
     if (!catalogDocument.querySelector('.volume-list > .volume')) {
-      throw new CloudflareError(catalogURL);
+      throw new BilinovelError(`/novel/${nid}/catalog`);
     }
 
     vols = parseVolumesFromCatalogDocument(catalogDocument, nid, options?.transformImgSrc);
@@ -134,8 +117,7 @@ export async function fetchNovelPage(
     volumes: vols
       .filter((v) => v.vid && v.title && v.cover)
       .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
-    updatedAt,
-    fetchedAt: new Date()
+    updatedAt
   };
 }
 
@@ -145,18 +127,13 @@ export async function fetchNovelVolumePage(
   vid: number,
   options?: BilinovelFetchNovelVolumeOptions
 ): Promise<NovelVolumePageResult | undefined> {
-  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
-  const novelURL = new URL(`/novel/${nid}/vol_${vid}.html`, baseURL);
-  const html = await fetch(`/novel/${nid}/vol_${vid}.html`);
+  const pathname = `/novel/${nid}/vol_${vid}.html`;
+  const html = await fetch(pathname, { selector: '.wrap' });
   if (!html) return undefined;
   const document = createDocument(html);
 
-  if (isCloudflareDocument(document)) {
-    throw new CloudflareError(novelURL);
-  }
-
   if (!document.querySelector('.book-info > .book-name')) {
-    throw new CloudflareError(novelURL);
+    throw new BilinovelError(pathname);
   }
 
   const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
@@ -206,8 +183,7 @@ export async function fetchNovelVolumePage(
     description,
     cover,
     chapters: chapters.filter((c) => c.cid && c.title) as any,
-    updatedAt,
-    fetchedAt: new Date()
+    updatedAt
   };
 }
 
@@ -215,17 +191,18 @@ export async function fetchNovelChapterPages(
   fetch: BilinovelFetch,
   nid: number,
   cid: number,
-  options?: BilinovelFetchChapterOptions
+  options?: BilinovelFetchNovelChapterOptions
 ): Promise<NovelChapterPagesResult | undefined> {
   const contents = [];
   const images = [];
   let title = '';
 
   for (let pageCount = 1; ; pageCount++) {
-    if (pageCount > 1 && Math.random() <= 0.5) {
-      const delay = options?.delay || 1000;
-      await sleep(delay + Math.random() * delay);
-    }
+    // TODO: 迁移到 fetch 逻辑里
+    // if (pageCount > 1 && Math.random() <= 0.5) {
+    //   const delay = options?.delay || 1000;
+    //   await sleep(delay + Math.random() * delay);
+    // }
     try {
       options?.logger?.log(
         `Start fetching novel chapter single page`,
@@ -262,8 +239,9 @@ export async function fetchNovelChapterPages(
       throw error;
     }
 
-    const delay = options?.delay || 1000;
-    await sleep(delay / 2 + (Math.random() * delay) / 2);
+    // TODO: 迁移到 fetch 逻辑里
+    // const delay = options?.delay || 1000;
+    // await sleep(delay / 2 + (Math.random() * delay) / 2);
   }
 
   return {
@@ -271,8 +249,7 @@ export async function fetchNovelChapterPages(
     cid,
     title,
     content: contents.join(''),
-    images,
-    fetchedAt: new Date()
+    images
   };
 }
 
@@ -281,32 +258,23 @@ export async function fetchNovelChapterPage(
   nid: number,
   cid: number,
   pageCount: number,
-  options?: BilinovelFetchChapterOptions
+  options?: BilinovelFetchNovelChapterOptions
 ) {
-  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
-  const novelURL = new URL(
-    `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`,
-    baseURL
-  );
-
-  const html = await fetch(`/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`);
+  const pathname = `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`;
+  const html = await fetch(pathname, { selector: '.mlfy_main' });
   if (!html) return undefined;
 
   const document = createDocument(html);
 
-  if (isCloudflareDocument(document)) {
-    throw new CloudflareError(novelURL);
-  }
-
   if (hasText(document, '沒有可閱讀的章節')) {
-    throw new BilinovelError(`This novel ${nid} and chapter ${cid} has been taken down.`);
+    throw new BilinovelError(pathname, `This novel ${nid} and chapter ${cid} has been taken down.`);
   }
 
   if (
     !document.querySelector('#mlfy_main_text') ||
     !document.querySelector('#mlfy_main_text > h1')
   ) {
-    throw new CloudflareError(novelURL);
+    throw new BilinovelError(pathname);
   }
 
   const rawTitle = document.querySelector('#mlfy_main_text > h1')?.textContent;
@@ -667,6 +635,7 @@ function extractChapterContent(document: Document, nid: number, cid: number) {
       const className = node.getAttribute?.('class') || '';
       if (className.includes('google')) return '';
       if (className.includes('dag')) return '';
+      if (className.includes('ad-slot')) return '';
 
       const id = node.getAttribute?.('id') || '';
       if (id.includes('hidden-images')) return '';

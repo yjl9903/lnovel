@@ -1,17 +1,15 @@
-import type { BilinovelFetch, BilinovelFetchOptions } from './types';
+import type { BilinovelFetch, BilinovelFetchPageOptions } from './types';
 import type { QueryValue } from './utils';
 
 import {
   applyTransformImgSrc,
   createDocument,
   getSearchParams,
-  isCloudflareDocument,
   parseMappedParam,
   parsePositiveInteger,
   parseShanghaiDateTime,
   resolveMappedKey,
-  resolveMappedValue,
-  splitUrlForFetch
+  resolveMappedValue
 } from './utils';
 
 export const WENKU_SORT = {
@@ -298,11 +296,6 @@ const WENKU_INITIAL_LABELS: Record<keyof typeof WENKU_INITIAL, string> = {
 
 export interface BilinovelFetchWenkuFilter {
   /**
-   * 自定义路径, 优先使用; 例如 `lastupdate_0_0_0_0_0_0_0_1_0.html`
-   */
-  path?: string;
-
-  /**
    * 排序方式, 如 lastupdate / postdate / weekvisit 等
    * @default WENKU_SORT.lastUpdate
    */
@@ -382,22 +375,16 @@ export interface WenkuPageResult {
     current: number;
     total?: number;
   };
-  fetchedAt: Date;
 }
 
 export async function fetchWenkuPage(
   fetch: BilinovelFetch,
   filter: BilinovelFetchWenkuFilter = {},
-  options?: BilinovelFetchOptions
+  options?: BilinovelFetchPageOptions
 ): Promise<WenkuPageResult> {
   const target = buildWenkuURL(filter, options);
-  const { path, query } = splitUrlForFetch(target);
-  const html = await fetch(path, query);
+  const html = await fetch(target, { selector: '.wrap' });
   const document = createDocument(html);
-
-  if (isCloudflareDocument(document)) {
-    throw new Error(`"${target.toString()}" was blocked by cloudflare`);
-  }
 
   const novels = Array.from(document.querySelectorAll('.store_collist > .bookbox')).map(
     (element) => {
@@ -461,8 +448,7 @@ export async function fetchWenkuPage(
     pagination: {
       current: currentPage,
       total: totalPages
-    },
-    fetchedAt: new Date()
+    }
   };
 }
 
@@ -473,12 +459,27 @@ type WenkuFilterQueryInput =
   | URLSearchParams
   | Record<string, WenkuFilterQueryValue | WenkuFilterQueryValue[]>;
 
+function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFetchPageOptions) {
+  const sort = resolveMappedValue(WENKU_SORT, filter.sort, 'lastUpdate');
+
+  const segments = [
+    resolveMappedValue(WENKU_TAG, filter.tag, 'all'),
+    resolveMappedValue(WENKU_PROGRESS, filter.progress, 'all'),
+    resolveMappedValue(WENKU_ANIMATION, filter.animation, 'all'),
+    resolveMappedValue(WENKU_REGION, filter.region, 'all'),
+    resolveMappedValue(WENKU_CHANNEL, filter.channel, 'all'),
+    resolveMappedValue(WENKU_INITIAL, filter.initial, 'all'),
+    resolveMappedValue(WENKU_WORD_COUNT, filter.wordCount, 'all'),
+    filter.page ?? 1,
+    resolveMappedValue(WENKU_UPDATED_WITHIN, filter.updatedWithin, 'all')
+  ];
+
+  return `/wenku/${sort}_${segments.join('_')}.html`;
+}
+
 export function parseWenkuFilter(input: WenkuFilterQueryInput): BilinovelFetchWenkuFilter {
   const searchParams = getSearchParams(input);
   const filter: BilinovelFetchWenkuFilter = {};
-
-  const path = searchParams.get('path')?.trim();
-  if (path) filter.path = path;
 
   const sort = parseMappedParam(WENKU_SORT, searchParams.get('sort'));
   if (sort !== undefined) filter.sort = sort;
@@ -514,10 +515,7 @@ export function parseWenkuFilter(input: WenkuFilterQueryInput): BilinovelFetchWe
 }
 
 export function formatWenkuFilterTitle(filter: BilinovelFetchWenkuFilter): string {
-  const parsedFromPath = filter.path ? parseWenkuPathFilter(filter.path) : undefined;
-  if (filter.path && !parsedFromPath) return filter.path;
-
-  const target = parsedFromPath ? { ...filter, ...parsedFromPath } : filter;
+  const target = filter;
 
   const sortKey = resolveMappedKey(WENKU_SORT, target.sort, 'lastUpdate');
   const tagKey = resolveMappedKey(WENKU_TAG, target.tag, 'all');
@@ -543,84 +541,4 @@ export function formatWenkuFilterTitle(filter: BilinovelFetchWenkuFilter): strin
   else parts.push('轻小说');
 
   return '哔哩轻小说 ' + parts.join(' · ');
-}
-
-function parseWenkuPathFilter(path: string): BilinovelFetchWenkuFilter | undefined {
-  let input = path.trim();
-  if (!input) return undefined;
-
-  const queryIndex = input.indexOf('?');
-  if (queryIndex >= 0) {
-    input = input.slice(0, queryIndex);
-  }
-
-  try {
-    const url = new URL(input, input.includes('://') ? undefined : 'https://example.com');
-    input = url.pathname;
-  } catch {
-    // ignore invalid url
-  }
-
-  input = input.replace(/^\/+/, '').replace(/\.html?$/, '');
-  if (input.startsWith('wenku/')) {
-    input = input.slice('wenku/'.length);
-  }
-
-  const parts = input.split('_');
-  if (parts.length !== 10 || !parts[0]) return undefined;
-
-  const [sort, tag, progress, animation, region, channel, initial, wordCount, page, updatedWithin] =
-    parts;
-
-  const parseNumber = (value: string) => {
-    const num = Number(value);
-    return Number.isFinite(num) ? num : undefined;
-  };
-
-  const parsedPage = parsePositiveInteger(page);
-
-  const parsed: BilinovelFetchWenkuFilter = {
-    sort: sort as WenkuSort,
-    tag: (parseNumber(tag) ?? tag) as WenkuTag,
-    progress: (parseNumber(progress) ?? progress) as WenkuProgress,
-    animation: (parseNumber(animation) ?? animation) as WenkuAnimation,
-    region: (parseNumber(region) ?? region) as WenkuRegion,
-    channel: (parseNumber(channel) ?? channel) as WenkuChannel,
-    initial: (parseNumber(initial) ?? initial) as WenkuInitial,
-    wordCount: (parseNumber(wordCount) ?? wordCount) as WenkuWordCount,
-    updatedWithin: (parseNumber(updatedWithin) ?? updatedWithin) as WenkuUpdatedWithin
-  };
-
-  if (parsedPage !== undefined) {
-    parsed.page = parsedPage;
-  }
-
-  return parsed;
-}
-
-function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFetchOptions) {
-  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
-
-  if (filter.path) {
-    const pathname = filter.path.startsWith('/wenku')
-      ? filter.path
-      : `/wenku/${filter.path.replace(/^\//, '')}`;
-    return new URL(pathname, baseURL);
-  }
-
-  const sort = resolveMappedValue(WENKU_SORT, filter.sort, 'lastUpdate');
-
-  const segments = [
-    resolveMappedValue(WENKU_TAG, filter.tag, 'all'),
-    resolveMappedValue(WENKU_PROGRESS, filter.progress, 'all'),
-    resolveMappedValue(WENKU_ANIMATION, filter.animation, 'all'),
-    resolveMappedValue(WENKU_REGION, filter.region, 'all'),
-    resolveMappedValue(WENKU_CHANNEL, filter.channel, 'all'),
-    resolveMappedValue(WENKU_INITIAL, filter.initial, 'all'),
-    resolveMappedValue(WENKU_WORD_COUNT, filter.wordCount, 'all'),
-    filter.page ?? 1,
-    resolveMappedValue(WENKU_UPDATED_WITHIN, filter.updatedWithin, 'all')
-  ];
-
-  return new URL(`/wenku/${sort}_${segments.join('_')}.html`, baseURL);
 }

@@ -1,15 +1,13 @@
-import type { BilinovelFetch, BilinovelFetchOptions } from './types';
+import type { BilinovelFetch, BilinovelFetchPageOptions } from './types';
 
 import {
   applyTransformImgSrc,
   createDocument,
-  isCloudflareDocument,
   parseMappedParam,
   parsePositiveInteger,
   parseShanghaiDateTime,
   resolveMappedKey,
-  resolveMappedValue,
-  splitUrlForFetch
+  resolveMappedValue
 } from './utils';
 
 export const TOP_SORT = {
@@ -78,22 +76,16 @@ export interface TopPageResult {
     current: number;
     total?: number;
   };
-  fetchedAt: Date;
 }
 
 export async function fetchTopPage(
   fetch: BilinovelFetch,
   filter: BilinovelFetchTopFilter = {},
-  options?: BilinovelFetchOptions
+  options?: BilinovelFetchPageOptions
 ): Promise<TopPageResult> {
-  const target = buildTopURL(filter, options);
-  const { path, query } = splitUrlForFetch(target);
-  const html = await fetch(path, query);
+  const target = buildTopURL(filter);
+  const html = await fetch(target, { selector: '.wrap' });
   const document = createDocument(html);
-
-  if (isCloudflareDocument(document)) {
-    throw new Error(`"${target.toString()}" was blocked by cloudflare`);
-  }
 
   const rawTitle =
     document.querySelector('.rank_i_title_name .active')?.textContent ||
@@ -163,8 +155,7 @@ export async function fetchTopPage(
     items,
     pagination: {
       current: currentPage
-    },
-    fetchedAt: new Date()
+    }
   };
 }
 
@@ -185,14 +176,11 @@ export function parseTopFilter(input: URL): BilinovelFetchTopFilter {
 export function formatTopFilterTitle(filter: BilinovelFetchTopFilter): string {
   const target = filter;
   const sortKey = resolveMappedKey(TOP_SORT, target.sort, 'monthVisit');
-
   return '哔哩轻小说 ' + (TOP_SORT_LABELS[sortKey] ?? String(sortKey));
 }
 
-function buildTopURL(filter: BilinovelFetchTopFilter, options?: BilinovelFetchOptions) {
-  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
-
+function buildTopURL(filter: BilinovelFetchTopFilter) {
   const sort = resolveMappedValue(TOP_SORT, filter.sort, 'monthVisit');
   const page = filter.page ?? 1;
-  return new URL(`/top/${sort}/${page}.html`, baseURL);
+  return `/top/${sort}/${page}.html`;
 }

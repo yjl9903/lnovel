@@ -40,21 +40,6 @@ export function createDocument(html: string): Document {
   return new JSDOM(html).window.document;
 }
 
-export function isCloudflareDocument(document: Document) {
-  if (document.querySelector('#cf-wrapper')) return true;
-  if (document.querySelector('.ray-id')) return true;
-  return false;
-}
-
-export function splitUrlForFetch(target: URL) {
-  const entries = Array.from(target.searchParams.entries());
-  const query = entries.length ? Object.fromEntries(entries) : undefined;
-  return {
-    path: target.pathname,
-    query
-  };
-}
-
 export function parsePositiveInteger(input: string | null | undefined): number | undefined {
   if (input === null || input === undefined) return undefined;
   const value = Number(input);
