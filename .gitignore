@@ -9,6 +9,7 @@ node_modules
 # user data
 .data
 .profile
+.screenshot
 *.db
 
 # Build output

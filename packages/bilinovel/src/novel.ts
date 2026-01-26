@@ -1,14 +1,18 @@
-import type { BrowserContext, Page } from 'playwright';
-
 import type {
+  BilinovelFetch,
   BilinovelFetchNovelOptions,
   BilinovelFetchNovelVolumeOptions,
   BilinovelFetchChapterOptions
 } from './types';
 
-import { blockRoutes, isCloudflarePage } from './browser';
 import { BilinovelError, CloudflareError } from './error';
-import { applyTransformImgSrc, parseShanghaiDateTime, sleep } from './utils';
+import {
+  sleep,
+  createDocument,
+  applyTransformImgSrc,
+  isCloudflareDocument,
+  parseShanghaiDateTime
+} from './utils';
 
 export interface NovelPageResult {
   nid: number;
@@ -57,501 +61,261 @@ export interface AuthorResult {
 }
 
 export async function fetchNovelPage(
-  context: BrowserContext,
+  fetch: BilinovelFetch,
   nid: number,
   options?: BilinovelFetchNovelOptions
 ): Promise<NovelPageResult | undefined> {
-  if (!nid) return undefined;
+  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
+  const novelURL = new URL(`/novel/${nid}.html`, baseURL);
+  const html = await fetch(`/novel/${nid}.html`);
+  if (!html) return undefined;
+  const document = createDocument(html);
 
-  const page = await context.newPage();
-  const novelURL = new URL(`/novel/${nid}.html`, options?.baseURL || 'https://www.linovelib.com/');
-
-  try {
-    await page.goto(novelURL.toString(), {
-      waitUntil: 'domcontentloaded'
-    });
-
-    if (await isCloudflarePage(page)) {
-      throw new CloudflareError(novelURL);
-    }
-
-    if (
-      (await page.getByText('抱歉，作品已下架！').count()) > 0 ||
-      (await page.getByText('小说下架了').count()) > 0
-    ) {
-      throw new BilinovelError(`This novel ${nid} has been taken down.`);
-    }
-
-    if ((await page.locator('.book-info > .book-name').count()) === 0) {
-      throw new CloudflareError(novelURL);
-    }
-
-    const name = await page.locator('.book-info > .book-name').first().textContent();
-
-    const authors = await extractAuthors(page);
-
-    const updatedAtStr = await page
-      .locator('meta[property="og:novel:update_time"]')
-      .first()
-      .getAttribute('content');
-    const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
-
-    if (!name || !updatedAt) return undefined;
-
-    const labels = await page.locator('.book-info > .book-label a').allTextContents();
-    const description = await page
-      .locator('.book-info > .book-dec > p:not(.backupname)')
-      .first()
-      .innerHTML();
-
-    let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
-
-    if (cover && options?.transformImgSrc) {
-      cover = applyTransformImgSrc(cover, options.transformImgSrc);
-    }
-
-    let vols = await Promise.all(
-      (await page.locator('.book-vol-chapter > a').all()).map(async (locator) => {
-        const href = await locator.getAttribute('href');
-        const title = await locator.getAttribute('title');
-        const img = await locator.locator('.tit.fl').getAttribute('style');
-        const volume = await locator.locator('h4').first().textContent();
-
-        const vidMatch = href?.match(/vol_(\d+)\.html/);
-        const vid = vidMatch ? +vidMatch[1] : 0;
-
-        const imgMatch = img?.match(/url\(['"]?(.*?)['"]?\)/);
-        let cover = imgMatch ? imgMatch[1] : '';
-
-        if (cover) {
-          cover = applyTransformImgSrc(cover, options?.transformImgSrc);
-        }
-
-        return {
-          nid,
-          vid,
-          title,
-          cover,
-          volume
-        };
-      })
-    );
-
-    if (vols.length === 0) {
-      await sleep(1000 + 1000 * Math.random());
-
-      const catalogURL = new URL(
-        `/novel/${nid}/catalog`,
-        options?.baseURL || 'https://www.linovelib.com/'
-      );
-
-      await page.goto(catalogURL.toString(), {
-        waitUntil: 'domcontentloaded'
-      });
-
-      if (await isCloudflarePage(page)) {
-        throw new CloudflareError(catalogURL);
-      }
-
-      if ((await page.locator('.volume-list > .volume').count()) === 0) {
-        throw new CloudflareError(catalogURL);
-      }
-
-      vols = await Promise.all(
-        (await page.locator('.volume-list > .volume').all()).map(async (locator) => {
-          const href = await locator.locator('a').first().getAttribute('href');
-          const title = await locator.locator('h2').first().textContent();
-          let cover = (await locator.locator('img').first().getAttribute('data-original')) || '';
-          const volume = '';
-
-          const vidMatch = href?.match(/vol_(\d+)\.html/);
-          const vid = vidMatch ? +vidMatch[1] : 0;
-
-          if (cover) {
-            cover = applyTransformImgSrc(cover, options?.transformImgSrc);
-          }
-
-          return {
-            nid,
-            vid,
-            title,
-            cover,
-            volume
-          };
-        })
-      );
-    }
-
-    return {
-      nid: nid,
-      name,
-      authors,
-      labels,
-      description,
-      cover,
-      volumes: vols
-        .filter((v) => v.vid && v.title && v.cover)
-        .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
-      updatedAt,
-      fetchedAt: new Date()
-    };
-  } catch (error) {
-    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
-      await options?.postmortem?.(page);
-    }
-    throw error;
+  if (isCloudflareDocument(document)) {
+    throw new CloudflareError(novelURL);
   }
+
+  if (hasText(document, '抱歉，作品已下架！') || hasText(document, '小说下架了')) {
+    throw new BilinovelError(`This novel ${nid} has been taken down.`);
+  }
+
+  if (!document.querySelector('.book-info > .book-name')) {
+    throw new CloudflareError(novelURL);
+  }
+
+  const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
+  const updatedAtStr =
+    document.querySelector('meta[property="og:novel:update_time"]')?.getAttribute('content') || '';
+  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+  if (!name || !updatedAt) return undefined;
+
+  const authors = extractAuthors(document);
+
+  const labels = Array.from(document.querySelectorAll('.book-info > .book-label a'))
+    .map((item) => item.textContent?.trim() || '')
+    .filter(Boolean);
+  const description =
+    document.querySelector('.book-info > .book-dec > p:not(.backupname)')?.innerHTML || '';
+
+  let cover = document.querySelector('.book-img > img')?.getAttribute('src') || undefined;
+
+  if (cover && options?.transformImgSrc) {
+    cover = applyTransformImgSrc(cover, options.transformImgSrc);
+  }
+
+  let vols = parseVolumesFromNovelDocument(document, nid, options?.transformImgSrc);
+
+  if (vols.length === 0) {
+    await sleep(1000 + 1000 * Math.random());
+    const catalogHtml = await fetch(`/novel/${nid}/catalog`);
+    if (!catalogHtml) return undefined;
+    const catalogDocument = createDocument(catalogHtml);
+    const catalogURL = new URL(`/novel/${nid}/catalog`, baseURL);
+
+    if (isCloudflareDocument(catalogDocument)) {
+      throw new CloudflareError(catalogURL);
+    }
+
+    if (!catalogDocument.querySelector('.volume-list > .volume')) {
+      throw new CloudflareError(catalogURL);
+    }
+
+    vols = parseVolumesFromCatalogDocument(catalogDocument, nid, options?.transformImgSrc);
+  }
+
+  return {
+    nid: nid,
+    name,
+    authors,
+    labels,
+    description,
+    cover,
+    volumes: vols
+      .filter((v) => v.vid && v.title && v.cover)
+      .sort((lhs, rhs) => lhs.vid - rhs.vid) as any,
+    updatedAt,
+    fetchedAt: new Date()
+  };
 }
 
 export async function fetchNovelVolumePage(
-  context: BrowserContext,
+  fetch: BilinovelFetch,
   nid: number,
   vid: number,
   options?: BilinovelFetchNovelVolumeOptions
 ): Promise<NovelVolumePageResult | undefined> {
-  if (!nid || !vid) return undefined;
+  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
+  const novelURL = new URL(`/novel/${nid}/vol_${vid}.html`, baseURL);
+  const html = await fetch(`/novel/${nid}/vol_${vid}.html`);
+  if (!html) return undefined;
+  const document = createDocument(html);
 
-  const page = await context.newPage();
-  const novelURL = new URL(
-    `/novel/${nid}/vol_${vid}.html`,
-    options?.baseURL || 'https://www.linovelib.com/'
+  if (isCloudflareDocument(document)) {
+    throw new CloudflareError(novelURL);
+  }
+
+  if (!document.querySelector('.book-info > .book-name')) {
+    throw new CloudflareError(novelURL);
+  }
+
+  const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
+
+  const updatedAtStr =
+    document.querySelector('meta[property="og:novel:update_time"]')?.getAttribute('content') || '';
+  const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
+
+  if (!name || !updatedAt) throw new Error(`missing info`);
+
+  const authors = extractAuthors(document);
+
+  const labels = Array.from(document.querySelectorAll('.book-info > .book-label a'))
+    .map((item) => item.textContent?.trim() || '')
+    .filter(Boolean);
+  const description =
+    document.querySelector('.book-info > .book-dec > p:not(.backupname)')?.innerHTML || '';
+
+  let cover = document.querySelector('.book-img > img')?.getAttribute('src') || undefined;
+
+  if (cover && options?.transformImgSrc) {
+    cover = applyTransformImgSrc(cover, options.transformImgSrc);
+  }
+
+  const chapters = Array.from(document.querySelectorAll('.book-new-chapter > .tit > a')).map(
+    (element) => {
+      const title = element.textContent?.trim() || '';
+      const href = element.getAttribute('href');
+      const cidMatch = href?.match(/\/(\d+)\.html$/);
+      const cid = cidMatch ? +cidMatch[1] : 0;
+
+      return {
+        nid,
+        vid,
+        cid,
+        title
+      };
+    }
   );
 
-  try {
-    await blockRoutes(page);
-
-    await page.goto(novelURL.toString(), {
-      waitUntil: 'domcontentloaded'
-    });
-
-    if (await isCloudflarePage(page)) {
-      throw new CloudflareError(novelURL);
-    }
-
-    if ((await page.locator('.book-info > .book-name').count()) === 0) {
-      throw new CloudflareError(novelURL);
-    }
-
-    const name = await page.locator('.book-info > .book-name').first().textContent();
-
-    const updatedAtStr = await page
-      .locator('meta[property="og:novel:update_time"]')
-      .first()
-      .getAttribute('content');
-    const updatedAt = updatedAtStr ? parseShanghaiDateTime(updatedAtStr) : null;
-
-    if (!name || !updatedAt) throw new Error(`missing info`);
-
-    const authors = await extractAuthors(page);
-
-    const labels = await page.locator('.book-info > .book-label a').allTextContents();
-    const description = await page
-      .locator('.book-info > .book-dec > p:not(.backupname)')
-      .first()
-      .innerHTML();
-
-    let cover = (await page.locator('.book-img > img').first().getAttribute('src')) || undefined;
-
-    if (cover && options?.transformImgSrc) {
-      cover = applyTransformImgSrc(cover, options.transformImgSrc);
-    }
-
-    const chapters = await Promise.all(
-      (await page.locator('.book-new-chapter > .tit > a').all()).map(async (locator) => {
-        const title = await locator.textContent();
-        const href = await locator.getAttribute('href');
-        const cidMatch = href?.match(/\/(\d+)\.html$/);
-        const cid = cidMatch ? +cidMatch[1] : 0;
-
-        return {
-          nid,
-          vid,
-          cid,
-          title
-        };
-      })
-    );
-
-    return {
-      nid,
-      vid,
-      name,
-      authors,
-      labels,
-      description,
-      cover,
-      chapters: chapters.filter((c) => c.cid && c.title) as any,
-      updatedAt,
-      fetchedAt: new Date()
-    };
-  } catch (error) {
-    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
-      await options?.postmortem?.(page);
-    }
-    throw error;
-  }
+  return {
+    nid,
+    vid,
+    name,
+    authors,
+    labels,
+    description,
+    cover,
+    chapters: chapters.filter((c) => c.cid && c.title) as any,
+    updatedAt,
+    fetchedAt: new Date()
+  };
 }
 
-async function extractAuthors(page: Page) {
-  let authors = await page
-    .locator('.book-author .au-name a')
-    .evaluateAll<AuthorResult[]>((links: any[]) => {
-      eval('var __name = t => t');
-
-      const items: AuthorResult[] = [];
-
-      const normalizePosition = (input: string) => {
-        input = input.replace(/[()（）]/g, '').trim();
-        if (input === '插画') return 'illustrator';
-        return input;
-      };
-      const parsePositionFromHref = (href: string) => {
-        if (href.includes('/illustratorarticle/')) return 'illustrator';
-        if (href.includes('/authorarticle/')) return 'author';
-        if (href.includes('/translatorarticle/')) return 'translator';
-        return '';
-      };
-      const normalizeName = (input: string) => input.replace(/[()（）]/g, '').trim();
-
-      for (const link of links) {
-        const ruby = link.querySelector('ruby');
-        const rt = ruby?.querySelector('rt');
-        let position = rt?.textContent ? normalizePosition(rt.textContent) : '';
-        if (!position) {
-          const href = link.getAttribute('href') || '';
-          position = parsePositionFromHref(href) || 'author';
-        }
-
-        let name = '';
-        if (ruby) {
-          const cloned = ruby.cloneNode(true);
-          cloned.querySelectorAll('rt, rp').forEach((node: any) => node.remove());
-          name = normalizeName(cloned.textContent || '');
-        } else {
-          name = normalizeName(link.textContent || '');
-        }
-
-        if (name) {
-          items.push({ name, position });
-        }
-      }
-
-      return items;
-    });
-
-  if (authors.length === 0) {
-    const authorMeta =
-      (await page.locator('meta[property="og:novel:author"]').first().getAttribute('content')) ||
-      (await page.locator('meta[name="author"]').first().getAttribute('content')) ||
-      '';
-    const authorPositionFallback =
-      (await page.locator('.book-author .au-head em').first().textContent()) || '';
-    const authorRaw = authorMeta.trim();
-
-    if (authorRaw) {
-      const fallbackPosition = authorPositionFallback.trim() || 'author';
-      authors = authorRaw
-        .split(/[、,，]/)
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .map((item) => ({ name: item, position: fallbackPosition }));
-    }
-  }
-
-  return authors;
-}
-
-export async function fetchNovelChapters(
-  context: BrowserContext,
+export async function fetchNovelChapterPages(
+  fetch: BilinovelFetch,
   nid: number,
   cid: number,
   options?: BilinovelFetchChapterOptions
 ): Promise<NovelChapterPagesResult | undefined> {
-  if (!nid || !cid) return undefined;
+  const contents = [];
+  const images = [];
+  let title = '';
 
-  const page = await context.newPage();
-
-  try {
-    await blockRoutes(page);
-
-    const contents = [];
-    const images = [];
-
-    let title = '';
-    let pageCount = 1;
-
-    for (; ; pageCount++) {
-      if (pageCount > 1 && Math.random() <= 0.5) {
-        const delay = options?.delay || 1000;
-        await sleep(delay + Math.random() * delay);
-      }
-
-      try {
-        options?.logger?.log(
-          `Start fetching novel chapter single page`,
-          `nid:${nid}`,
-          `cid:${cid}`,
-          `page:${pageCount}`
-        );
-
-        const result = await fetchNovelChapterPage(page, nid, cid, pageCount, options);
-
-        options?.logger?.log(
-          `Finish fetching novel chapter single page`,
-          `nid:${nid}`,
-          `cid:${cid}`,
-          `page:${pageCount}${result?.pagination.total !== Number.MAX_SAFE_INTEGER ? ` / total:${result?.pagination.total || 0}` : ''}`
-        );
-
-        if (!result) break;
-
-        title = result.title;
-        contents.push(result.content);
-        images.push(...result.images);
-
-        if (result.pagination.complete) break;
-      } catch (error) {
-        options?.logger?.log(
-          `Failed fetching novel chapter single page`,
-          `nid:${nid}`,
-          `cid:${cid}`,
-          `page:${pageCount}`,
-          error
-        );
-
-        throw error;
-      }
-
+  for (let pageCount = 1; ; pageCount++) {
+    if (pageCount > 1 && Math.random() <= 0.5) {
       const delay = options?.delay || 1000;
-      await sleep(delay / 2 + (Math.random() * delay) / 2);
+      await sleep(delay + Math.random() * delay);
+    }
+    try {
+      options?.logger?.log(
+        `Start fetching novel chapter single page`,
+        `nid:${nid}`,
+        `cid:${cid}`,
+        `page:${pageCount}`
+      );
+
+      const result = await fetchNovelChapterPage(fetch, nid, cid, pageCount, options);
+
+      options?.logger?.log(
+        `Finish fetching novel chapter single page`,
+        `nid:${nid}`,
+        `cid:${cid}`,
+        `page:${pageCount}${result?.pagination.total !== Number.MAX_SAFE_INTEGER ? ` / total:${result?.pagination.total || 0}` : ''}`
+      );
+
+      if (!result) break;
+
+      title = result.title;
+      contents.push(result.content);
+      images.push(...result.images);
+
+      if (result.pagination.complete) break;
+    } catch (error) {
+      options?.logger?.log(
+        `Failed fetching novel chapter single page`,
+        `nid:${nid}`,
+        `cid:${cid}`,
+        `page:${pageCount}`,
+        error
+      );
+
+      throw error;
     }
 
-    return {
-      nid,
-      cid,
-      title,
-      content: contents.join(''),
-      images,
-      fetchedAt: new Date()
-    };
-  } catch (error) {
-    if (!(error instanceof CloudflareError) && !(error instanceof BilinovelError)) {
-      await options?.postmortem?.(page);
-    }
-    throw error;
+    const delay = options?.delay || 1000;
+    await sleep(delay / 2 + (Math.random() * delay) / 2);
   }
+
+  return {
+    nid,
+    cid,
+    title,
+    content: contents.join(''),
+    images,
+    fetchedAt: new Date()
+  };
 }
 
 export async function fetchNovelChapterPage(
-  page: Page,
+  fetch: BilinovelFetch,
   nid: number,
   cid: number,
   pageCount: number,
   options?: BilinovelFetchChapterOptions
 ) {
+  const baseURL = options?.baseURL || 'https://www.linovelib.com/';
   const novelURL = new URL(
     `/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`,
-    options?.baseURL || 'https://www.linovelib.com/'
+    baseURL
   );
 
-  await page.goto(novelURL.toString(), {
-    waitUntil: 'domcontentloaded'
-  });
+  const html = await fetch(`/novel/${nid}/${cid}${pageCount > 1 ? `_${pageCount}` : ''}.html`);
+  if (!html) return undefined;
 
-  if (await isCloudflarePage(page)) {
+  const document = createDocument(html);
+
+  if (isCloudflareDocument(document)) {
     throw new CloudflareError(novelURL);
   }
 
-  if ((await page.getByText('沒有可閱讀的章節').count()) > 0) {
+  if (hasText(document, '沒有可閱讀的章節')) {
     throw new BilinovelError(`This novel ${nid} and chapter ${cid} has been taken down.`);
   }
 
   if (
-    (await page.locator('#mlfy_main_text').count()) === 0 ||
-    (await page.locator('#mlfy_main_text > h1').count()) === 0
+    !document.querySelector('#mlfy_main_text') ||
+    !document.querySelector('#mlfy_main_text > h1')
   ) {
     throw new CloudflareError(novelURL);
   }
 
-  const rawTitle = await page.locator('#mlfy_main_text > h1').textContent();
+  const rawTitle = document.querySelector('#mlfy_main_text > h1')?.textContent;
   if (!rawTitle) return undefined;
 
   const { title, current, total } = parseTitle(rawTitle);
   if (!title || current > total) return undefined;
 
-  let content = await page
-    .locator('#mlfy_main_text > #TextContent')
-    .first()
-    .evaluate<string>(async (container: any) => {
-      try {
-        // Under tsx / esbuild environment, all the functions will be wrapped by __name(<fn>, '<name>')
-        // hacked by evalling a script to "polyfill" __name function
-        eval('var __name = t => t');
-
-        // 等待重排完成
-        await new Promise<void>((res) => {
-          let count = 0;
-          const check = () => {
-            if (count >= 12) return res();
-            const p = container.querySelector('p');
-            if (p) {
-              const attrs = p.getAttributeNames()[0];
-              if (attrs && attrs.startsWith('data-')) {
-                return res();
-              }
-            }
-            setTimeout(check, 1000);
-          };
-          setTimeout(check, 1000);
-        });
-
-        // @ts-ignore
-        const getString = (dom) => {
-          if (dom.nodeType === 8) return '';
-          if (dom.nodeType === 3) return dom.textContent.trim();
-          if (dom.nodeType === 1) {
-            if (dom.getAttribute('class')?.includes('google')) return '';
-            if (dom.getAttribute('class')?.includes('dag')) return '';
-            if (dom.getAttribute('id')?.includes('hidden-images')) return '';
-            if (dom.getAttribute('id')?.includes('show-more-images')) return '';
-            if (dom.nodeName === 'BR') return '<br/>';
-            if (dom.nodeName === 'P') {
-              // @ts-ignore
-              const style = window.getComputedStyle(dom);
-              const position = style.getPropertyValue('position');
-              const attrs = dom.getAttributeNames()[0];
-              return position === 'static' && dom.textContent.length > 0
-                ? attrs
-                  ? `<p ${attrs}>${dom.innerHTML}</p>`
-                  : `<p>${dom.innerHTML}</p>`
-                : '';
-            }
-            if (dom.nodeName === 'IMG') {
-              const cloned = dom.cloneNode();
-              cloned.removeAttribute('class');
-              const realSrc = cloned.getAttribute('data-src');
-              if (realSrc) {
-                cloned.removeAttribute('data-src');
-                cloned.setAttribute('src', realSrc);
-              }
-              return cloned.outerHTML.replace(/>$/, '/>');
-            }
-            if (dom.nodeName === 'SMALL' && dom.querySelector('p')) {
-              return [...dom.childNodes].reduce((acc, dom) => acc + getString(dom), '');
-            }
-            return dom.outerHTML;
-          }
-          return '';
-        };
-
-        return [...container.childNodes].reduce((acc, dom) => {
-          return acc + getString(dom);
-        }, '');
-      } catch (error) {
-        // @ts-ignore
-        return 'ERROR: ' + error?.message + '\n' + (error?.stack || '');
-      }
-    });
+  let content = extractChapterContent(document, nid, cid);
 
   content = content.trim();
 
@@ -561,16 +325,16 @@ export async function fetchNovelChapterPage(
     content = transformBbcode(content);
   }
 
-  let images = await Promise.all(
-    (await page.locator('#mlfy_main_text > #TextContent img').all()).map(async (locator) => {
-      const src = (await locator.getAttribute('data-src')) || (await locator.getAttribute('src'));
-      const alt = await locator.getAttribute('alt');
+  let images = Array.from(document.querySelectorAll('#mlfy_main_text > #TextContent img')).map(
+    (element) => {
+      const src = element.getAttribute('data-src') || element.getAttribute('src');
+      const alt = element.getAttribute('alt');
 
       return {
         src: src || undefined,
         alt: alt || undefined
       } as { src: string; alt: string | undefined };
-    })
+    }
   );
   images = images.filter((img) => img.src);
 
@@ -589,7 +353,7 @@ export async function fetchNovelChapterPage(
     content = rewriteContentImgSrc(content);
   }
 
-  const pagination = await page.locator('.mlfy_page > a:last-child').getAttribute('href');
+  const pagination = document.querySelector('.mlfy_page > a:last-child')?.getAttribute('href');
   const complete =
     (current > 1 && current === total) ||
     !pagination ||
@@ -683,4 +447,265 @@ export async function fetchNovelChapterPage(
 
     return content;
   }
+}
+
+function hasText(document: Document, text: string) {
+  return (document.body?.textContent || '').includes(text);
+}
+
+function parseVolumesFromNovelDocument(
+  document: Document,
+  nid: number,
+  transformImgSrc?: string | ((url: string) => string | undefined | null)
+) {
+  return Array.from(document.querySelectorAll('.book-vol-chapter > a')).map((element) => {
+    const href = element.getAttribute('href');
+    const title = element.getAttribute('title') || '';
+    const img = element.querySelector('.tit.fl')?.getAttribute('style');
+    const volume = element.querySelector('h4')?.textContent?.trim() || '';
+
+    const vidMatch = href?.match(/vol_(\d+)\.html/);
+    const vid = vidMatch ? +vidMatch[1] : 0;
+
+    const imgMatch = img?.match(/url\(['"]?(.*?)['"]?\)/);
+    let cover = imgMatch ? imgMatch[1] : '';
+
+    if (cover && transformImgSrc) {
+      cover = applyTransformImgSrc(cover, transformImgSrc);
+    }
+
+    return {
+      nid,
+      vid,
+      title,
+      cover,
+      volume
+    };
+  });
+}
+
+function parseVolumesFromCatalogDocument(
+  document: Document,
+  nid: number,
+  transformImgSrc?: string | ((url: string) => string | undefined | null)
+) {
+  return Array.from(document.querySelectorAll('.volume-list > .volume')).map((element) => {
+    const href = element.querySelector('a')?.getAttribute('href');
+    const title = element.querySelector('h2')?.textContent?.trim() || '';
+    let cover = element.querySelector('img')?.getAttribute('data-original') || '';
+    const volume = '';
+
+    const vidMatch = href?.match(/vol_(\d+)\.html/);
+    const vid = vidMatch ? +vidMatch[1] : 0;
+
+    if (cover && transformImgSrc) {
+      cover = applyTransformImgSrc(cover, transformImgSrc);
+    }
+
+    return {
+      nid,
+      vid,
+      title,
+      cover,
+      volume
+    };
+  });
+}
+
+function extractAuthors(document: Document) {
+  let authors = Array.from(document.querySelectorAll('.book-author .au-name a')).map((link) => {
+    const normalizePosition = (input: string) => {
+      input = input.replace(/[()（）]/g, '').trim();
+      if (input === '插画') return 'illustrator';
+      return input;
+    };
+    const parsePositionFromHref = (href: string) => {
+      if (href.includes('/illustratorarticle/')) return 'illustrator';
+      if (href.includes('/authorarticle/')) return 'author';
+      if (href.includes('/translatorarticle/')) return 'translator';
+      return '';
+    };
+    const normalizeName = (input: string) => input.replace(/[()（）]/g, '').trim();
+
+    const ruby = link.querySelector('ruby');
+    const rt = ruby?.querySelector('rt');
+    let position = rt?.textContent ? normalizePosition(rt.textContent) : '';
+    if (!position) {
+      const href = link.getAttribute('href') || '';
+      position = parsePositionFromHref(href) || 'author';
+    }
+
+    let name = '';
+    if (ruby) {
+      const cloned = ruby.cloneNode(true) as HTMLElement;
+      cloned.querySelectorAll?.('rt, rp').forEach((node: any) => node.remove());
+      name = normalizeName(cloned.textContent || '');
+    } else {
+      name = normalizeName(link.textContent || '');
+    }
+
+    return name ? { name, position } : null;
+  });
+
+  authors = authors.filter((item) => item !== null);
+
+  if (authors.length === 0) {
+    const authorMeta =
+      document.querySelector('meta[property="og:novel:author"]')?.getAttribute('content') ||
+      document.querySelector('meta[name="author"]')?.getAttribute('content') ||
+      '';
+    const authorPositionFallback =
+      document.querySelector('.book-author .au-head em')?.textContent || '';
+    const authorRaw = authorMeta.trim();
+
+    if (authorRaw) {
+      const fallbackPosition = authorPositionFallback.trim() || 'author';
+      authors = authorRaw
+        .split(/[、,，]/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => ({ name: item, position: fallbackPosition }));
+    }
+  }
+
+  return authors as AuthorResult[];
+}
+
+function extractChapterContent(document: Document, nid: number, cid: number) {
+  const container = document.querySelector('#mlfy_main_text > #TextContent');
+  if (!container) return '';
+
+  /**
+   * 还原段落顺序（基于 chapterId 的确定性排列）
+   * @param {HTMLElement} container
+   * @param {number|string} chapterId
+   */
+  function restoreParagraphOrder(container: HTMLDivElement, cid: number) {
+    const allNodes = Array.from(container.childNodes) as HTMLElement[];
+    const paragraphs = [];
+
+    for (var i = 0; i < allNodes.length; i++) {
+      const node = allNodes[i];
+      if (
+        node &&
+        node.nodeType === 1 &&
+        node.tagName.toLowerCase() === 'p' &&
+        node.innerHTML.replace(/\s+/g, '').length > 0
+      ) {
+        paragraphs.push({ node: node, idx: i });
+      }
+    }
+
+    const total = paragraphs.length;
+    if (!total) return;
+
+    const KEEP_HEAD = 20;
+
+    const seed = cid * 126 + 232;
+    const order: number[] = [];
+
+    if (total > KEEP_HEAD) {
+      const head: number[] = [];
+      const tail: number[] = [];
+
+      function shuffle(arr: number[], seed: number) {
+        const len = arr.length;
+        for (let j = len - 1; j > 0; j--) {
+          seed = (seed * 9302 + 49397) % 233280;
+          const k = Math.floor((seed / 233280) * (j + 1));
+          const tmp = arr[j];
+          arr[j] = arr[k];
+          arr[k] = tmp;
+        }
+        return arr;
+      }
+
+      for (let i = 0; i < total; i++) {
+        if (i < KEEP_HEAD) {
+          head.push(i);
+        } else {
+          tail.push(i);
+        }
+      }
+      shuffle(tail, seed);
+      order.push(...head.concat(tail));
+    } else {
+      for (let i = 0; i < total; i++) {
+        order.push(i);
+      }
+    }
+
+    const reordered: HTMLElement[] = [];
+    for (let i = 0; i < total; i++) {
+      reordered[order[i]] = paragraphs[i].node;
+    }
+
+    let cursor = 0;
+    for (let i = 0; i < allNodes.length; i++) {
+      const nNode = allNodes[i];
+      if (
+        nNode &&
+        nNode.nodeType === 1 &&
+        nNode.tagName.toLowerCase() === 'p' &&
+        nNode.innerHTML.replace(/\s+/g, '').length > 0
+      ) {
+        allNodes[i] = reordered[cursor++];
+      }
+    }
+
+    container.innerHTML = '';
+    for (let i = 0; i < allNodes.length; i++) {
+      if (allNodes[i]) container.appendChild(allNodes[i]);
+    }
+  }
+
+  const getNodeString = (node: HTMLElement): string => {
+    if (!node) return '';
+    if (node.nodeType === 8) return '';
+    if (node.nodeType === 3) return (node.textContent || '').trim();
+    if (node.nodeType === 1) {
+      const className = node.getAttribute?.('class') || '';
+      if (className.includes('google')) return '';
+      if (className.includes('dag')) return '';
+
+      const id = node.getAttribute?.('id') || '';
+      if (id.includes('hidden-images')) return '';
+      if (id.includes('show-more-images')) return '';
+
+      if (node.nodeName === 'BR') return '<br/>';
+
+      if (node.nodeName === 'P') {
+        return `<p>${node.innerHTML}</p>`;
+      }
+
+      if (node.nodeName === 'IMG') {
+        const cloned = node.cloneNode(true) as HTMLElement;
+        cloned.removeAttribute?.('class');
+        const realSrc = cloned.getAttribute?.('data-src');
+        if (realSrc) {
+          cloned.removeAttribute?.('data-src');
+          cloned.setAttribute?.('src', realSrc);
+        }
+        return (cloned.outerHTML || '').replace(/>$/, '/>');
+      }
+
+      if (node.nodeName === 'SMALL' && node.querySelector?.('p')) {
+        return Array.from(node.childNodes).reduce(
+          (acc, child) => acc + getNodeString(child as HTMLElement),
+          ''
+        );
+      }
+
+      return node.outerHTML || '';
+    }
+    return '';
+  };
+
+  restoreParagraphOrder(container as HTMLDivElement, cid);
+
+  const paragraphs = Array.from(container.childNodes).map((node) =>
+    getNodeString(node as HTMLElement)
+  );
+
+  return paragraphs.reduce((acc, text) => acc + text, '');
 }

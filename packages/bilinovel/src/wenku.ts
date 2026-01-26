@@ -1,8 +1,18 @@
-import type { BrowserContext } from 'playwright';
+import type { BilinovelFetch, BilinovelFetchOptions } from './types';
+import type { QueryValue } from './utils';
 
-import { blockRoutes, isCloudflarePage } from './browser';
-import type { BilinovelFetchOptions } from './types';
-import { applyTransformImgSrc, parseShanghaiDateTime } from './utils';
+import {
+  applyTransformImgSrc,
+  createDocument,
+  getSearchParams,
+  isCloudflareDocument,
+  parseMappedParam,
+  parsePositiveInteger,
+  parseShanghaiDateTime,
+  resolveMappedKey,
+  resolveMappedValue,
+  splitUrlForFetch
+} from './utils';
 
 export const WENKU_SORT = {
   lastUpdate: 'lastupdate',
@@ -376,46 +386,41 @@ export interface WenkuPageResult {
 }
 
 export async function fetchWenkuPage(
-  context: BrowserContext,
+  fetch: BilinovelFetch,
   filter: BilinovelFetchWenkuFilter = {},
   options?: BilinovelFetchOptions
 ): Promise<WenkuPageResult> {
-  const page = await context.newPage();
-  await blockRoutes(page);
-
   const target = buildWenkuURL(filter, options);
+  const { path, query } = splitUrlForFetch(target);
+  const html = await fetch(path, query);
+  const document = createDocument(html);
 
-  await page.goto(target.toString(), { waitUntil: 'domcontentloaded' });
-
-  if (await isCloudflarePage(page)) {
+  if (isCloudflareDocument(document)) {
     throw new Error(`"${target.toString()}" was blocked by cloudflare`);
   }
 
-  const novels = await Promise.all(
-    (await page.locator('.store_collist > .bookbox').all()).map(async (locator) => {
-      const href = await locator.locator('.bookimg a').first().getAttribute('href');
+  const novels = Array.from(document.querySelectorAll('.store_collist > .bookbox')).map(
+    (element) => {
+      const href = element.querySelector('.bookimg a')?.getAttribute('href');
       const nidMatch = href?.match(/\/novel\/(\d+)\.html/);
       const nid = nidMatch ? Number(nidMatch[1]) : 0;
 
-      const title = (await locator.locator('.bookname').first().textContent())?.trim() || '';
+      const title = element.querySelector('.bookname')?.textContent?.trim() || '';
 
-      let cover =
-        (await locator.locator('.bookimg img').first().getAttribute('data-original')) || undefined;
+      let cover = element.querySelector('.bookimg img')?.getAttribute('data-original') || undefined;
 
       if (cover && options?.transformImgSrc) {
         cover = applyTransformImgSrc(cover, options.transformImgSrc);
       }
 
-      const info = await locator.locator('.bookilnk span').allTextContents();
-      const [author, library, status, updatedAtStr] = info.map((text) => text.trim());
+      const info = Array.from(element.querySelectorAll('.bookilnk span'))
+        .map((item) => item.textContent?.trim() || '')
+        .filter(Boolean);
+      const [author, library, status, updatedAtStr] = info;
 
-      const description = (
-        (await locator.locator('.bookintro').first().textContent()) || ''
-      ).trim();
+      const description = element.querySelector('.bookintro')?.textContent?.trim() || '';
 
-      const tagsText = (
-        (await locator.locator('.bookupdate b').first().textContent()) || ''
-      ).trim();
+      const tagsText = element.querySelector('.bookupdate b')?.textContent?.trim() || '';
       const tags = tagsText
         .split(/\s+/)
         .map((tag) => tag.trim())
@@ -434,12 +439,12 @@ export async function fetchWenkuPage(
         description,
         tags
       };
-    })
+    }
   );
 
   const items = novels.filter((item) => item.nid && item.title && item.updatedAt);
 
-  const statsText = await page.locator('#pagestats').first().textContent();
+  const statsText = document.querySelector('#pagestats')?.textContent;
   let currentPage = filter.page ?? 1;
   let totalPages: number | undefined;
   if (statsText) {
@@ -461,7 +466,7 @@ export async function fetchWenkuPage(
   };
 }
 
-type WenkuFilterQueryValue = string | number | boolean | null | undefined;
+type WenkuFilterQueryValue = QueryValue;
 type WenkuFilterQueryInput =
   | string
   | URL
@@ -618,90 +623,4 @@ function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFet
   ];
 
   return new URL(`/wenku/${sort}_${segments.join('_')}.html`, baseURL);
-}
-
-function resolveMappedKey<T extends Record<string, number | string>>(
-  map: T,
-  value: keyof T | T[keyof T] | undefined,
-  fallback: keyof T
-): keyof T {
-  if (value === undefined) return fallback;
-  if (Object.prototype.hasOwnProperty.call(map, value as keyof T)) {
-    return value as keyof T;
-  }
-  const matched = (Object.keys(map) as Array<keyof T>).find((key) => map[key] === value);
-  return matched ?? fallback;
-}
-
-function resolveMappedValue<T extends Record<string, number | string>>(
-  map: T,
-  value: keyof T | T[keyof T] | undefined,
-  fallback: keyof T
-): T[keyof T] {
-  if (value === undefined) return map[fallback];
-  if (Object.prototype.hasOwnProperty.call(map, value as keyof T)) {
-    return map[value as keyof T];
-  }
-  const matched = Object.values(map).find((item) => item === value);
-  return matched ?? (map[fallback] as any);
-}
-
-function parseMappedParam<T extends Record<string, number | string>>(
-  map: T,
-  input: string | null
-): keyof T | T[keyof T] | undefined {
-  if (input === null) return undefined;
-  const value = input.trim();
-  if (!value) return undefined;
-
-  const keyMatch = (Object.keys(map) as Array<keyof T>).find(
-    (key) => key.toString().toLowerCase() === value.toLowerCase()
-  );
-  if (keyMatch) return keyMatch;
-
-  const parsed: string | number = /^\d+$/.test(value) ? Number(value) : value;
-  const valMatch = (Object.values(map) as Array<T[keyof T]>).find((item) => {
-    if (typeof item === 'number' && typeof parsed === 'number') return item === parsed;
-    if (typeof item === 'string' && typeof parsed === 'string') {
-      return item.toLowerCase() === parsed.toLowerCase();
-    }
-    return item === (parsed as any);
-  });
-
-  return valMatch;
-}
-
-function parsePositiveInteger(input: string | null): number | undefined {
-  if (input === null) return undefined;
-  const value = Number(input);
-  if (!Number.isFinite(value)) return undefined;
-  const num = Math.floor(value);
-  return num > 0 ? num : undefined;
-}
-
-function getSearchParams(input: WenkuFilterQueryInput) {
-  if (input instanceof URLSearchParams) return input;
-  if (input instanceof URL) return input.searchParams;
-
-  if (typeof input === 'string') {
-    const trimmed = input.trim();
-    if (trimmed.startsWith('?')) return new URLSearchParams(trimmed.slice(1));
-    try {
-      const url = new URL(trimmed, trimmed.includes('://') ? undefined : 'https://example.com');
-      if (url.search || trimmed.includes('?') || !trimmed.includes('=')) {
-        return url.searchParams;
-      }
-    } catch {
-      // ignore and fallback to parsing as query string
-    }
-    return new URLSearchParams(trimmed);
-  }
-
-  const params = new URLSearchParams();
-  Object.entries(input).forEach(([key, value]) => {
-    if (value === undefined || value === null) return;
-    const list = Array.isArray(value) ? value : [value];
-    list.forEach((item) => params.append(key, String(item)));
-  });
-  return params;
 }

@@ -40,9 +40,8 @@
     "test:ci": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {},
-  "peerDependencies": {
-    "playwright": "^1.57.0"
+  "dependencies": {
+    "jsdom": "^27.0.4"
   },
   "engines": {
     "node": ">=v20.0.0"

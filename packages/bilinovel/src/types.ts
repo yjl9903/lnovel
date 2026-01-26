@@ -1,5 +1,12 @@
 import type { Page } from 'playwright';
 
+export type BilinovelFetch = (
+  path: string,
+  query?: Record<string, string | number | undefined>
+) => Promise<string>;
+
+export type Fetcher = BilinovelFetch;
+
 export interface BilinovelFetchOptions {
   /**
    * @default 'https://www.linovelib.com/'
