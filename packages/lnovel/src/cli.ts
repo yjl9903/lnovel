@@ -14,7 +14,17 @@ const cli = breadc('lnovel', {
   }
 });
 
+cli.command('bili top').action(async () => {});
+
+cli.command('bili wenku').action(async () => {});
+
+cli.command('bili novel <nid>').action(async (nid: string) => {});
+
+cli.command('bili volume <nid> <vid>').action(async (nid: string, vid: string) => {});
+
+cli.command('bili chapter <nid> <cid>').action(async (nid: string, cid: string) => {});
+
 cli.run(process.argv.slice(2)).catch((err) => {
-  console.log(color.lightRed(`[Unknown Error] ${err.message}`));
+  console.log(color.lightRed(`${err.message}`));
   console.error(err);
 });

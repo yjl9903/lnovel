@@ -8,10 +8,8 @@
 HOST=0.0.0.0
 PORT=3000
 
-FOLO=1
+DATABASE_FILE=./lnovel.db
 CHROMIUM_USER_DIR=./.profile
-DATABASE_FILE=./db.sqlite
-FLARESOLVERR_URL=...
 ```
 
 ## Credits

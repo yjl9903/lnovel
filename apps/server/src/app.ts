@@ -6,8 +6,8 @@ import { HTTPException } from 'hono/http-exception';
 import { Cron } from 'croner';
 import { createConsola } from 'consola';
 
-import { app as browser } from './browser';
-import { app as bilinovel, updatePendingNovels } from './bilinovel';
+import { app as browser } from './browser.js';
+import { app as bilinovel, updatePendingNovels } from './bilinovel/index.js';
 
 export const consola = createConsola().withTag('server');
 

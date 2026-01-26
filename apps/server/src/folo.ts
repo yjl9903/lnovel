@@ -11,12 +11,12 @@ export function getFoloShareURL(feedId: string) {
 }
 
 export function getFoloUserId() {
-  return process.env.FOLLOW_USER_ID || '41508082357911552';
+  return process.env.FOLLOW_USER_ID;
 }
 
 export async function getFoloFeedId(url: string) {
   try {
-    if (!process.env.FOLO) return undefined;
+    if (!getFoloUserId()) return undefined;
 
     const [resp] = await database.select().from(folos).where(eq(folos.url, url));
     if (resp) {
@@ -30,7 +30,7 @@ export async function getFoloFeedId(url: string) {
 
 export async function setFoloFeedId(url: string) {
   try {
-    if (!process.env.FOLO) return undefined;
+    if (!getFoloUserId()) return undefined;
 
     const feedId = await getFoloFeedId(url);
     if (feedId) return feedId;

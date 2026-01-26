@@ -1,13 +1,13 @@
 import 'dotenv/config';
 
 import { breadc } from 'breadc';
-import { consola } from 'consola';
-import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici';
+import { createConsola } from 'consola';
 
 import { version } from '../package.json';
 
-import { startServer } from './server';
-import { createApp, startCron } from './index';
+import { createApp, startCron, startServer } from './index';
+
+const consola = createConsola().withTag('cli');
 
 const app = breadc('lnovel-server', { description: 'lnovel API server', version })
   .option('--secret <string>', 'Admin auth secret')
@@ -16,10 +16,8 @@ const app = breadc('lnovel-server', { description: 'lnovel API server', version 
 app
   .command('', 'Start lnovel server')
   .alias('start')
-  .option('--site <site>', 'Web site host')
   .option('--host <ip>', 'Listen host')
   .option('--port <port>', 'Listen port')
-  .option('--import', 'Import bangumi data', { default: false })
   .action(async (options) => {
     const host = options.host ?? process.env.HOST;
     const port = options.port ?? process.env.PORT;
@@ -29,16 +27,20 @@ app
     await startServer(app, { host, port });
   });
 
+app.command('bili novel <nid>').action(async (nid: string) => {});
+
+app.command('bili volume <nid> <vid>').action(async (nid: string, vid: string) => {});
+
+app.command('bili chapter <nid> <cid>').action(async (nid: string, cid: string) => {});
+
 consola.wrapConsole();
 
 process.on('uncaughtException', (err) => {
-  console.error('[global]', 'uncaughtException', err);
+  consola.error('Uncaught Exception', err);
 });
 
 process.on('unhandledRejection', (err) => {
-  console.error('[global]', 'unhandledRejection', err);
+  consola.error('Unhandled Rejection', err);
 });
-
-setGlobalDispatcher(new EnvHttpProxyAgent());
 
 await app.run(process.argv.slice(2)).catch((err) => console.error(err));

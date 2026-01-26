@@ -49,19 +49,14 @@
     "croner": "9.1.0",
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
-    "fast-xml-parser": "5.3.3",
     "feed": "5.2.0",
-    "flomise": "0.0.1",
-    "hono": "4.11.4",
-    "lru-cache": "11.2.4",
+    "flomise": "0.0.3",
+    "hono": "4.11.5",
+    "lnovel": "workspace:*",
+    "lru-cache": "11.2.5",
     "p-limit": "7.2.0",
-    "playwright": "1.57.0",
-    "playwright-extra": "4.3.6",
-    "puppeteer-core": "24.35.0",
-    "puppeteer-extra-plugin-stealth": "2.11.2",
-    "undici": "7.18.2",
-    "unstorage": "1.17.4",
-    "zod": "4.3.5"
+    "puppeteer-core": "24.36.0",
+    "zod": "4.3.6"
   },
   "devDependencies": {
     "drizzle-kit": "0.31.8"

@@ -38,25 +38,19 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "dev": "unbuild --stub",
+    "build": "tsdown",
     "test": "vitest",
     "test:ci": "vitest --run",
     "typecheck": "tsc --noEmit --jsx preserve"
   },
   "dependencies": {
     "@breadc/color": "^0.9.7",
+    "@breadc/death": "^0.9.7",
     "@clack/prompts": "^0.11.0",
     "@epubook/core": "^0.0.11",
-    "axios": "^1.13.2",
+    "bilinovel": "workspace:*",
     "breadc": "^0.9.7",
-    "cheerio": "1.0.0-rc.12",
-    "death": "^1.1.0",
     "epubook": "^0.0.11",
-    "iconv-lite": "^0.7.2",
-    "image-size": "^1.2.1",
-    "p-limit": "^7.2.0",
-    "set-cookie-parser": "^2.7.2",
     "yaml": "^2.8.2"
   },
   "engines": {

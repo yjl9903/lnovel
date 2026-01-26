@@ -1,4 +1,4 @@
-import type { Context } from '../app';
+import type { Context } from '../app.js';
 
 export function buildSite(c: Context, path: string) {
   const requestUrl = new URL(c.req.url);
