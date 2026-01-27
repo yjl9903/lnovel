@@ -84,7 +84,8 @@ app.use('*', async (c: Context, next) => {
   await next();
 
   // 设置缓存 header
-  if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
+  const enableCache = !feedURL.pathname.endsWith('/contexts')
+  if (c.res.status === 200 && enableCache && !c.res.headers.get('Cache-Control')) {
     c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   }
 });
