@@ -255,8 +255,7 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
             cover: novel.cover,
             labels: novel.labels,
             updatedAt: novel.updatedAt,
-            done: false,
-            fetchedAt: novel.fetchedAt
+            done: false
           }
         });
 
@@ -276,7 +275,10 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
       }
 
       if (failed === 0) {
-        await database.update(biliNovels).set({ done: true }).where(eq(biliNovels.nid, +nid));
+        await database
+          .update(biliNovels)
+          .set({ done: true, fetchedAt: novel.fetchedAt })
+          .where(eq(biliNovels.nid, +nid));
 
         consola.log(
           `Finish updating novel to database`,
@@ -362,8 +364,7 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
               description: fetchedVolume.description,
               cover: fetchedVolume.cover,
               done: false,
-              updatedAt: fetchedVolume.updatedAt,
-              fetchedAt: fetchedVolume.fetchedAt
+              updatedAt: fetchedVolume.updatedAt
             }
           });
 
@@ -373,7 +374,10 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
           oldVolume.done &&
           oldVolume.updatedAt.getTime() >= fetchedVolume.updatedAt.getTime()
         ) {
-          await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
+          await database
+            .update(biliVolumes)
+            .set({ done: true, fetchedAt: fetchedVolume.fetchedAt })
+            .where(eq(biliVolumes.vid, +vid));
 
           consola.log(
             `Skip updating novel volume to database`,
