@@ -102,14 +102,22 @@ app.onError(async (error: unknown, c: Context) => {
   if (error instanceof HTTPException) {
     return error.getResponse();
   } else if (url.pathname.endsWith('/feed.xml')) {
-    const message = (error as Error)?.message || 'unknown';
+    const message =
+      error instanceof WorkflowException
+        ? error.getMessage()
+        : (error as Error)?.message || 'unknown';
     return c.text(message, error instanceof WorkflowException ? error.status : 500);
   } else {
+    const message =
+      error instanceof WorkflowException
+        ? error.getMessage()
+        : (error as Error)?.message || 'unknown';
+
     return c.json(
       {
         ok: false,
         provider: Provider.bilinovel,
-        message: (error as Error)?.message || 'unknown'
+        message
       },
       error instanceof WorkflowException ? error.status : 500
     );

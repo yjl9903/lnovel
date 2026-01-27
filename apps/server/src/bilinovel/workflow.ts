@@ -52,8 +52,15 @@ export class WorkflowException extends Error {
   public readonly status: ContentfulStatusCode;
 
   public constructor(message: string, status: ContentfulStatusCode = 500, cause?: unknown) {
-    super(message, { cause });
+    super(message, { cause: cause instanceof WorkflowException ? cause.cause : cause });
     this.status = status;
+  }
+
+  public getMessage() {
+    if (this.cause && (this.cause as Error)?.message) {
+      return this.message + ': ' + (this.cause as Error).message;
+    }
+    return this.message;
   }
 }
 
