@@ -56,7 +56,8 @@ app.use(
   <title>lnovel</title>
 </head>
 <body>
-  <p>Request timeout after waiting 30 seconds. Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
+  <p>Request timeout after waiting 30 seconds.</p>
+  <p>Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
 </body>
 </html>`,
           {
@@ -83,10 +84,15 @@ app.use('*', async (c: Context, next) => {
 
   await next();
 
-  // 设置缓存 header
-  const enableCache = !feedURL.pathname.endsWith('/contexts')
-  if (c.res.status === 200 && enableCache && !c.res.headers.get('Cache-Control')) {
-    c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+  const enableCache = !feedURL.pathname.endsWith('/contexts');
+  if (enableCache) {
+    // 设置缓存 header
+    if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
+      c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+    }
+  } else {
+    // 禁止缓存
+    c.res.headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
   }
 });
 
@@ -107,7 +113,22 @@ app.onError(async (error: unknown, c: Context) => {
       error instanceof WorkflowException
         ? error.getMessage()
         : (error as Error)?.message || 'unknown';
-    return c.text(message, error instanceof WorkflowException ? error.status : 500);
+
+    return c.html(
+      `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>lnovel</title>
+</head>
+<body>
+  <p>Request Error: ${message}</p>
+  <p>Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
+</body>
+</html>`,
+      error instanceof WorkflowException ? error.status : 500
+    );
   } else {
     const message =
       error instanceof WorkflowException
@@ -488,7 +509,11 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
 async function attachFoloFeedId<T extends { nid: number | string }>(c: Context, item: T) {
   const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
   const foloFeedId = await getFoloFeedId(feedUrl);
-  return { ...item, foloFeedId: foloFeedId ?? null };
+  if (foloFeedId) {
+    return { ...item, follow: { feedId: foloFeedId } };
+  } else {
+    return item;
+  }
 }
 
 async function attachFoloVolumeFeedId<T extends { nid: number | string; vid: number | string }>(
@@ -497,7 +522,11 @@ async function attachFoloVolumeFeedId<T extends { nid: number | string; vid: num
 ) {
   const feedUrl = buildSite(c, `/bili/novel/${item.nid}/vol/${item.vid}/feed.xml`);
   const foloFeedId = await getFoloFeedId(feedUrl);
-  return { ...item, foloFeedId: foloFeedId ?? null };
+  if (foloFeedId) {
+    return { ...item, follow: { feedId: foloFeedId } };
+  } else {
+    return item;
+  }
 }
 
 async function attachFoloFeedIds<T extends { nid: number | string }>(c: Context, items: T[]) {
@@ -505,7 +534,11 @@ async function attachFoloFeedIds<T extends { nid: number | string }>(c: Context,
     items.map(async (item) => {
       const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
       const foloFeedId = await getFoloFeedId(feedUrl);
-      return { ...item, foloFeedId: foloFeedId ?? null };
+      if (foloFeedId) {
+        return { ...item, follow: { feedId: foloFeedId } };
+      } else {
+        return item;
+      }
     })
   );
 }

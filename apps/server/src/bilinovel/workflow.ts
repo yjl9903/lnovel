@@ -21,8 +21,8 @@ import { setFoloFeedId } from '../folo';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 
 import { consola, transformImgSrc, tryResult } from './utils';
-import { updateNovelChapterToDatabase } from './database';
 import { type Session, createBilinovelSession } from './browser';
+import { getNovelFromDatabase, updateNovelChapterToDatabase } from './database';
 
 // top 和 wenku 页使用的并发控制
 const indexLimit = newQueue(1);
@@ -198,13 +198,37 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
   .hook('pre:exec', ensureSession)
   .action(async (ctx, nid) => {
     try {
+      const dbNovel = await getNovelFromDatabase('' + nid, false);
+      if (
+        dbNovel &&
+        new Date().getTime() - dbNovel.fetchedAt.getTime() <=
+          (dbNovel.done ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000)
+      ) {
+        consola.log(
+          `Skip updating novel to database`,
+          `nid:${nid}`,
+          dbNovel.name,
+          'updated:' + dbNovel.updatedAt.toLocaleString(),
+          'fetched:' + dbNovel.fetchedAt.toLocaleString()
+        );
+        return dbNovel;
+      }
+
       const novel = await ctx.run(getNovel, nid);
+
+      ctx.set('novel', {
+        nid,
+        name: novel.name,
+        updatedAt: novel.updatedAt,
+        fetchedAt: novel.fetchedAt
+      });
+      ctx.set('progress', { current: 0, failed: 0, total: novel.volumes.length });
 
       consola.log(
         `Start updating novel to database`,
         `nid:${nid}`,
         novel.name,
-        novel.updatedAt.toLocaleString()
+        'updated:' + novel.updatedAt.toLocaleString()
       );
 
       let failed = 0;
@@ -258,24 +282,24 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
           `Finish updating novel to database`,
           `nid:${nid}`,
           novel.name,
-          novel.updatedAt.toLocaleString()
+          'updated:' + novel.updatedAt.toLocaleString()
         );
 
-        return { ok: true as const, data: novel };
+        return novel;
+      } else {
+        consola.log(
+          `Failed updating novel to database`,
+          `nid:${nid}`,
+          novel.name,
+          'updated:' + novel.updatedAt.toLocaleString()
+        );
+
+        return novel;
       }
-
-      consola.log(
-        `Failed updating novel to database`,
-        `nid:${nid}`,
-        novel.name,
-        novel.updatedAt.toLocaleString()
-      );
-
-      return { ok: false, novel };
     } catch (error) {
       consola.log(`Failed updating novel to database`, `nid:${nid}`, error);
 
-      return { ok: false, error };
+      throw new WorkflowException(`Failed updating novel nid:${nid} to database`, 500, error);
     }
   });
 
@@ -302,6 +326,14 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
 
       try {
         const fetchedVolume = await ctx.run(getNovelVolume, nid, vid);
+
+        ctx.set('volume', {
+          vid,
+          name: fetchedVolume.name,
+          updatedAt: fetchedVolume.updatedAt,
+          fetchedAt: fetchedVolume.fetchedAt
+        });
+        ctx.set('progress', { current: 0, total: fetchedVolume.chapters.length });
 
         const [oldVolume] = await database
           .select()
@@ -348,7 +380,8 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
             `nid:${nid}`,
             novel.name,
             `vid:${vid}`,
-            novelVolume.title
+            novelVolume.title,
+            'updated:' + fetchedVolume.updatedAt.toLocaleString()
           );
 
           return fetchedVolume;
@@ -451,10 +484,10 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
           }
         }
 
+        await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
+
         // 异步更新 foloId
         setFoloFeedId(new URL(`/bili/novel/${nid}/vol/${vid}/feed.xml`, ctx.global.origin));
-
-        await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
 
         consola.log(
           `Finish updating novel volume and chapters to database`,
@@ -543,7 +576,10 @@ export const getTop = workflow('getTop', {
 
       // 延迟更新所有 novel
       setTimeout(async () => {
-        for (const { nid } of resp.items) {
+        const items = [...resp.items].sort(
+          (lhs, rhs) => rhs.updatedAt.getTime() - lhs.updatedAt.getTime()
+        );
+        for (const { nid } of items) {
           ctx.run(updateNovel, nid);
         }
       }, 1000);
@@ -585,7 +621,10 @@ export const getWenku = workflow('getWenku', {
 
       // 延迟更新所有 novel
       setTimeout(async () => {
-        for (const { nid } of resp.items) {
+        const items = [...resp.items].sort(
+          (lhs, rhs) => rhs.updatedAt.getTime() - lhs.updatedAt.getTime()
+        );
+        for (const { nid } of items) {
           ctx.run(updateNovel, nid);
         }
       }, 1000);

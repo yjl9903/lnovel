@@ -16,7 +16,9 @@ type TopNovelItem = {
   latestChapter?: string;
   description?: string;
   rank?: number;
-  foloFeedId?: string | null;
+  follow?: {
+    feedId: string;
+  };
 };
 
 type TopResponse = {
@@ -247,8 +249,8 @@ export default function App() {
                               {activeItem.title}
                             </a>
                             <RssButton href={buildFeedUrl(activeItem.nid)} className="shrink-0" />
-                            {activeItem.foloFeedId ? (
-                              <FoloButton feedId={activeItem.foloFeedId} className="shrink-0" />
+                            {activeItem.follow ? (
+                              <FoloButton feedId={activeItem.follow.feedId} className="shrink-0" />
                             ) : null}
                           </h3>
                           <p className="mt-2 text-sm text-slate-500">
@@ -330,8 +332,8 @@ export default function App() {
                                   {item.title}
                                 </a>
                                 <RssButton href={buildFeedUrl(item.nid)} className="shrink-0" />
-                                {item.foloFeedId ? (
-                                  <FoloButton feedId={item.foloFeedId} className="shrink-0" />
+                                {item.follow ? (
+                                  <FoloButton feedId={item.follow.feedId} className="shrink-0" />
                                 ) : null}
                               </p>
                               <p className="mt-2 text-xs text-slate-500">
