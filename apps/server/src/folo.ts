@@ -28,9 +28,11 @@ export async function getFoloFeedId(url: string) {
   }
 }
 
-export async function setFoloFeedId(url: string) {
+export async function setFoloFeedId(url: string | URL) {
   try {
     if (!getFoloUserId()) return undefined;
+
+    if (url instanceof URL) url = url.toString();
 
     const feedId = await getFoloFeedId(url);
     if (feedId) return feedId;

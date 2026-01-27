@@ -6,7 +6,7 @@ import { HTTPException } from 'hono/http-exception';
 import { Cron } from 'croner';
 import { createConsola } from 'consola';
 
-import { app as browser } from './browser.js';
+import { getOrigin } from './utils/url.js';
 import { app as bilinovel, updatePendingNovels } from './bilinovel/index.js';
 
 export const consola = createConsola().withTag('server');
@@ -14,6 +14,7 @@ export const consola = createConsola().withTag('server');
 export type ServiceBindings = {};
 
 export type AppVariables = {
+  origin: string;
   requestId: string;
   responseTimestamp: Date | undefined | null;
 };
@@ -29,6 +30,9 @@ function createHono() {
   const app = new Hono<AppEnv>();
 
   app.use('*', async (c, next) => {
+    const origin = getOrigin(c);
+    c.set('origin', origin);
+
     const requestId = crypto.randomUUID();
     c.set('requestId', requestId);
 
@@ -91,8 +95,6 @@ export function createApp() {
 
   app.route('/bili/', bilinovel);
 
-  app.route('/browser/', browser);
-
   return app;
 }
 
@@ -111,7 +113,8 @@ export async function startCron() {
 
   const biliJob = new Cron('0 * * * *', { timezone: 'Asia/Shanghai', protect: true }, async () => {
     try {
-      const req = new Request(`https://lnovel.animes.garden/bili/_/cron`, {
+      const APP_HOST = process.env.APP_HOST || 'lnvoel.animes.garden';
+      const req = new Request(`https://${APP_HOST}/bili/_/cron`, {
         method: 'POST'
       });
       const res = await app.fetch(req);
@@ -124,5 +127,5 @@ export async function startCron() {
   // 延迟一会后, 手动触发任务执行
   setTimeout(() => {
     biliJob.trigger();
-  }, 1000);
+  }, 60 * 1000);
 }

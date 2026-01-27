@@ -133,8 +133,8 @@ importers:
         specifier: 5.2.0
         version: 5.2.0
       flomise:
-        specifier: 0.0.3
-        version: 0.0.3
+        specifier: 0.0.6
+        version: 0.0.6
       hono:
         specifier: 4.11.5
         version: 4.11.5
@@ -2242,8 +2242,8 @@ packages:
     resolution: {integrity: sha512-S8KoZgRZN+a5rNwqTxlZZePjT/4cnm0ROV70LedRHZ0p8u9fRID0hJUZQpkKLzro8LfmC8sx23bY6tVNxv8pQA==}
     engines: {node: '>= 18.0.0'}
 
-  flomise@0.0.3:
-    resolution: {integrity: sha512-YfLBJoP0hqTODiziN615pibXy2S1giRc5YG/YhT/4LB1Cvu7vDpr7f1Low58wIFtNcXDfyiYFYQuuALxobrP4A==}
+  flomise@0.0.6:
+    resolution: {integrity: sha512-3U8x/wVz9kd7fOshPuQRqxbhbU0ZAWipttLqWnXg4XqH5wuTUI1nM4gEuNiW3x1SUlTj7+qfEAguC5Sx2NK6+w==}
     engines: {node: '>=v20.10.0'}
 
   formdata-polyfill@4.0.10:
@@ -5491,7 +5491,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  flomise@0.0.3: {}
+  flomise@0.0.6: {}
 
   formdata-polyfill@4.0.10:
     dependencies:

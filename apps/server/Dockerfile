@@ -77,4 +77,4 @@ ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} \
 # Start the server by default, this can be overwritten at runtime
 EXPOSE ${PORT}
 
-CMD [ "node", "apps/server/cli.mjs", "start" ]
+CMD [ "node", "apps/server/cli.mjs", "start", "--cron" ]

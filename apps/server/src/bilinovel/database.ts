@@ -9,11 +9,11 @@ import {
 import { database } from '../database';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 
-export type NovelResult = NovelPageResult & { done: boolean };
+export type NovelResult = NovelPageResult & { fetchedAt: Date; done: boolean };
 
-export type NovelVolumeResult = NovelVolumePageResult & { done: boolean };
+export type NovelVolumeResult = NovelVolumePageResult & { fetchedAt: Date; done: boolean };
 
-export type NovelChaptersResult = NovelChapterPagesResult & { vid: number };
+export type NovelChapterResult = NovelChapterPagesResult & { vid: number; fetchedAt: Date };
 
 /**
  * 从数据库查询 novel 信息
@@ -124,23 +124,22 @@ export const getNovelVolumeFromDatabase = async (
 export const getNovelChapterFromDatabase = async (
   nid: string,
   cid: string
-): Promise<NovelChaptersResult | undefined> => {
-  const [novel] = await database.select().from(biliNovels).where(eq(biliNovels.nid, +nid));
+): Promise<NovelChapterResult | undefined> => {
+  const [chapter] = await database
+    .select()
+    .from(biliChapters)
+    .where(and(eq(biliChapters.nid, +nid), eq(biliChapters.cid, +cid)));
 
-  if (novel) {
-    const [chapter] = await database.select().from(biliChapters).where(eq(biliChapters.cid, +cid));
-
-    if (chapter) {
-      return {
-        nid: +nid,
-        vid: chapter.vid,
-        cid: +cid,
-        title: chapter.title,
-        content: chapter.content,
-        images: chapter.images,
-        fetchedAt: chapter.fetchedAt
-      };
-    }
+  if (chapter) {
+    return {
+      nid: +nid,
+      vid: chapter.vid,
+      cid: +cid,
+      title: chapter.title,
+      content: chapter.content,
+      images: chapter.images,
+      fetchedAt: chapter.fetchedAt
+    };
   }
 
   return undefined;

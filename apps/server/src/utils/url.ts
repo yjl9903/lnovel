@@ -1,6 +1,6 @@
 import type { Context } from '../app.js';
 
-export function buildSite(c: Context, path: string) {
+export function getOrigin(c: Context) {
   const requestUrl = new URL(c.req.url);
 
   const forwardedProto = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -11,6 +11,11 @@ export function buildSite(c: Context, path: string) {
 
   const origin = `${proto}://${host}`;
 
+  return origin;
+}
+
+export function buildSite(c: Context, path: string) {
+  const origin = getOrigin(c);
   return new URL(path, origin).toString();
 }
 

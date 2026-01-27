@@ -18,12 +18,13 @@ app
   .alias('start')
   .option('--host <ip>', 'Listen host')
   .option('--port <port>', 'Listen port')
+  .option('--cron', 'Start cron job')
   .action(async (options) => {
     const host = options.host ?? process.env.HOST;
     const port = options.port ?? process.env.PORT;
 
     const app = createApp();
-    await startCron();
+    options.cron && (await startCron());
     await startServer(app, { host, port });
   });
 

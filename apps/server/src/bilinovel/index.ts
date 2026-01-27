@@ -2,11 +2,12 @@ import { Hono } from 'hono';
 import { timeout } from 'hono/timeout';
 import { HTTPException } from 'hono/http-exception';
 import { etag, RETAINED_304_HEADERS } from 'hono/etag';
+
 import {
-  formatTopFilterTitle,
-  formatWenkuFilterTitle,
   parseTopFilter,
-  parseWenkuFilter
+  parseWenkuFilter,
+  formatTopFilterTitle,
+  formatWenkuFilterTitle
 } from 'bilinovel';
 
 import type { AppEnv, Context } from '../app';
@@ -18,15 +19,18 @@ import { getFoloUserId, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '..
 
 import { consola, normalizeDescription, transformAuthor } from './utils';
 import {
-  getNovel,
-  getNovelVolume,
-  getNovelChapter,
-  getWenku,
+  engine,
   getTop,
-  triggerUpdateNovels,
-  forceUpdateNovelVolume,
-  forceUpdateNovelChapter
-} from './handlers';
+  getWenku,
+  getGlobal,
+  getNovel,
+  getNovelChapter,
+  getNovelVolume,
+  updateNovel,
+  WorkflowException,
+  updateNovelVolume,
+  updateNovelChapter
+} from './workflow';
 import {
   getNovelFromDatabase,
   getNovelsFromDatabase,
@@ -71,7 +75,15 @@ app.use(
 );
 
 app.use('*', async (c: Context, next) => {
+  // 更新 folo feed id
+  const feedURL = new URL(getFeedURL(c));
+  if (feedURL.pathname.endsWith('/feed.xml')) {
+    setFoloFeedId(feedURL);
+  }
+
   await next();
+
+  // 设置缓存 header
   if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
     c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   }
@@ -84,6 +96,26 @@ app.use(
   })
 );
 
+app.onError(async (error: unknown, c: Context) => {
+  const url = new URL(c.req.url);
+
+  if (error instanceof HTTPException) {
+    return error.getResponse();
+  } else if (url.pathname.endsWith('/feed.xml')) {
+    const message = (error as Error)?.message || 'unknown';
+    return c.text(message, error instanceof WorkflowException ? error.status : 500);
+  } else {
+    return c.json(
+      {
+        ok: false,
+        provider: Provider.bilinovel,
+        message: (error as Error)?.message || 'unknown'
+      },
+      error instanceof WorkflowException ? error.status : 500
+    );
+  }
+});
+
 app.get('/', async (c: Context) => {
   return c.json({
     ok: true,
@@ -91,50 +123,61 @@ app.get('/', async (c: Context) => {
   });
 });
 
+app.get('/contexts', async (c: Context) => {
+  const stores = engine.getStores();
+  const contexts = stores.map((store) => [...store.contexts.values()]).flat();
+  const data = contexts.map((ctx) => ({
+    scope: ctx.workflow.scope,
+    key: ctx.key,
+    status: ctx.status,
+    variables: ctx.variables
+  }));
+
+  return c.json({
+    ok: true,
+    provider: Provider.bilinovel,
+    data: {
+      contexts: data
+    }
+  });
+});
+
 app.get('/wenku', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
-  const resp = await getWenku(c, filter);
+  const data = await engine.run(getGlobal(c), getWenku, filter);
 
-  if (resp.ok) {
-    const data = {
-      ...resp.data,
-      items: await attachFoloFeedIds(c, resp.data.items)
-    };
-    return c.json({ ok: true, provider: Provider.bilinovel, filter, data });
-  }
-
-  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  return c.json({
+    ok: true,
+    provider: Provider.bilinovel,
+    filter,
+    data: {
+      ...data,
+      items: await attachFoloFeedIds(c, data.items)
+    }
+  });
 });
 
 app.get('/top/:sort', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseTopFilter(url);
-  const resp = await getTop(c, filter);
+  const data = await engine.run(getGlobal(c), getTop, filter);
 
-  if (resp.ok) {
-    const data = {
-      ...resp.data,
-      items: await attachFoloFeedIds(c, resp.data.items)
-    };
-    return c.json({ ok: true, provider: Provider.bilinovel, filter, data });
-  }
-
-  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  return c.json({
+    ok: true,
+    provider: Provider.bilinovel,
+    filter,
+    data: {
+      ...data,
+      items: await attachFoloFeedIds(c, data.items)
+    }
+  });
 });
 
 app.get('/novels', async (c: Context) => {
-  try {
-    const novels = await getNovelsFromDatabase();
-    const data = await attachFoloFeedIds(c, novels);
-    return c.json({ ok: true, provider: Provider.bilinovel, data });
-  } catch (error) {
-    consola.error(error);
-    return c.json(
-      { ok: false, provider: Provider.bilinovel, message: (error as any)?.message },
-      500
-    );
-  }
+  const novels = await getNovelsFromDatabase();
+  const data = await attachFoloFeedIds(c, novels);
+  return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
 
 app.get('/novel/:nid', async (c: Context) => {
@@ -143,23 +186,15 @@ app.get('/novel/:nid', async (c: Context) => {
 
   const nid = c.req.param('nid');
 
+  const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid, false);
   if (db && !force) {
-    updateNovelAndFeedId(c, nid);
     const data = await attachFoloFeedId(c, db);
     return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
-  const resp = await getNovel(c, nid);
-
-  updateNovelAndFeedId(c, nid);
-
-  if (resp.ok) {
-    const data = await attachFoloFeedId(c, resp.data);
-    return c.json({ ok: true, provider: Provider.bilinovel, data });
-  }
-
-  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  const data = await fetched;
+  return c.json({ ok: true, provider: Provider.bilinovel, data: await attachFoloFeedId(c, data) });
 });
 
 app.get('/novel/:nid/vol/:vid', async (c: Context) => {
@@ -170,22 +205,22 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const vid = c.req.param('vid');
 
   const db = await getNovelVolumeFromDatabase(nid, vid, false);
+
   if (db && !force) {
-    updateNovelAndFeedId(c, nid);
+    engine.run(getGlobal(c), getNovel, +nid);
     const data = await attachFoloVolumeFeedId(c, db);
     return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
-  const resp = await forceUpdateNovelVolume(c, nid, vid);
+  const data = await engine.run(getGlobal(c), updateNovelVolume, +nid, +vid);
 
-  updateNovelAndFeedId(c, nid);
+  engine.run(getGlobal(c), getNovel, +nid);
 
-  if (resp.ok) {
-    const data = await attachFoloVolumeFeedId(c, resp.data);
-    return c.json({ ok: true, provider: Provider.bilinovel, data });
-  }
-
-  return c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  return c.json({
+    ok: true,
+    provider: Provider.bilinovel,
+    data: await attachFoloVolumeFeedId(c, data)
+  });
 });
 
 app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
@@ -197,17 +232,15 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
 
   const db = await getNovelChapterFromDatabase(nid, cid);
   if (db && !force) {
-    updateNovelAndFeedId(c, nid);
+    engine.run(getGlobal(c), getNovel, +nid);
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
-  const resp = await forceUpdateNovelChapter(c, nid, cid);
+  const data = await engine.run(getGlobal(c), updateNovelChapter, +nid, +cid);
 
-  updateNovelAndFeedId(c, nid);
+  engine.run(getGlobal(c), getNovel, +nid);
 
-  return resp.ok
-    ? c.json({ ok: true, provider: Provider.bilinovel, data: resp.data })
-    : c.json({ ok: false, provider: Provider.bilinovel, message: resp.message }, resp.status);
+  return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
 
 app.get('/novels/feed.xml', async (c: Context) => {
@@ -236,8 +269,6 @@ app.get('/novels/feed.xml', async (c: Context) => {
       })
     );
 
-    setFoloFeedId(getFeedURL(c));
-
     return getFeedResponse(c, {
       title: 'lnovel 哔哩轻小说 索引',
       description: '轻小说镜像聚合站 lnovel',
@@ -259,246 +290,191 @@ app.get('/novels/feed.xml', async (c: Context) => {
 app.get('/wenku/feed.xml', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
-  const resp = await getWenku(c, filter);
+  const data = await engine.run(getGlobal(c), getWenku, filter);
 
-  if (resp.ok) {
-    const { data } = resp;
+  const items = await Promise.all(
+    data.items.map(async (rawItem) => {
+      const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
+      const foloId = await getFoloFeedId(rawFeedURL);
+      const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+      const feedUrl = rawFeedURL;
 
-    const items = await Promise.all(
-      data.items.map(async (rawItem) => {
-        const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
-        const foloId = await getFoloFeedId(rawFeedURL);
-        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
-        const feedUrl = rawFeedURL;
+      const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
 
-        const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
+      const author = dbItem?.authors
+        ? dbItem.authors.map((author) => transformAuthor(author))
+        : rawItem.author
+          ? [transformAuthor({ name: rawItem.author, position: 'author' })]
+          : undefined;
 
-        const author = dbItem?.authors
-          ? dbItem.authors.map((author) => transformAuthor(author))
-          : rawItem.author
-            ? [transformAuthor({ name: rawItem.author, position: 'author' })]
-            : undefined;
-
-        return {
-          title: dbItem?.name || rawItem.title,
-          id: `/bili/novel/${rawItem.nid}`,
-          link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
-          author,
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
+      return {
+        title: dbItem?.name || rawItem.title,
+        id: `/bili/novel/${rawItem.nid}`,
+        link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+        author,
+        content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
 <p>${dbItem?.description || rawItem.description}</p>
 <p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
-          image: dbItem?.cover || rawItem.cover,
-          date: dbItem?.updatedAt || rawItem.updatedAt,
-          categories: rawItem.tags
-        };
-      })
-    );
+        image: dbItem?.cover || rawItem.cover,
+        date: dbItem?.updatedAt || rawItem.updatedAt,
+        categories: rawItem.tags
+      };
+    })
+  );
 
-    setFoloFeedId(getFeedURL(c));
-
-    return getFeedResponse(c, {
-      title: formatWenkuFilterTitle(filter),
-      description:
-        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
-      link: data.url,
-      rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
-      image: 'https://www.bilinovel.com/logo.png',
-      items,
-      follow: {
-        feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: getFoloUserId()
-      }
-    });
-  } else {
-    return c.text(`${resp.message}`, resp.status);
-  }
+  return getFeedResponse(c, {
+    title: formatWenkuFilterTitle(filter),
+    description:
+      '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
+    link: data.url,
+    rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
+    image: 'https://www.bilinovel.com/logo.png',
+    items,
+    follow: {
+      feedId: await getFoloFeedId(getFeedURL(c)),
+      userId: getFoloUserId()
+    }
+  });
 });
 
 app.get('/top/:sort/feed.xml', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseTopFilter(url);
-  const resp = await getTop(c, filter);
+  const data = await engine.run(getGlobal(c), getTop, filter);
 
-  if (resp.ok) {
-    const { data } = resp;
+  const items = await Promise.all(
+    data.items.map(async (rawItem) => {
+      const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
+      const foloId = await getFoloFeedId(rawFeedURL);
+      const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+      const feedUrl = rawFeedURL;
 
-    const items = await Promise.all(
-      data.items.map(async (rawItem) => {
-        const rawFeedURL = buildSite(c, `/bili/novel/${rawItem.nid}/feed.xml`);
-        const foloId = await getFoloFeedId(rawFeedURL);
-        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
-        const feedUrl = rawFeedURL;
+      const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
 
-        const dbItem = await getNovelFromDatabase('' + rawItem.nid, false);
+      const author = dbItem?.authors
+        ? dbItem.authors.map((author) => transformAuthor(author))
+        : rawItem.author
+          ? [transformAuthor({ name: rawItem.author, position: 'author' })]
+          : undefined;
 
-        const author = dbItem?.authors
-          ? dbItem.authors.map((author) => transformAuthor(author))
-          : rawItem.author
-            ? [transformAuthor({ name: rawItem.author, position: 'author' })]
-            : undefined;
-
-        return {
-          title: dbItem?.name || rawItem.title,
-          id: `/bili/novel/${rawItem.nid}`,
-          link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
-          author,
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
+      return {
+        title: dbItem?.name || rawItem.title,
+        id: `/bili/novel/${rawItem.nid}`,
+        link: `https://www.linovelib.com/novel/${rawItem.nid}.html`,
+        author,
+        content: `<p><a href=\"${`https://www.linovelib.com/novel/${rawItem.nid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>
 <p>${dbItem?.description || rawItem.description}</p>
 <p><img src="${dbItem?.cover || rawItem.cover}" alt="cover" /></p>`,
-          image: dbItem?.cover || rawItem.cover,
-          date: dbItem?.updatedAt || rawItem.updatedAt
-        };
-      })
-    );
+        image: dbItem?.cover || rawItem.cover,
+        date: dbItem?.updatedAt || rawItem.updatedAt
+      };
+    })
+  );
 
-    setFoloFeedId(getFeedURL(c));
-
-    return getFeedResponse(c, {
-      title: formatTopFilterTitle(filter),
-      description:
-        '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
-      link: data.url,
-      rssLink: buildSite(c, `/top/${filter.sort}/feed.xml${url.search}`),
-      image: 'https://www.bilinovel.com/logo.png',
-      items,
-      follow: {
-        feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: getFoloUserId()
-      }
-    });
-  } else {
-    return c.text(`${resp.message}`, resp.status);
-  }
+  return getFeedResponse(c, {
+    title: formatTopFilterTitle(filter),
+    description:
+      '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
+    link: data.url,
+    rssLink: buildSite(c, `/top/${filter.sort}/feed.xml${url.search}`),
+    image: 'https://www.bilinovel.com/logo.png',
+    items,
+    follow: {
+      feedId: await getFoloFeedId(getFeedURL(c)),
+      userId: getFoloUserId()
+    }
+  });
 });
 
 app.get('/novel/:nid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
 
+  const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid);
 
-  const resp = db ? ({ ok: true, data: db } as const) : await getNovel(c, nid);
+  const data = db ? db : await fetched;
 
-  if (resp.ok) {
-    const { data } = resp;
+  const author = data.authors.find((author) => author.position === 'author');
 
-    updateNovelAndFeedId(c, nid);
+  const items = await Promise.all(
+    data.volumes.map(async (vol, index) => {
+      const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
+      const foloId = await getFoloFeedId(rawFeedURL);
+      const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
+      const feedUrl = rawFeedURL;
 
-    const author = data.authors.find((author) => author.position === 'author');
+      const dbVol = await getNovelVolumeFromDatabase(nid, '' + vol.vid, false);
 
-    const items = await Promise.all(
-      data.volumes.map(async (vol, index) => {
-        const rawFeedURL = buildSite(c, `/bili/novel/${nid}/vol/${vol.vid}/feed.xml`);
-        const foloId = await getFoloFeedId(rawFeedURL);
-        const foloUrl = foloId ? getFoloShareURL(foloId) : undefined;
-        const feedUrl = rawFeedURL;
+      return {
+        title: vol.title || vol.volume,
+        id: `/bili/novel/${nid}/vol/${vol.vid}`,
+        link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
+        // author: data.authors.map((author) => transformAuthor(author)),
+        content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>${dbVol?.description ? `<p>${dbVol.description}</p>` : ''}<p><img src="${vol.cover}" alt="cover" /></p>`,
+        image: dbVol?.cover || vol.cover,
+        // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
+        date: new Date(data.updatedAt.getTime() + 1000 * index),
+        categories: data.labels
+      };
+    })
+  );
 
-        const dbVol = await getNovelVolumeFromDatabase(nid, '' + vol.vid, false);
-
-        return {
-          title: vol.title || vol.volume,
-          id: `/bili/novel/${nid}/vol/${vol.vid}`,
-          link: `https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`,
-          // author: data.authors.map((author) => transformAuthor(author)),
-          content: `<p><a href=\"${`https://www.linovelib.com/novel/${nid}/vol_${vol.vid}.html`}\">源链接</a> | <a href=\"${feedUrl}\" target=\"_blank\">RSS 订阅</a>${foloUrl ? ` | <a href=\"${foloUrl}\" target=\"_blank\">Folo 订阅</a>` : ''}</p>${dbVol?.description ? `<p>${dbVol.description}</p>` : ''}<p><img src="${vol.cover}" alt="cover" /></p>`,
-          image: dbVol?.cover || vol.cover,
-          // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
-          date: new Date(data.updatedAt.getTime() + 1000 * index),
-          categories: data.labels
-        };
-      })
-    );
-
-    return getFeedResponse(c, {
-      title: data.name,
-      description: normalizeDescription(data.description || data.name),
-      link: `https://www.linovelib.com/novel/${nid}.html`,
-      rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
-      author: author ? transformAuthor(author) : undefined,
-      image: data.cover,
-      items,
-      follow: {
-        feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: getFoloUserId()
-      }
-    });
-  } else {
-    return c.text(`${resp.message}`, resp.status);
-  }
+  return getFeedResponse(c, {
+    title: data.name,
+    description: normalizeDescription(data.description || data.name),
+    link: `https://www.linovelib.com/novel/${nid}.html`,
+    rssLink: buildSite(c, `/bili/novel/${nid}/feed.xml`),
+    author: author ? transformAuthor(author) : undefined,
+    image: data.cover,
+    items,
+    follow: {
+      feedId: await getFoloFeedId(getFeedURL(c)),
+      userId: getFoloUserId()
+    }
+  });
 });
 
 app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   const nid = c.req.param('nid');
   const vid = c.req.param('vid');
 
+  const fetched = engine.run(getGlobal(c), getNovelVolume, +nid, +vid);
   const db = await getNovelVolumeFromDatabase(nid, vid);
 
-  const resp = db ? ({ ok: true, data: db } as const) : await getNovelVolume(c, nid, vid);
+  const data = db ? db : await fetched;
 
-  if (resp.ok) {
-    const { data } = resp;
+  const author = data.authors.find((author) => author.position === 'author');
 
-    const author = data.authors.find((author) => author.position === 'author');
-
-    const chapters = [];
-    for (const chapter of data.chapters) {
-      const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
-      const resp = db
-        ? ({ ok: true, data: db } as const)
-        : await getNovelChapter(c, nid, '' + chapter.cid);
-
-      if (resp.ok) {
-        chapters.push(resp.data!);
-      } else {
-        return c.text(`${resp.message}`, resp.status);
-      }
-    }
-
-    updateNovelAndFeedId(c, nid);
-
-    return getFeedResponse(c, {
-      title: `${data.name}`,
-      description: normalizeDescription(data.description),
-      link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
-      rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
-      author: author ? transformAuthor(author) : undefined,
-      image: data.cover,
-      items: chapters.map((chapter, index) => ({
-        title: `${data.name} ${chapter.title}`,
-        id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
-        link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
-        // author: data.authors.map((author) => transformAuthor(author)),
-        // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
-        date: new Date(data.updatedAt.getTime() + 1000 * index),
-        categories: data.labels,
-        content: chapter.content
-      })),
-      follow: {
-        feedId: await getFoloFeedId(getFeedURL(c)),
-        userId: getFoloUserId()
-      }
-    });
-  } else {
-    return c.text(`${resp.message}`, resp.status);
+  const chapters = [];
+  for (const chapter of data.chapters) {
+    const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
+    const data = db ? db : await engine.run(getGlobal(c), getNovelChapter, +nid, chapter.cid);
+    chapters.push(data);
   }
-});
 
-async function updateNovelAndFeedId(c: Context, nid: string) {
-  return new Promise<void>((res) => {
-    setTimeout(async () => {
-      try {
-        const url = new URL(getFeedURL(c));
-        await Promise.all([
-          getNovel(c, nid),
-          url.pathname.endsWith('/feed.xml') ? setFoloFeedId(getFeedURL(c)) : undefined
-        ]);
-      } catch (error) {
-        consola.error('Update novel', error);
-      } finally {
-        res();
-      }
-    }, 1000);
+  return getFeedResponse(c, {
+    title: `${data.name}`,
+    description: normalizeDescription(data.description),
+    link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
+    rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
+    author: author ? transformAuthor(author) : undefined,
+    image: data.cover,
+    items: chapters.map((chapter, index) => ({
+      title: `${data.name} ${chapter.title}`,
+      id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
+      link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
+      // author: data.authors.map((author) => transformAuthor(author)),
+      // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
+      date: new Date(data.updatedAt.getTime() + 1000 * index),
+      categories: data.labels,
+      content: chapter.content
+    })),
+    follow: {
+      feedId: await getFoloFeedId(getFeedURL(c)),
+      userId: getFoloUserId()
+    }
   });
-}
+});
 
 async function attachFoloFeedId<T extends { nid: number | string }>(c: Context, item: T) {
   const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
@@ -536,10 +512,12 @@ export async function updatePendingNovels(c: Context) {
       now,
       novels.map((n) => ({ nid: n.nid, name: n.name }))
     );
-    await triggerUpdateNovels(
-      c,
-      novels.map((n) => n.nid)
-    );
+    for (const { nid } of novels) {
+      const novel = await getNovelFromDatabase('' + nid, false);
+      if (!novel || !novel.done) {
+        await engine.run(getGlobal(c), updateNovel, nid);
+      }
+    }
   } catch (error) {
     consola.error('Failed updating pending novels', now, error);
   } finally {

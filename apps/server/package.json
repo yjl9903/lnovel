@@ -50,7 +50,7 @@
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
     "feed": "5.2.0",
-    "flomise": "0.0.3",
+    "flomise": "0.0.6",
     "hono": "4.11.5",
     "lnovel": "workspace:*",
     "lru-cache": "11.2.5",
