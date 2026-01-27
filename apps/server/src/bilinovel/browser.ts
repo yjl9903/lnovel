@@ -27,10 +27,11 @@ const consola = createConsola().withTag('browser');
 const connectScrapeless = async (options: ScrapelessOptions) => {
   const query = new URLSearchParams({
     token: options.token || process.env.SCRAPELESS_TOKEN!,
+    // proxyCountry: 'ANY',
     proxyCountry: 'US',
     proxyState: 'CA',
     proxyCity: 'los_angeles',
-    sessionTTL: String(options.sessionTTL ?? 60 * 5)
+    sessionTTL: String(options.sessionTTL ?? 60 * 3)
   });
 
   const connectionURL = `wss://browser.scrapeless.com/api/v2/browser?${query.toString()}`;
@@ -105,13 +106,66 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
     try {
       const page = await (await browser).newPage();
+      await interceptor(page);
       first = true;
       return page;
     } catch {
       browser = connect();
       const page = await (await browser).newPage();
+      await interceptor(page);
       first = true;
       return page;
+    }
+
+    async function interceptor(page: Page) {
+      try {
+        // Enable request interception
+        await page.setRequestInterception(true);
+
+        // Define resource types to block
+        const BLOCKED_TYPES = new Set(['image', 'media', 'stylesheet', 'font']);
+
+        // Define domains and URL patterns to block
+        const BLOCKED_DOMAINS = [
+          'google-analytics.com',
+          'googletagmanager.com',
+          'doubleclick.net',
+          'twitter.com',
+          'linkedin.com',
+          'adservice.google.com',
+          'googleadservices.com',
+          'facebook.net', // Facebook Pixel
+          'adnxs.com', // 常见广告商
+          'criteo.com'
+        ];
+
+        const BLOCKED_PATHS = ['/ads/', '/analytics/', '/pixel/', '/tracking/', '/stats/'];
+
+        // Intercept requests
+        page.on('request', (request) => {
+          // Check mime type
+          if (BLOCKED_TYPES.has(request.resourceType())) {
+            request.abort();
+            return;
+          }
+
+          const url = request.url();
+
+          // Check domain
+          if (BLOCKED_DOMAINS.some((domain) => url.includes(domain))) {
+            request.abort();
+            return;
+          }
+
+          // Check path
+          if (BLOCKED_PATHS.some((path) => url.includes(path))) {
+            request.abort();
+            return;
+          }
+
+          request.continue();
+        });
+      } catch {}
     }
   };
 
@@ -147,9 +201,13 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             await page.waitForSelector(selector);
           }
 
-          consola.log(`Finish navigating to ${url.toString()}`);
-
           const content = await page.content();
+
+          if ((await page.$$('#cf-wrapper')).length > 0 || (await page.$$('.ray-id')).length > 0) {
+            throw new Error(`${url.toString()} is blocked by cloudflare`);
+          }
+
+          consola.log(`Finish navigating to ${url.toString()}`);
 
           return content;
         } catch (error) {
