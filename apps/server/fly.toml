@@ -43,7 +43,7 @@ processes = ['server']
 [[vm]]
 cpu_kind = 'shared'
 cpus = 1
-memory = '2g'
+memory = '1g'
 processes = ['server']
 
 [mounts]
