@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import { LRUCache } from 'lru-cache';
 import { createConsola } from 'consola';
 import puppeteer, { type Browser, type Page } from 'puppeteer-core';
 
@@ -63,6 +64,11 @@ export interface SessionOptions {
     reconnect?: number;
   };
 }
+
+const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
+  max: 10,
+  ttl: 60 * 60 * 1000
+});
 
 export interface Session {
   fetch: BilinovelFetch;
@@ -175,6 +181,11 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
       const url = new URL(pathname, BASE_URL);
 
+      const lastError = ERRORS.get(url.toString());
+      if (lastError && lastError.count > 10) {
+        throw lastError.error;
+      }
+
       const filename = pathname
         .replace(/^\//, '')
         .replace(/\//g, '_')
@@ -198,20 +209,23 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
           await page.goto(url.toString(), { timeout: 60 * 1000, waitUntil: 'domcontentloaded' });
 
           if (selector) {
-            await page.waitForSelector(selector);
+            await page.waitForSelector(selector, { timeout: 60 * 1000 });
           }
-
-          const content = await page.content();
 
           if ((await page.$$('#cf-wrapper')).length > 0 || (await page.$$('.ray-id')).length > 0) {
             throw new Error(`${url.toString()} is blocked by cloudflare`);
           }
+
+          const content = await page.content();
 
           consola.log(`Finish navigating to ${url.toString()}`);
 
           return content;
         } catch (error) {
           consola.error(error);
+
+          const lastError = ERRORS.get(url.toString());
+          ERRORS.set(url.toString(), { count: (lastError?.count || 0) + 1, error });
 
           await fs.mkdir('.screenshot').catch(() => {});
 
