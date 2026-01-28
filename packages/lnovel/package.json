@@ -46,7 +46,7 @@
   "dependencies": {
     "@breadc/color": "^0.9.7",
     "@breadc/death": "^0.9.7",
-    "@clack/prompts": "^0.11.0",
+    "@clack/prompts": "^1.0.0",
     "@epubook/core": "^0.0.11",
     "bilinovel": "workspace:*",
     "breadc": "^0.9.7",
