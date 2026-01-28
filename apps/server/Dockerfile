@@ -58,13 +58,13 @@ FROM base
 COPY --from=build /lnovel /lnovel
 
 # 设置浏览器下载路径，避免放在临时目录被清理
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PUPPETEER_CACHE_DIR=/puppeteer
 
-# 安装 Chromium 及其所需的系统依赖 (System Deps)
-# --with-deps 会自动运行 apt-get 安装 libnss3, libatk 等库
+# 安装 Chrome 及其所需的系统依赖 (System Deps)
+# --install-deps 会自动运行 apt-get 安装 libnss3, libatk 等库
 # 运行完后清理 apt 缓存以减小体积
 RUN apt-get update && \
-    npx playwright install chromium --with-deps && \
+    npx puppeteer browsers install chrome --install-deps && \
     rm -rf /var/lib/apt/lists/*
 
 # Declare args

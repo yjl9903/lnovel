@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { LRUCache } from 'lru-cache';
 import { createConsola } from 'consola';
-import puppeteer, { type Browser, type Page } from 'puppeteer-core';
+import puppeteer, { type Browser, type Page } from 'puppeteer';
 
 import type { BilinovelFetch } from 'bilinovel';
 
@@ -24,6 +24,31 @@ interface ScrapelessOptions {
 const BASE_URL = 'https://www.linovelib.com';
 
 const consola = createConsola().withTag('browser');
+
+// 防止请求雪崩, 缓存一定时间失败的链接
+const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
+  max: 10,
+  ttl: 60 * 60 * 1000
+});
+
+const launchLocalBrowser = async (): Promise<Browser> => {
+  let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+
+  if (!executablePath) {
+    try {
+      executablePath = puppeteer.executablePath();
+    } catch {}
+  }
+
+  return puppeteer.launch({
+    executablePath,
+    defaultViewport: null,
+    userDataDir: process.env.CHROMIUM_USER_DIR,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+};
+
+const localBrowser = launchLocalBrowser();
 
 const connectScrapeless = async (options: ScrapelessOptions) => {
   const query = new URLSearchParams({
@@ -65,11 +90,6 @@ export interface SessionOptions {
   };
 }
 
-const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
-  max: 10,
-  ttl: 60 * 60 * 1000
-});
-
 export interface Session {
   fetch: BilinovelFetch;
   newPage: () => Promise<Page>;
@@ -83,17 +103,41 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
   let first = true;
   let browser: Promise<Browser> | undefined = undefined;
-
+  let forceRemote = false;
   const delayInterval = options.delay?.interval ?? 5 * 1000;
   const delayReconnect = options.delay?.reconnect ?? 10 * 1000;
 
+  const isLocal = async () => {
+    if (!browser) return false;
+    try {
+      return (await browser) === (await localBrowser);
+    } catch {
+      return false;
+    }
+  };
+
   const connect = async (): Promise<Browser> => {
     if (browser) await close();
+
+    if (!forceRemote) {
+      try {
+        browser = Promise.resolve(localBrowser);
+        return localBrowser;
+      } catch (error) {
+        consola.warn('Local puppeteer launch failed, fallback to remote browser.');
+        consola.debug(error);
+      }
+    }
+
     return (browser = connectScrapeless(scrapeless ?? {}));
   };
 
   const close = async () => {
     if (!browser) return;
+    if (await isLocal()) {
+      browser = undefined;
+      return;
+    }
     try {
       await (await browser).close();
     } catch {
@@ -204,25 +248,41 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             await sleep(delayInterval + Math.random() * delayInterval);
           }
 
-          consola.log(`Start navigating to ${url.toString()}`);
+          const local = await isLocal();
+          consola.log(`Start ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
           await page.goto(url.toString(), { timeout: 60 * 1000, waitUntil: 'domcontentloaded' });
 
-          if (selector) {
-            await page.waitForSelector(selector, { timeout: 60 * 1000 });
+          if (local) {
+            if (
+              (await page.$$('#cf-wrapper')).length > 0 ||
+              (await page.$$('.ray-id')).length > 0
+            ) {
+              throw new Error(`${url.toString()} is blocked by cloudflare`);
+            }
           }
 
-          if ((await page.$$('#cf-wrapper')).length > 0 || (await page.$$('.ray-id')).length > 0) {
-            throw new Error(`${url.toString()} is blocked by cloudflare`);
+          if (selector) {
+            if (local) {
+              const target = await page.$(selector);
+              if (!target) {
+                throw new Error(`${url.toString()} is blocked by cloudflare`);
+              }
+            } else {
+              await page.waitForSelector(selector, { timeout: 60 * 1000 });
+            }
           }
 
           const content = await page.content();
 
-          consola.log(`Finish navigating to ${url.toString()}`);
+          consola.log(`Finish ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
           return content;
         } catch (error) {
           consola.error(error);
+
+          // 使用远程浏览器
+          forceRemote = true;
 
           const lastError = ERRORS.get(url.toString());
           ERRORS.set(url.toString(), { count: (lastError?.count || 0) + 1, error });
