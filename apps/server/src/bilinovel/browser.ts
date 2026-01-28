@@ -282,6 +282,10 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           consola.log(`Finish ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
+          if (local) {
+            await page.close().catch(() => {});
+          }
+
           return content;
         } catch (error) {
           consola.error(error);
@@ -300,6 +304,8 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
               fullPage: true
             })
             .catch(() => {});
+
+          await page.close().catch(() => {});
 
           if (turn + 1 === MAX_RETRY) {
             throw error;
