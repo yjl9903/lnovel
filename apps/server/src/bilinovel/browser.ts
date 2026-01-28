@@ -27,9 +27,11 @@ const consola = createConsola().withTag('browser');
 
 // 防止请求雪崩, 缓存一定时间失败的链接
 const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
-  max: 10,
+  max: 100,
   ttl: 60 * 60 * 1000
 });
+
+const MAX_ERROR = 10;
 
 const launchLocalBrowser = async (): Promise<Browser> => {
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -226,7 +228,8 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
       const url = new URL(pathname, BASE_URL);
 
       const lastError = ERRORS.get(url.toString());
-      if (lastError && lastError.count > 10) {
+      if (lastError && lastError.count > MAX_ERROR) {
+        consola.log(`Skip navigating to ${url.toString()} (repeated ${lastError.count} times)`);
         throw lastError.error;
       }
 
@@ -272,6 +275,8 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
               await page.waitForSelector(selector, { timeout: 60 * 1000 });
             }
           }
+
+          ERRORS.delete(url.toString());
 
           const content = await page.content();
 
