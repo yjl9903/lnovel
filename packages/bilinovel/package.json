@@ -41,7 +41,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "jsdom": "^27.0.4"
+    "jsdom": "^27.4.0"
   },
   "engines": {
     "node": ">=v20.0.0"
