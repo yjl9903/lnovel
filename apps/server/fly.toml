@@ -41,9 +41,9 @@ retries = 10
 processes = ['server']
 
 [[vm]]
-memory = '1g'
 cpu_kind = 'shared'
 cpus = 1
+memory = '2g'
 processes = ['server']
 
 [mounts]
