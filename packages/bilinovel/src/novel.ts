@@ -61,7 +61,7 @@ export async function fetchNovelPage(
   if (!html) return undefined;
   const document = createDocument(html);
 
-  if (hasText(document, '抱歉，作品已下架！') || hasText(document, '小说下架了')) {
+  if (hasText(document, ['抱歉，作品已下架！', '小说下架了', '抱歉，该小说不存在！'])) {
     throw new BilinovelError(pathname, `This novel ${nid} has been taken down.`);
   }
 
@@ -128,6 +128,10 @@ export async function fetchNovelVolumePage(
   const html = await fetch(pathname, { selector: '.wrap' });
   if (!html) return undefined;
   const document = createDocument(html);
+
+  if (hasText(document, ['抱歉，作品已下架！', '小说下架了', '抱歉，该小说不存在！'])) {
+    throw new BilinovelError(pathname, `This novel ${nid} volume ${vid} has been taken down.`);
+  }
 
   if (!document.querySelector('.book-info > .book-name')) {
     throw new BilinovelError(pathname);
@@ -260,7 +264,14 @@ export async function fetchNovelChapterPage(
 
   const document = createDocument(html);
 
-  if (hasText(document, '沒有可閱讀的章節')) {
+  if (
+    hasText(document, [
+      '抱歉，作品已下架！',
+      '小说下架了',
+      '抱歉，该小说不存在！',
+      '沒有可閱讀的章節'
+    ])
+  ) {
     throw new BilinovelError(pathname, `This novel ${nid} and chapter ${cid} has been taken down.`);
   }
 
@@ -411,8 +422,9 @@ export async function fetchNovelChapterPage(
   }
 }
 
-function hasText(document: Document, text: string) {
-  return (document.body?.textContent || '').includes(text);
+function hasText(document: Document, texts: string[]) {
+  const content = document.body?.textContent || '';
+  return texts.some((text) => content.includes(text));
 }
 
 function parseVolumesFromNovelDocument(
