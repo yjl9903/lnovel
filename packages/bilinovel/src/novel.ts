@@ -93,9 +93,6 @@ export async function fetchNovelPage(
   let vols = parseVolumesFromNovelDocument(document, nid, options?.transformImgSrc);
 
   if (vols.length === 0) {
-    // TODO: 迁移到 fetch 逻辑内
-    // await sleep(1000 + 1000 * Math.random());
-
     const catalogHtml = await fetch(`/novel/${nid}/catalog`, { selector: '.wrap' });
     if (!catalogHtml) return undefined;
     const catalogDocument = createDocument(catalogHtml);
@@ -198,11 +195,6 @@ export async function fetchNovelChapterPages(
   let title = '';
 
   for (let pageCount = 1; ; pageCount++) {
-    // TODO: 迁移到 fetch 逻辑里
-    // if (pageCount > 1 && Math.random() <= 0.5) {
-    //   const delay = options?.delay || 1000;
-    //   await sleep(delay + Math.random() * delay);
-    // }
     try {
       options?.logger?.log(
         `Start fetching novel chapter single page`,
@@ -212,6 +204,12 @@ export async function fetchNovelChapterPages(
       );
 
       const result = await fetchNovelChapterPage(fetch, nid, cid, pageCount, options);
+
+      try {
+        if (result) {
+          await options?.hooks?.progress?.(result);
+        }
+      } catch {}
 
       options?.logger?.log(
         `Finish fetching novel chapter single page`,
@@ -238,10 +236,6 @@ export async function fetchNovelChapterPages(
 
       throw error;
     }
-
-    // TODO: 迁移到 fetch 逻辑里
-    // const delay = options?.delay || 1000;
-    // await sleep(delay / 2 + (Math.random() * delay) / 2);
   }
 
   return {

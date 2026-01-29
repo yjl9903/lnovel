@@ -251,42 +251,57 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             await sleep(delayInterval + Math.random() * delayInterval);
           }
 
-          const local = await isLocal();
-          consola.log(`Start ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
+          const content = await Promise.race([
+            (async () => {
+              const local = await isLocal();
 
-          await page.goto(url.toString(), { timeout: 60 * 1000, waitUntil: 'domcontentloaded' });
+              consola.log(`Start ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
-          if (local) {
-            if (
-              (await page.$$('#cf-wrapper')).length > 0 ||
-              (await page.$$('.ray-id')).length > 0
-            ) {
-              throw new Error(`${url.toString()} is blocked by cloudflare`);
-            }
-          }
+              await page.goto(url.toString(), {
+                timeout: 60 * 1000,
+                waitUntil: 'domcontentloaded'
+              });
 
-          if (selector) {
-            if (local) {
-              const target = await page.$(selector);
-              if (!target) {
-                throw new Error(`${url.toString()} is blocked by cloudflare`);
+              if (local) {
+                if (
+                  (await page.$$('#cf-wrapper')).length > 0 ||
+                  (await page.$$('.ray-id')).length > 0
+                ) {
+                  throw new Error(`${url.toString()} is blocked by cloudflare`);
+                }
               }
-            } else {
-              await page.waitForSelector(selector, { timeout: 60 * 1000 });
-            }
+
+              if (selector) {
+                if (local) {
+                  const target = await page.$(selector);
+                  if (!target) {
+                    throw new Error(`${url.toString()} is blocked by cloudflare`);
+                  }
+                } else {
+                  await page.waitForSelector(selector, { timeout: 60 * 1000 });
+                }
+              }
+
+              ERRORS.delete(url.toString());
+
+              const content = await page.content();
+
+              consola.log(`Finish ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
+
+              if (local) {
+                await page.close().catch(() => {});
+              }
+
+              return content;
+            })(),
+            sleep(2 * 60 * 1000).then(() => undefined)
+          ]);
+
+          if (content) {
+            return content;
           }
 
-          ERRORS.delete(url.toString());
-
-          const content = await page.content();
-
-          consola.log(`Finish ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
-
-          if (local) {
-            await page.close().catch(() => {});
-          }
-
-          return content;
+          throw new Error(`Fetch timeout: "${url.toString()}"`);
         } catch (error) {
           consola.error(error);
 

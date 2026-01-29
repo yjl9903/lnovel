@@ -166,7 +166,12 @@ export const getNovelChapter = workflow('getNovelChapter', {
       const resp = await fetchNovelChapterPages(session.fetch, nid, cid, {
         logger: consola,
         transformImgSrc: getTransformImgSrc(ctx),
-        transformBbcode: true
+        transformBbcode: true,
+        hooks: {
+          progress({ pagination }) {
+            ctx.set('progress', { ...pagination });
+          }
+        }
       });
 
       if (resp) {

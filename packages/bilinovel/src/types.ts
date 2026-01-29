@@ -28,4 +28,19 @@ export interface BilinovelFetchNovelChapterOptions extends BilinovelFetchPageOpt
    * BBCode 转 HTML
    */
   transformBbcode?: boolean;
+
+  /**
+   * 进度钩子
+   */
+  hooks?: {
+    progress?: (result: {
+      cid: number;
+      title: string;
+      pagination: {
+        current: number;
+        total: number;
+        complete: boolean;
+      };
+    }) => Promise<void> | void;
+  };
 }
