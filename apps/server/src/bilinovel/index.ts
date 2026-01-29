@@ -24,7 +24,6 @@ import {
   getWenku,
   getGlobal,
   getNovel,
-  getNovelChapter,
   getNovelVolume,
   updateNovel,
   WorkflowException,
@@ -76,13 +75,15 @@ app.use(
 );
 
 app.use('*', async (c: Context, next) => {
+  await next();
+
   // 更新 folo feed id
   const feedURL = new URL(getFeedURL(c));
   if (feedURL.pathname.endsWith('/feed.xml')) {
-    setFoloFeedId(feedURL);
+    setTimeout(() => {
+      setFoloFeedId(feedURL);
+    }, 1000);
   }
-
-  await next();
 
   const enableCache = !feedURL.pathname.endsWith('/contexts');
   if (enableCache) {
