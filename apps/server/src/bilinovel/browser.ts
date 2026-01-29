@@ -239,7 +239,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
         .replace(/\.html$/, '.png')
         .replace('catalog', 'catalog.png');
 
-      for (let turn = 0; turn < MAX_RETRY; turn++) {
+      for (let turn = 0; turn <= MAX_RETRY; turn++) {
         try {
           if (page.isClosed()) {
             page = await newPage();
@@ -322,7 +322,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           await page.close().catch(() => {});
 
-          if (turn + 1 === MAX_RETRY) {
+          if (turn === MAX_RETRY) {
             throw error;
           }
 
