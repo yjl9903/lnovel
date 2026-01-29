@@ -10,6 +10,7 @@ export const biliNovels = sqliteTable('bili_novels', {
   cover: text('cover'),
   labels: text('label', { mode: 'json' }).$type<string[]>().default([]),
   done: integer('done', { mode: 'boolean' }).default(false),
+  isDeleted: integer('is_deleted', { mode: 'boolean' }).default(false),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });
@@ -25,6 +26,7 @@ export const biliVolumes = sqliteTable('bili_volumes', {
   cover: text('cover'),
   labels: text('label', { mode: 'json' }).$type<string[]>().notNull().default([]),
   done: integer('done', { mode: 'boolean' }).default(false),
+  isDeleted: integer('is_deleted', { mode: 'boolean' }).default(false),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   fetchedAt: integer('fetched_at', { mode: 'timestamp_ms' }).notNull()
 });

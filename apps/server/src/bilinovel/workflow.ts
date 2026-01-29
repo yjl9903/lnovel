@@ -381,6 +381,9 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
             }
           });
 
+        // 异步更新 foloId
+        setFoloFeedId(new URL(`/bili/novel/${nid}/vol/${vid}/feed.xml`, ctx.global.origin));
+
         // 视为数据一致: 数据库条目存在 且 数据库条目 done 且 数据库条目更新时间 >= 抓取的更新时间
         if (
           oldVolume &&
@@ -502,9 +505,6 @@ export const updateNovelVolume = workflow('updateNovelVolume', { concurrency: 1 
         }
 
         await database.update(biliVolumes).set({ done: true }).where(eq(biliVolumes.vid, +vid));
-
-        // 异步更新 foloId
-        setFoloFeedId(new URL(`/bili/novel/${nid}/vol/${vid}/feed.xml`, ctx.global.origin));
 
         consola.log(
           `Finish updating novel volume and chapters to database`,

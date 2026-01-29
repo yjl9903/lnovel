@@ -5,7 +5,7 @@ import type {
   BilinovelFetchNovelChapterOptions
 } from './types';
 
-import { BilinovelError } from './error';
+import { BilinovelError, BilinovelErrorCode } from './error';
 import { createDocument, applyTransformImgSrc, parseShanghaiDateTime } from './utils';
 
 export interface NovelPageResult {
@@ -62,11 +62,15 @@ export async function fetchNovelPage(
   const document = createDocument(html);
 
   if (hasText(document, ['抱歉，作品已下架！', '小说下架了', '抱歉，该小说不存在！'])) {
-    throw new BilinovelError(pathname, `This novel ${nid} has been taken down.`);
+    throw new BilinovelError(
+      pathname,
+      BilinovelErrorCode.banned,
+      `This novel ${nid} has been taken down.`
+    );
   }
 
   if (!document.querySelector('.book-info > .book-name')) {
-    throw new BilinovelError(pathname);
+    throw new BilinovelError(pathname, BilinovelErrorCode.empty);
   }
 
   const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
@@ -98,7 +102,7 @@ export async function fetchNovelPage(
     const catalogDocument = createDocument(catalogHtml);
 
     if (!catalogDocument.querySelector('.volume-list > .volume')) {
-      throw new BilinovelError(`/novel/${nid}/catalog`);
+      throw new BilinovelError(`/novel/${nid}/catalog`, BilinovelErrorCode.empty);
     }
 
     vols = parseVolumesFromCatalogDocument(catalogDocument, nid, options?.transformImgSrc);
@@ -130,11 +134,15 @@ export async function fetchNovelVolumePage(
   const document = createDocument(html);
 
   if (hasText(document, ['抱歉，作品已下架！', '小说下架了', '抱歉，该小说不存在！'])) {
-    throw new BilinovelError(pathname, `This novel ${nid} volume ${vid} has been taken down.`);
+    throw new BilinovelError(
+      pathname,
+      BilinovelErrorCode.banned,
+      `This novel ${nid} volume ${vid} has been taken down.`
+    );
   }
 
   if (!document.querySelector('.book-info > .book-name')) {
-    throw new BilinovelError(pathname);
+    throw new BilinovelError(pathname, BilinovelErrorCode.empty);
   }
 
   const name = document.querySelector('.book-info > .book-name')?.textContent?.trim() || '';
@@ -272,14 +280,18 @@ export async function fetchNovelChapterPage(
       '沒有可閱讀的章節'
     ])
   ) {
-    throw new BilinovelError(pathname, `This novel ${nid} and chapter ${cid} has been taken down.`);
+    throw new BilinovelError(
+      pathname,
+      BilinovelErrorCode.banned,
+      `This novel ${nid} and chapter ${cid} has been taken down.`
+    );
   }
 
   if (
     !document.querySelector('#mlfy_main_text') ||
     !document.querySelector('#mlfy_main_text > h1')
   ) {
-    throw new BilinovelError(pathname);
+    throw new BilinovelError(pathname, BilinovelErrorCode.empty);
   }
 
   const rawTitle = document.querySelector('#mlfy_main_text > h1')?.textContent;
