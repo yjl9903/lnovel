@@ -88,8 +88,6 @@ export const getNovel = workflow('getNovel', {
       if (resp) {
         consola.log(`Finish fetching novel page`, `nid:${nid}`, resp.name);
 
-        ctx.run(updateNovel, nid);
-
         return { ...resp, fetchedAt: new Date() };
       } else {
         consola.error(`Failed fetching novel page`, `nid:${nid}`, 'due to 404 not found');
@@ -126,8 +124,6 @@ export const getNovelVolume = workflow('getNovelVolume', {
 
       if (resp) {
         consola.log(`Finish fetching novel volume page`, `nid:${nid}`, `vid:${vid}`, resp.name);
-
-        ctx.run(updateNovel, nid);
 
         return { ...resp, fetchedAt: new Date() };
       } else {
@@ -180,8 +176,6 @@ export const getNovelChapter = workflow('getNovelChapter', {
 
       if (resp) {
         consola.log(`Finish fetching novel chapter page`, `nid:${nid}`, `cid:${cid}`, resp?.title);
-
-        ctx.run(updateNovel, nid);
 
         return { ...resp, fetchedAt: new Date() };
       } else {
@@ -597,7 +591,7 @@ export const getTop = workflow('getTop', {
           (lhs, rhs) => rhs.updatedAt.getTime() - lhs.updatedAt.getTime()
         );
         for (const { nid } of items) {
-          ctx.run(updateNovel, nid);
+          ctx.run(updateNovel, nid).catch(() => {});
         }
       }, 1000);
 
@@ -642,7 +636,7 @@ export const getWenku = workflow('getWenku', {
           (lhs, rhs) => rhs.updatedAt.getTime() - lhs.updatedAt.getTime()
         );
         for (const { nid } of items) {
-          ctx.run(updateNovel, nid);
+          ctx.run(updateNovel, nid).catch(() => {});
         }
       }, 1000);
 

@@ -224,6 +224,9 @@ app.get('/novel/:nid', async (c: Context) => {
   }
 
   const data = await fetched;
+
+  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+
   return c.json({ ok: true, provider: Provider.bilinovel, data: await attachFoloFeedId(c, data) });
 });
 
@@ -237,14 +240,14 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   const db = await getNovelVolumeFromDatabase(nid, vid, false);
 
   if (db && !force) {
-    engine.run(getGlobal(c), getNovel, +nid);
+    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
     const data = await attachFoloVolumeFeedId(c, db);
     return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
   const data = await engine.run(getGlobal(c), updateNovelVolume, +nid, +vid);
 
-  engine.run(getGlobal(c), getNovel, +nid);
+  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
 
   return c.json({
     ok: true,
@@ -262,13 +265,13 @@ app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
 
   const db = await getNovelChapterFromDatabase(nid, cid);
   if (db && !force) {
-    engine.run(getGlobal(c), getNovel, +nid);
+    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
   const data = await engine.run(getGlobal(c), updateNovelChapter, +nid, +cid);
 
-  engine.run(getGlobal(c), getNovel, +nid);
+  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
 
   return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
@@ -449,6 +452,8 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
     })
   );
 
+  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+
   return getFeedResponse(c, {
     title: data.name,
     description: normalizeDescription(data.description || data.name),
@@ -478,9 +483,14 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
   const chapters = [];
   for (const chapter of data.chapters) {
     const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
-    const data = db ? db : await engine.run(getGlobal(c), getNovelChapter, +nid, chapter.cid);
-    chapters.push(data);
+    if (db) {
+      chapters.push(db);
+    } else {
+      break;
+    }
   }
+
+  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
 
   return getFeedResponse(c, {
     title: `${data.name}`,
