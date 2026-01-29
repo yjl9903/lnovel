@@ -7,18 +7,21 @@
 
 ## 使用
 
-你可以直接使用提供的 RSS 订阅链接.
+你可以直接使用 lnovel 开放接口提供的 3 种 RSS 订阅链接.
 
-+ [哔哩轻小说 月点击榜](https://app.folo.is/share/feeds/231049696759276544)
-+ [哔哩轻小说 周点击榜](https://app.folo.is/share/feeds/231789721946592256)
-+ [哔哩轻小说 周推荐榜](https://app.folo.is/share/feeds/234666995431193600)
-+ [哔哩轻小说 月推荐榜](https://app.folo.is/share/feeds/232505823724295168)
-+ [哔哩轻小说 最新更新 · 日本轻小说](https://app.folo.is/share/feeds/221271104769934336)
-+ [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么](https://app.folo.is/share/feeds/224529602427239424)
-+ [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么 第一卷](https://app.folo.is/share/feeds/224531353209850880)
-+ [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么 第二卷](https://app.folo.is/share/feeds/231759473318204416)
++ **轻小说榜单索引**:
+  + [哔哩轻小说 月点击榜](https://app.folo.is/share/feeds/231049696759276544)
+  + [哔哩轻小说 周点击榜](https://app.folo.is/share/feeds/231789721946592256)
+  + [哔哩轻小说 周推荐榜](https://app.folo.is/share/feeds/234666995431193600)
+  + [哔哩轻小说 月推荐榜](https://app.folo.is/share/feeds/232505823724295168)
+  + [哔哩轻小说 最新更新 · 日本轻小说](https://app.folo.is/share/feeds/221271104769934336)
++ **轻小说丛书系列**:
+  + [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么](https://app.folo.is/share/feeds/224529602427239424)
++ **轻小说内容**:
+  + [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么 第一卷](https://app.folo.is/share/feeds/224531353209850880)
+  + [把喜欢的女生收作女仆后，她居然在我的房间里偷偷地在搞些什么 第二卷](https://app.folo.is/share/feeds/231759473318204416)
 
-**链接转换规则**:
+链接转换规则:
 
 + **排行榜索引页**: [https://www.linovelib.com/top/monthvisit/1.html](https://www.linovelib.com/top/monthvisit/1.html) 改写成 [https://lnovel.animes.garden/bili/top/monthvisit/feed.xml](https://lnovel.animes.garden/bili/top/monthvisit/feed.xml)
 + **轻小说丛书页**: [https://www.linovelib.com/novel/4972.html](https://www.linovelib.com/novel/4972.html) 提取小说 ID 4972 改写成 [https://lnovel.animes.garden/bili/novel/4972/feed.xml](https://lnovel.animes.garden/bili/novel/4972/feed.xml)
@@ -30,7 +33,6 @@
 
 + [轻小说文库](https://www.wenku8.net/)
 + [哔哩轻小说](https://www.linovelib.com/)
-+ [Messiahhh/wenku8-downloader](https://github.com/Messiahhh/wenku8-downloader): 轻小说文库的命令行小说下载器
 
 ## 开源协议
 
