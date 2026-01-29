@@ -143,7 +143,11 @@ export const getNovelVolume = workflow('getNovelVolume', {
     } catch (error) {
       consola.error(`Failed fetching novel volume page`, `nid:${nid}`, `vid:${vid}`, error);
 
-      throw error;
+      throw new WorkflowException(
+        `Failed fetching novel volume page nid:${nid} vid:${vid}`,
+        500,
+        error
+      );
     }
   });
 
@@ -193,7 +197,11 @@ export const getNovelChapter = workflow('getNovelChapter', {
     } catch (error) {
       consola.error(`Failed fetching novel chapter page`, `nid:${nid}`, `cid:${cid}`, error);
 
-      throw error;
+      throw new WorkflowException(
+        `Failed fetching novel chapter page nid:${nid} cid:${cid}`,
+        500,
+        error
+      );
     }
   });
 
