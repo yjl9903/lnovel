@@ -314,7 +314,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           throw new Error(`Fetch timeout: "${url.toString()}"`);
         } catch (error) {
-          consola.error(`Failed fetching "${url.toString()}"`, `retry:${turn}/${MAX_RETRY}`, error);
+          consola.error(`Failed fetching "${url.toString()}"`, error);
 
           // 使用远程浏览器
           forceRemote = true;
@@ -331,11 +331,13 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             })
             .catch(() => {});
 
-          await page?.close().catch(() => {});
+          await Promise.race([page?.close().catch(() => {}), sleep(2 * 1000)]);
 
           if (turn === MAX_RETRY) {
             throw error;
           }
+
+          consola.log(`Retry fetching "${url.toString()}"`, `${turn}/${MAX_RETRY}`);
 
           // 重新连接浏览器
           await sleep(delayReconnect + Math.random() * delayReconnect);
