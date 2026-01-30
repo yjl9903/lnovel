@@ -69,6 +69,8 @@ const connectScrapeless = async (options: ScrapelessOptions) => {
     defaultViewport: null
   });
 
+  consola.log('Connected to remote browser', browser.connected);
+
   return browser;
 };
 
@@ -94,7 +96,7 @@ export interface SessionOptions {
 
 export interface Session {
   fetch: BilinovelFetch;
-  newPage: () => Promise<Page>;
+  newPage: () => Promise<Page | undefined>;
   close: () => Promise<void>;
 }
 
@@ -126,8 +128,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
         browser = Promise.resolve(localBrowser);
         return localBrowser;
       } catch (error) {
-        consola.warn('Local puppeteer launch failed, fallback to remote browser.');
-        consola.debug(error);
+        consola.error('Local puppeteer launch failed, fallback to remote browser', error);
       }
     }
 
@@ -136,12 +137,15 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
   const close = async () => {
     if (!browser) return;
-    if (await isLocal()) {
-      browser = undefined;
-      return;
-    }
     try {
-      await (await browser).close();
+      await Promise.race([
+        (async () => {
+          if (!(await isLocal())) {
+            await (await browser).close();
+          }
+        })(),
+        sleep(2 * 1000)
+      ]);
     } catch {
       // ignore error
     } finally {
@@ -150,24 +154,29 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   };
 
   const newPage = async () => {
-    if (!browser) {
-      browser = connect();
-    } else if (!(await browser).connected) {
-      browser = connect();
-    }
+    return await Promise.race([
+      (async () => {
+        if (!browser) {
+          browser = connect();
+        } else if (!(await browser).connected) {
+          browser = connect();
+        }
 
-    try {
-      const page = await (await browser).newPage();
-      await interceptor(page);
-      first = true;
-      return page;
-    } catch {
-      browser = connect();
-      const page = await (await browser).newPage();
-      await interceptor(page);
-      first = true;
-      return page;
-    }
+        try {
+          const page = await (await browser).newPage();
+          await interceptor(page);
+          first = true;
+          return page;
+        } catch {
+          browser = connect();
+          const page = await (await browser).newPage();
+          await interceptor(page);
+          first = true;
+          return page;
+        }
+      })(),
+      sleep(10 * 1000).then(() => undefined)
+    ]);
 
     async function interceptor(page: Page) {
       try {
@@ -241,7 +250,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
       for (let turn = 0; turn <= MAX_RETRY; turn++) {
         try {
-          if (page.isClosed()) {
+          if (!page || page.isClosed()) {
             page = await newPage();
           }
 
@@ -253,6 +262,8 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           const content = await Promise.race([
             (async () => {
+              if (!page) throw new Error(`Failed creating page`);
+
               const local = await isLocal();
 
               consola.log(`Start ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
@@ -303,7 +314,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           throw new Error(`Fetch timeout: "${url.toString()}"`);
         } catch (error) {
-          consola.error(error);
+          consola.error(`Failed fetching "${url.toString()}"`, `retry:${turn}/${MAX_RETRY}`, error);
 
           // 使用远程浏览器
           forceRemote = true;
@@ -314,13 +325,13 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
           await fs.mkdir('.screenshot').catch(() => {});
 
           await page
-            .screenshot({
+            ?.screenshot({
               path: path.join('.screenshot', filename),
               fullPage: true
             })
             .catch(() => {});
 
-          await page.close().catch(() => {});
+          await page?.close().catch(() => {});
 
           if (turn === MAX_RETRY) {
             throw error;
