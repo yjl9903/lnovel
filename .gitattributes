@@ -1,0 +1,4 @@
+# Exclude test data fixtures from GitHub Linguist stats.
+**/__assets__/** linguist-vendored
+**/__snapshots__/** linguist-vendored
+**/__fixtures__/** linguist-vendored
