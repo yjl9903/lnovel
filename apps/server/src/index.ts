@@ -36,7 +36,6 @@ export function createApp() {
     if (!html) {
       return c.json({ ok: false, message: 'Landing not built' }, 404);
     }
-
     return c.html(html);
   });
 
