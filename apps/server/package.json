@@ -46,7 +46,7 @@
     "bilinovel": "workspace:*",
     "breadc": "0.9.7",
     "consola": "3.4.2",
-    "croner": "9.1.0",
+    "croner": "10.0.1",
     "dotenv": "17.2.3",
     "drizzle-orm": "0.45.1",
     "feed": "5.2.0",
