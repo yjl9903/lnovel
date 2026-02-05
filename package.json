@@ -19,7 +19,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/jsdom": "^27.0.0",
-    "@types/node": "^24.10.10",
+    "@types/node": "^24.10.11",
     "bumpp": "latest",
     "prettier": "^3.8.1",
     "tsdown": "^0.20.3",
