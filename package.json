@@ -22,7 +22,7 @@
     "@types/node": "^24.10.10",
     "bumpp": "latest",
     "prettier": "^3.8.1",
-    "tsdown": "^0.20.1",
+    "tsdown": "^0.20.2",
     "tsx": "^4.21.0",
     "turbo": "^2.8.3",
     "typescript": "^5.9.3",
