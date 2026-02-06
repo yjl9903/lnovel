@@ -73,7 +73,7 @@ importers:
         version: 19.2.4(react@19.2.4)
       shadcn:
         specifier: 3.8.3
-        version: 3.8.3(@types/node@24.10.11)(hono@4.11.7)(typescript@5.9.3)
+        version: 3.8.3(@types/node@24.10.11)(hono@4.11.8)(typescript@5.9.3)
       tailwind-merge:
         specifier: 3.4.0
         version: 3.4.0
@@ -104,10 +104,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 1.19.9
-        version: 1.19.9(hono@4.11.7)
+        version: 1.19.9(hono@4.11.8)
       '@hono/zod-validator':
         specifier: 0.7.6
-        version: 0.7.6(hono@4.11.7)(zod@4.3.6)
+        version: 0.7.6(hono@4.11.8)(zod@4.3.6)
       better-sqlite3:
         specifier: 12.6.2
         version: 12.6.2
@@ -136,8 +136,8 @@ importers:
         specifier: 0.0.6
         version: 0.0.6
       hono:
-        specifier: 4.11.7
-        version: 4.11.7
+        specifier: 4.11.8
+        version: 4.11.8
       lnovel:
         specifier: workspace:*
         version: link:../../packages/lnovel
@@ -2380,8 +2380,8 @@ packages:
   headers-polyfill@4.0.3:
     resolution: {integrity: sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==}
 
-  hono@4.11.7:
-    resolution: {integrity: sha512-l7qMiNee7t82bH3SeyUCt9UF15EVmaBvsppY2zQtrbIhl/yzBTny+YUxsVjSjQ6gaqaeVtZmGocom8TzBlA4Yw==}
+  hono@4.11.8:
+    resolution: {integrity: sha512-eVkB/CYCCei7K2WElZW9yYQFWssG0DhaDhVvr7wy5jJ22K+ck8fWW0EsLpB0sITUTvPnc97+rrbQqIr5iqiy9Q==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.0.1:
@@ -4348,13 +4348,13 @@ snapshots:
 
   '@fontsource-variable/ibm-plex-sans@5.2.8': {}
 
-  '@hono/node-server@1.19.9(hono@4.11.7)':
+  '@hono/node-server@1.19.9(hono@4.11.8)':
     dependencies:
-      hono: 4.11.7
+      hono: 4.11.8
 
-  '@hono/zod-validator@0.7.6(hono@4.11.7)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.11.8)(zod@4.3.6)':
     dependencies:
-      hono: 4.11.7
+      hono: 4.11.8
       zod: 4.3.6
 
   '@hugeicons/core-free-icons@3.1.1': {}
@@ -4416,9 +4416,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@modelcontextprotocol/sdk@1.25.3(hono@4.11.7)(zod@3.25.76)':
+  '@modelcontextprotocol/sdk@1.25.3(hono@4.11.8)(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.9(hono@4.11.7)
+      '@hono/node-server': 1.19.9(hono@4.11.8)
       ajv: 8.17.1
       ajv-formats: 3.0.1(ajv@8.17.1)
       content-type: 1.0.5
@@ -5655,7 +5655,7 @@ snapshots:
 
   headers-polyfill@4.0.3: {}
 
-  hono@4.11.7: {}
+  hono@4.11.8: {}
 
   hookable@6.0.1: {}
 
@@ -6424,7 +6424,7 @@ snapshots:
 
   setprototypeof@1.2.0: {}
 
-  shadcn@3.8.3(@types/node@24.10.11)(hono@4.11.7)(typescript@5.9.3):
+  shadcn@3.8.3(@types/node@24.10.11)(hono@4.11.8)(typescript@5.9.3):
     dependencies:
       '@antfu/ni': 25.0.0
       '@babel/core': 7.29.0
@@ -6432,7 +6432,7 @@ snapshots:
       '@babel/plugin-transform-typescript': 7.28.6(@babel/core@7.29.0)
       '@babel/preset-typescript': 7.28.5(@babel/core@7.29.0)
       '@dotenvx/dotenvx': 1.52.0
-      '@modelcontextprotocol/sdk': 1.25.3(hono@4.11.7)(zod@3.25.76)
+      '@modelcontextprotocol/sdk': 1.25.3(hono@4.11.8)(zod@3.25.76)
       '@types/validate-npm-package-name': 4.0.2
       browserslist: 4.28.1
       commander: 14.0.3
