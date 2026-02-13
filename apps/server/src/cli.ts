@@ -3,25 +3,25 @@ import 'dotenv/config';
 import { breadc } from 'breadc';
 import { createConsola } from 'consola';
 
-import { version } from '../package.json';
+import { description, version } from '../package.json';
 
 import { createApp, startCron, startServer } from './index';
 
 const consola = createConsola().withTag('cli');
 
-const app = breadc('lnovel-server', { description: 'lnovel API server', version })
+const app = breadc('lnovel-server', { description, version })
   .option('--secret <string>', 'Admin auth secret')
   .option('--redis-uri <string>', 'Redis connection URI');
 
 app
-  .command('', 'Start lnovel server')
-  .alias('start')
+  .command('start', 'Start lnovel server')
+  .alias('')
   .option('--host <ip>', 'Listen host')
   .option('--port <port>', 'Listen port')
   .option('--cron', 'Start cron job')
   .action(async (options) => {
-    const host = options.host ?? process.env.HOST;
-    const port = options.port ?? process.env.PORT;
+    const host = options.host || process.env.HOST;
+    const port = options.port || process.env.PORT;
 
     const app = createApp();
     options.cron && (await startCron());

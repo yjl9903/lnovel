@@ -2,7 +2,7 @@
   "name": "@lnovel/server",
   "version": "0.0.4",
   "private": true,
-  "description": "lnovel server implementation",
+  "description": "lnovel api server",
   "keywords": [
     "light-novels"
   ],
@@ -44,7 +44,7 @@
     "@hono/zod-validator": "0.7.6",
     "better-sqlite3": "12.6.2",
     "bilinovel": "workspace:*",
-    "breadc": "0.9.7",
+    "breadc": "1.0.0-beta.6",
     "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.3.1",
