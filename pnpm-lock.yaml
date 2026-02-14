@@ -115,8 +115,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/bilinovel
       breadc:
-        specifier: 1.0.0-beta.6
-        version: 1.0.0-beta.6
+        specifier: 1.0.0-beta.8
+        version: 1.0.0-beta.8
       consola:
         specifier: 3.4.2
         version: 3.4.2
@@ -164,11 +164,11 @@ importers:
   packages/lnovel:
     dependencies:
       '@breadc/color':
-        specifier: ^1.0.0-beta.6
-        version: 1.0.0-beta.6
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       '@breadc/death':
-        specifier: ^1.0.0-beta.6
-        version: 1.0.0-beta.6
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       '@clack/prompts':
         specifier: ^1.0.1
         version: 1.0.1
@@ -179,8 +179,8 @@ importers:
         specifier: workspace:*
         version: link:../bilinovel
       breadc:
-        specifier: ^1.0.0-beta.6
-        version: 1.0.0-beta.6
+        specifier: ^1.0.0-beta.8
+        version: 1.0.0-beta.8
       epubook:
         specifier: ^0.0.11
         version: 0.0.11
@@ -393,17 +393,17 @@ packages:
       '@types/react':
         optional: true
 
-  '@breadc/color@1.0.0-beta.6':
-    resolution: {integrity: sha512-oOIf+u8TYumGQ9w5zrVFSOxJe8995DYFqjiKU+D5IEhg/wcJfUnX7chakAQrSha2U5T9K+TecxBDqhcomMtssw==}
+  '@breadc/color@1.0.0-beta.8':
+    resolution: {integrity: sha512-J70HdbJtM7U8FMwufIstQe+I5orYLeoV+zgOjEbXz5YNWTp7sCaFb6s/K6SK4xuLILv8LHC5yZf5aZ03gPFITA==}
 
-  '@breadc/core@1.0.0-beta.6':
-    resolution: {integrity: sha512-KalZIXTZxqnJOA8KtT+s36MIDMRHR2vFthLhvmAYphgmaj6A1QTi1Eddja7DEwnSQ63rpmfJE1W7eb/I4dS5Qw==}
+  '@breadc/core@1.0.0-beta.8':
+    resolution: {integrity: sha512-uS155cofxuAc/boDw/QAm15QiWI8WJiO7DTjHAR041f0/7Ev6BESWEr/F5kLHdn2fnXlShL6oSGBA/85iT+9rw==}
 
-  '@breadc/death@1.0.0-beta.6':
-    resolution: {integrity: sha512-PgLkQrQZ9RDuTrecT/4sjARYilTEVG2uRXMjpqE5akvp33MZM+cJthUhxs8HxX3D/wXadS86zkHDOwJBLBFt8g==}
+  '@breadc/death@1.0.0-beta.8':
+    resolution: {integrity: sha512-UU5GCHoNela8SJJZtei5T1IuHYG+g0dEj+ZcLVTt81P5F8WhJhuuqFOjbwxHV0hUVGEhyxZblzVSKxYEb4ZjVw==}
 
-  '@breadc/tui@1.0.0-beta.6':
-    resolution: {integrity: sha512-PEuuCai1Hfgi5xQjKc51NWnIZP6IXeklvcXhmxWWbxwyFTkN5Px8C//Gmv8rRM3+Oc4Vj5xZ9k224KbW38BMVg==}
+  '@breadc/tui@1.0.0-beta.8':
+    resolution: {integrity: sha512-Kc+SDzPWttywcPGLzuvFpV6QlkFLQJhHKUunINO3+xnbRdwg3VDPVLEL2/qtX0PBDKdA5OuImeJ4uTxyYbk8jA==}
 
   '@clack/core@1.0.1':
     resolution: {integrity: sha512-WKeyK3NOBwDOzagPR5H08rFk9D/WuN705yEbuZvKqlkmoLM2woKtXb10OO2k1NoSU4SFG947i2/SCYh+2u5e4g==}
@@ -1669,8 +1669,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  breadc@1.0.0-beta.6:
-    resolution: {integrity: sha512-0LCz6+2efrB/JaA/CMHRa0mJjsSA7e14kGMFX+Kur3zmvIStHIVlW2Dv54Zj/VF6rtDQmmFiJa6XFcplFijFww==}
+  breadc@1.0.0-beta.8:
+    resolution: {integrity: sha512-ooFOnSovVBngw7Mj1U/qunm2yliW1z/4ut6GmO2XQTxG1cur5w/8NLLNtGCOvJENd9eYBeQn6qRhtk972zYvZQ==}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -4021,17 +4021,17 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.14
 
-  '@breadc/color@1.0.0-beta.6': {}
+  '@breadc/color@1.0.0-beta.8': {}
 
-  '@breadc/core@1.0.0-beta.6':
+  '@breadc/core@1.0.0-beta.8':
     dependencies:
-      '@breadc/color': 1.0.0-beta.6
+      '@breadc/color': 1.0.0-beta.8
 
-  '@breadc/death@1.0.0-beta.6': {}
+  '@breadc/death@1.0.0-beta.8': {}
 
-  '@breadc/tui@1.0.0-beta.6':
+  '@breadc/tui@1.0.0-beta.8':
     dependencies:
-      '@breadc/color': 1.0.0-beta.6
+      '@breadc/color': 1.0.0-beta.8
       std-env: 3.10.0
       string-width: 8.1.1
 
@@ -4989,12 +4989,12 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  breadc@1.0.0-beta.6:
+  breadc@1.0.0-beta.8:
     dependencies:
-      '@breadc/color': 1.0.0-beta.6
-      '@breadc/core': 1.0.0-beta.6
-      '@breadc/death': 1.0.0-beta.6
-      '@breadc/tui': 1.0.0-beta.6
+      '@breadc/color': 1.0.0-beta.8
+      '@breadc/core': 1.0.0-beta.8
+      '@breadc/death': 1.0.0-beta.8
+      '@breadc/tui': 1.0.0-beta.8
 
   browserslist@4.28.1:
     dependencies:
