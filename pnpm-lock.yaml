@@ -158,7 +158,7 @@ importers:
   packages/bilinovel:
     dependencies:
       jsdom:
-        specifier: ^28.0.0
+        specifier: ^28.1.0
         version: 28.1.0(@noble/hashes@1.8.0)
 
   packages/lnovel:
