@@ -44,7 +44,7 @@
     "@hono/zod-validator": "0.7.6",
     "better-sqlite3": "12.6.2",
     "bilinovel": "workspace:*",
-    "breadc": "1.0.0-beta.8",
+    "breadc": "1.0.0-beta.10",
     "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.3.1",

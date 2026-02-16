@@ -44,12 +44,12 @@
     "typecheck": "tsc --noEmit --jsx preserve"
   },
   "dependencies": {
-    "@breadc/color": "^1.0.0-beta.8",
-    "@breadc/death": "^1.0.0-beta.8",
+    "@breadc/color": "^1.0.0-beta.10",
+    "@breadc/death": "^1.0.0-beta.10",
     "@clack/prompts": "^1.0.1",
     "@epubook/core": "^0.0.11",
     "bilinovel": "workspace:*",
-    "breadc": "^1.0.0-beta.8",
+    "breadc": "^1.0.0-beta.10",
     "epubook": "^0.0.11",
     "yaml": "^2.8.2"
   },
