@@ -115,8 +115,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/bilinovel
       breadc:
-        specifier: 1.0.0-beta.10
-        version: 1.0.0-beta.10
+        specifier: 1.0.0-beta.12
+        version: 1.0.0-beta.12
       consola:
         specifier: 3.4.2
         version: 3.4.2
@@ -164,11 +164,11 @@ importers:
   packages/lnovel:
     dependencies:
       '@breadc/color':
-        specifier: ^1.0.0-beta.10
-        version: 1.0.0-beta.10
+        specifier: ^1.0.0-beta.12
+        version: 1.0.0-beta.12
       '@breadc/death':
-        specifier: ^1.0.0-beta.10
-        version: 1.0.0-beta.10
+        specifier: ^1.0.0-beta.12
+        version: 1.0.0-beta.12
       '@clack/prompts':
         specifier: ^1.0.1
         version: 1.0.1
@@ -179,8 +179,8 @@ importers:
         specifier: workspace:*
         version: link:../bilinovel
       breadc:
-        specifier: ^1.0.0-beta.10
-        version: 1.0.0-beta.10
+        specifier: ^1.0.0-beta.12
+        version: 1.0.0-beta.12
       epubook:
         specifier: ^0.0.11
         version: 0.0.11
@@ -397,17 +397,17 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@breadc/color@1.0.0-beta.10':
-    resolution: {integrity: sha512-Ohiyw5TDYRaZokBt6+qw0xsn9NbeUvAExgsbFA1nE9BqfXGVnxsvI6vAIoil5aSHumEpAxjUAF8muRPH5BCQEQ==}
+  '@breadc/color@1.0.0-beta.12':
+    resolution: {integrity: sha512-HPsrV6nh+CyuX5T3133FoGO+b2cXyaS6GEadl+uYL0l5t899oAK6CiAKxYmG4HIGsBWlYorFAiWkdhkqYw26Kg==}
 
-  '@breadc/core@1.0.0-beta.10':
-    resolution: {integrity: sha512-ttaS9mRpQikuEV055u9TLh3bePdXoZV4nFnVXDfswFrJC7zgspZ2U9KHm8G3SUofqF9OSHTZ7IPh44RNfmjkFA==}
+  '@breadc/core@1.0.0-beta.12':
+    resolution: {integrity: sha512-/c1toFpLmr9kgp66rtF0On2dttt7hepr6MjZWlY9O1lwJ1RviHSNQutGn28vAwh5EeN9DC9LQpKUYJoiWIYZCw==}
 
-  '@breadc/death@1.0.0-beta.10':
-    resolution: {integrity: sha512-SD9A1sJsnHb3nhGkLVSddBnPSakXHxfrOtgCF6322yADkNQ6TLRgd8yVz1KWppoJvKOJAVuxGZSoiyRe+QXACw==}
+  '@breadc/death@1.0.0-beta.12':
+    resolution: {integrity: sha512-o47GKu4zqksFtSxpk4ZrnGUj8HvSWct191T0mRBRxgGpthejt1UoZ7p20IMlbhTt55xEHgcT+iu+LiwaieSjSw==}
 
-  '@breadc/tui@1.0.0-beta.10':
-    resolution: {integrity: sha512-/EKJxYG5YAyZ53mXZusOdbY5OfHSO4o4hDahZV6yRoKpWeEYkXDfkdHACJFrYu+Jarw0UTxHHXpPjsQMz1OX+w==}
+  '@breadc/tui@1.0.0-beta.12':
+    resolution: {integrity: sha512-jDRu0bGn+/aBai27GvBtaGBdIQtMrTzfZVh3HFH3zcdqo5fhelc9ZMj74m/nWSqDk5eOOcxCTZmxVnwHNnlKLA==}
 
   '@clack/core@1.0.1':
     resolution: {integrity: sha512-WKeyK3NOBwDOzagPR5H08rFk9D/WuN705yEbuZvKqlkmoLM2woKtXb10OO2k1NoSU4SFG947i2/SCYh+2u5e4g==}
@@ -1677,8 +1677,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  breadc@1.0.0-beta.10:
-    resolution: {integrity: sha512-pdhMLCXdTS4nTnkv7rfD+gIZli5vb3YyCXyucYRK6eIcauBRfVJNRu32pszNcQ8IKzKdaMDjUNTslYAdGnGGBg==}
+  breadc@1.0.0-beta.12:
+    resolution: {integrity: sha512-hb1K0VcGG4zVHsWw46L2fIsuKgxdvKv4NWVk5G4i7XNioNPCRn4LEPh4jt2mD4VX2PmVERa2ruvG3YE5vB3gwA==}
 
   browserslist@4.28.1:
     resolution: {integrity: sha512-ZC5Bd0LgJXgwGqUknZY/vkUQ04r8NXnJZ3yYi4vDmSiZmC/pdSN0NbNRPxZpbtO4uAfDUAFffO8IZoM3Gj8IkA==}
@@ -2327,6 +2327,10 @@ packages:
     resolution: {integrity: sha512-QZjmEOC+IT1uk6Rx0sX22V6uHWVwbdbxf1faPqJ1QhLdGgsRGCZoyaQBm/piRdJy/D2um6hM1UP7ZEeQ4EkP+Q==}
     engines: {node: '>=18'}
 
+  get-east-asian-width@1.5.0:
+    resolution: {integrity: sha512-CQ+bEO+Tva/qlmw24dCejulK5pMzVnUOFOijVogd3KQs07HnRIgp8TGipvCCRT06xeYEbpbgwaCxglFyiuIcmA==}
+    engines: {node: '>=18'}
+
   get-intrinsic@1.3.0:
     resolution: {integrity: sha512-9fSjSaos/fRIVIp+xSJlE6lfwhES7LNtKaCBIamHsjr2na1BiABJPo0mOjjz8GJDURarmCPGqaiVg5mfjb98CQ==}
     engines: {node: '>= 0.4'}
@@ -2962,6 +2966,7 @@ packages:
   prebuild-install@7.1.3:
     resolution: {integrity: sha512-8Mf2cbV7x1cXPUILADGI3wuhfqWvtiLA1iclTDbFRZkgRQS0NqsPZphna9V+HyTEadheuPmjaJMsbzKQFOzLug==}
     engines: {node: '>=10'}
+    deprecated: No longer maintained. Please contact the author of the relevant native addon; alternatives are available.
     hasBin: true
 
   prettier@3.8.1:
@@ -3265,8 +3270,8 @@ packages:
     resolution: {integrity: sha512-tsaTIkKW9b4N+AEj+SVA+WhJzV7/zMhcSu78mLKWSk7cXMOSHsBKFWUs0fWwq8QyK3MgJBQRX6Gbi4kYbdvGkQ==}
     engines: {node: '>=18'}
 
-  string-width@8.1.1:
-    resolution: {integrity: sha512-KpqHIdDL9KwYk22wEOg/VIqYbrnLeSApsKT/bSj6Ez7pn3CftUiLAv2Lccpq1ALcpLV9UX1Ppn92npZWu2w/aw==}
+  string-width@8.2.0:
+    resolution: {integrity: sha512-6hJPQ8N0V0P3SNmP6h2J99RLuzrWz2gvT7VnK5tKvrNqJoyS9W4/Fb8mo31UiPvy00z7DQXkP2hnKBVav76thw==}
     engines: {node: '>=20'}
 
   string_decoder@1.3.0:
@@ -4037,19 +4042,19 @@ snapshots:
     dependencies:
       css-tree: 3.1.0
 
-  '@breadc/color@1.0.0-beta.10': {}
+  '@breadc/color@1.0.0-beta.12': {}
 
-  '@breadc/core@1.0.0-beta.10':
+  '@breadc/core@1.0.0-beta.12':
     dependencies:
-      '@breadc/color': 1.0.0-beta.10
+      '@breadc/color': 1.0.0-beta.12
 
-  '@breadc/death@1.0.0-beta.10': {}
+  '@breadc/death@1.0.0-beta.12': {}
 
-  '@breadc/tui@1.0.0-beta.10':
+  '@breadc/tui@1.0.0-beta.12':
     dependencies:
-      '@breadc/color': 1.0.0-beta.10
+      '@breadc/color': 1.0.0-beta.12
       std-env: 3.10.0
-      string-width: 8.1.1
+      string-width: 8.2.0
 
   '@clack/core@1.0.1':
     dependencies:
@@ -5009,12 +5014,12 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  breadc@1.0.0-beta.10:
+  breadc@1.0.0-beta.12:
     dependencies:
-      '@breadc/color': 1.0.0-beta.10
-      '@breadc/core': 1.0.0-beta.10
-      '@breadc/death': 1.0.0-beta.10
-      '@breadc/tui': 1.0.0-beta.10
+      '@breadc/color': 1.0.0-beta.12
+      '@breadc/core': 1.0.0-beta.12
+      '@breadc/death': 1.0.0-beta.12
+      '@breadc/tui': 1.0.0-beta.12
 
   browserslist@4.28.1:
     dependencies:
@@ -5624,6 +5629,8 @@ snapshots:
   get-caller-file@2.0.5: {}
 
   get-east-asian-width@1.4.0: {}
+
+  get-east-asian-width@1.5.0: {}
 
   get-intrinsic@1.3.0:
     dependencies:
@@ -6622,9 +6629,9 @@ snapshots:
       get-east-asian-width: 1.4.0
       strip-ansi: 7.1.2
 
-  string-width@8.1.1:
+  string-width@8.2.0:
     dependencies:
-      get-east-asian-width: 1.4.0
+      get-east-asian-width: 1.5.0
       strip-ansi: 7.1.2
 
   string_decoder@1.3.0:
