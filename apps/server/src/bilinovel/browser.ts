@@ -260,11 +260,11 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             await sleep(delayInterval + Math.random() * delayInterval);
           }
 
+          const local = await isLocal();
+
           const content = await Promise.race([
             (async () => {
               if (!page) throw new Error(`Failed creating page`);
-
-              const local = await isLocal();
 
               consola.log(`Start ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
@@ -299,14 +299,16 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
               consola.log(`Finish ${local ? 'local' : 'remote'} navigating to ${url.toString()}`);
 
-              if (local) {
-                await page.close().catch(() => {});
-              }
-
               return content;
             })(),
             sleep(2 * 60 * 1000).then(() => undefined)
           ]);
+
+          if (local && page) {
+            try {
+              await page.close().catch(() => {});
+            } catch {}
+          }
 
           if (content) {
             return content;

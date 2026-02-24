@@ -67,7 +67,7 @@ export class WorkflowException extends Error {
 export const getNovel = workflow('getNovel', {
   concurrency: 1,
   cache: new LRUCache({
-    max: 1000,
+    max: 100,
     ttl: 60 * 60 * 1000
   })
 })
@@ -104,7 +104,7 @@ export const getNovel = workflow('getNovel', {
 export const getNovelVolume = workflow('getNovelVolume', {
   concurrency: 1,
   cache: new LRUCache({
-    max: 1000,
+    max: 100,
     ttl: 24 * 60 * 60 * 1000
   })
 })
@@ -150,7 +150,7 @@ export const getNovelVolume = workflow('getNovelVolume', {
 export const getNovelChapter = workflow('getNovelChapter', {
   concurrency: 1,
   cache: new LRUCache({
-    max: 1000,
+    max: 100,
     ttl: 24 * 60 * 60 * 1000
   })
 })
@@ -561,7 +561,7 @@ export const updateNovelChapter = workflow('updateNovelChapter', { concurrency: 
 export const getTop = workflow('getTop', {
   concurrency: indexLimit,
   cache: new LRUCache({
-    max: 1000,
+    max: 5,
     ttl: 60 * 60 * 1000
   })
 })
@@ -606,7 +606,7 @@ export const getTop = workflow('getTop', {
 export const getWenku = workflow('getWenku', {
   concurrency: indexLimit,
   cache: new LRUCache({
-    max: 1000,
+    max: 5,
     ttl: 60 * 60 * 1000
   })
 })
