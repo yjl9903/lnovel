@@ -170,8 +170,8 @@ importers:
         specifier: ^1.0.0-beta.12
         version: 1.0.0-beta.12
       '@clack/prompts':
-        specifier: ^1.0.1
-        version: 1.0.1
+        specifier: ^1.1.0
+        version: 1.1.0
       '@epubook/core':
         specifier: ^0.0.11
         version: 0.0.11
@@ -410,11 +410,11 @@ packages:
   '@breadc/tui@1.0.0-beta.12':
     resolution: {integrity: sha512-jDRu0bGn+/aBai27GvBtaGBdIQtMrTzfZVh3HFH3zcdqo5fhelc9ZMj74m/nWSqDk5eOOcxCTZmxVnwHNnlKLA==}
 
-  '@clack/core@1.0.1':
-    resolution: {integrity: sha512-WKeyK3NOBwDOzagPR5H08rFk9D/WuN705yEbuZvKqlkmoLM2woKtXb10OO2k1NoSU4SFG947i2/SCYh+2u5e4g==}
+  '@clack/core@1.1.0':
+    resolution: {integrity: sha512-SVcm4Dqm2ukn64/8Gub2wnlA5nS2iWJyCkdNHcvNHPIeBTGojpdJ+9cZKwLfmqy7irD4N5qLteSilJlE0WLAtA==}
 
-  '@clack/prompts@1.0.1':
-    resolution: {integrity: sha512-/42G73JkuYdyWZ6m8d/CJtBrGl1Hegyc7Fy78m5Ob+jF85TOUmLR5XLce/U3LxYAw0kJ8CT5aI99RIvPHcGp/Q==}
+  '@clack/prompts@1.1.0':
+    resolution: {integrity: sha512-pkqbPGtohJAvm4Dphs2M8xE29ggupihHdy1x84HNojZuMtFsHiUlRvqD24tM2+XmI+61LlfNceM3Wr7U5QES5g==}
 
   '@csstools/color-helpers@6.0.2':
     resolution: {integrity: sha512-LMGQLS9EuADloEFkcTBR3BwV/CGHV7zyDxVRtVDTwdI2Ca4it0CCVTT9wCkxSgokjE5Ho41hEPgb8OEUwoXr6Q==}
@@ -4144,15 +4144,13 @@ snapshots:
       std-env: 3.10.0
       string-width: 8.2.0
 
-  '@clack/core@1.0.1':
+  '@clack/core@1.1.0':
     dependencies:
-      picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@clack/prompts@1.0.1':
+  '@clack/prompts@1.1.0':
     dependencies:
-      '@clack/core': 1.0.1
-      picocolors: 1.1.1
+      '@clack/core': 1.1.0
       sisteransi: 1.0.5
 
   '@csstools/color-helpers@6.0.2': {}
