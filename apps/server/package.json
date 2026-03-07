@@ -37,7 +37,8 @@
     "build": "tsdown",
     "drizzle": "drizzle-kit",
     "drizzle:generate": "drizzle-kit generate",
-    "puppeteer:prepare": "puppeteer browsers install chrome --install-deps"
+    "puppeteer:prepare": "puppeteer browsers install chrome --install-deps",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@hono/node-server": "1.19.11",

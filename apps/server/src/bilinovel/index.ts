@@ -211,11 +211,11 @@ app.get('/novels', async (c: Context) => {
   return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
 
-app.get('/novel/:nid', async (c: Context) => {
+app.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
-  const nid = c.req.param('nid');
+  const nid = c.req.param('nid')!;
 
   const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid, false);
@@ -231,12 +231,12 @@ app.get('/novel/:nid', async (c: Context) => {
   return c.json({ ok: true, provider: Provider.bilinovel, data: await attachFoloFeedId(c, data) });
 });
 
-app.get('/novel/:nid/vol/:vid', async (c: Context) => {
+app.get('/novel/:nid/vol/:vid', validateNumericParams('nid', 'vid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
-  const nid = c.req.param('nid');
-  const vid = c.req.param('vid');
+  const nid = c.req.param('nid')!;
+  const vid = c.req.param('vid')!;
 
   const db = await getNovelVolumeFromDatabase(nid, vid, false);
 
@@ -257,12 +257,12 @@ app.get('/novel/:nid/vol/:vid', async (c: Context) => {
   });
 });
 
-app.get('/novel/:nid/chapter/:cid', async (c: Context) => {
+app.get('/novel/:nid/chapter/:cid', validateNumericParams('nid', 'cid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
-  const nid = c.req.param('nid');
-  const cid = c.req.param('cid');
+  const nid = c.req.param('nid')!;
+  const cid = c.req.param('cid')!;
 
   const db = await getNovelChapterFromDatabase(nid, cid);
   if (db && !force) {
@@ -420,8 +420,8 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
   });
 });
 
-app.get('/novel/:nid/feed.xml', async (c: Context) => {
-  const nid = c.req.param('nid');
+app.get('/novel/:nid/feed.xml', validateNumericParams('nid'), async (c: Context) => {
+  const nid = c.req.param('nid')!;
 
   const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid);
@@ -470,9 +470,9 @@ app.get('/novel/:nid/feed.xml', async (c: Context) => {
   });
 });
 
-app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
-  const nid = c.req.param('nid');
-  const vid = c.req.param('vid');
+app.get('/novel/:nid/vol/:vid/feed.xml', validateNumericParams('nid', 'vid'), async (c: Context) => {
+  const nid = c.req.param('nid')!;
+  const vid = c.req.param('vid')!;
 
   const fetched = engine.run(getGlobal(c), getNovelVolume, +nid, +vid);
   const db = await getNovelVolumeFromDatabase(nid, vid);
@@ -516,6 +516,22 @@ app.get('/novel/:nid/vol/:vid/feed.xml', async (c: Context) => {
     }
   });
 });
+
+function validateNumericParams(...names: string[]) {
+  return async (c: Context, next: () => Promise<void>) => {
+    for (const name of names) {
+      const raw = c.req.param(name);
+      const num = Number(raw);
+      if (!raw || !Number.isInteger(num) || num < 0) {
+        throw new HTTPException(400, {
+          message: `Invalid route parameter: ${name}`
+        });
+      }
+    }
+
+    await next();
+  };
+}
 
 async function attachFoloFeedId<T extends { nid: number | string }>(c: Context, item: T) {
   const feedUrl = buildSite(c, `/bili/novel/${item.nid}/feed.xml`);
