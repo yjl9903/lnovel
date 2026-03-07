@@ -33,6 +33,8 @@ const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
 
 const MAX_ERROR = 10;
 
+let localStartedAt = new Date();
+
 const launchLocalBrowser = async (): Promise<Browser> => {
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
 
@@ -42,6 +44,8 @@ const launchLocalBrowser = async (): Promise<Browser> => {
     } catch {}
   }
 
+  localStartedAt = new Date();
+
   return puppeteer.launch({
     executablePath,
     defaultViewport: null,
@@ -50,7 +54,7 @@ const launchLocalBrowser = async (): Promise<Browser> => {
   });
 };
 
-const localBrowser = launchLocalBrowser();
+let localBrowser = launchLocalBrowser();
 
 const connectScrapeless = async (options: ScrapelessOptions) => {
   const query = new URLSearchParams({
@@ -125,8 +129,14 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
     if (!forceRemote) {
       try {
-        browser = Promise.resolve(localBrowser);
-        return localBrowser;
+        if (new Date().getTime() - localStartedAt.getTime() <= 12 * 60 * 60 * 1000) {
+          browser = Promise.resolve(localBrowser);
+          return localBrowser;
+        } else {
+          // Restart a new local browser
+          await (await localBrowser).close().catch(() => {});
+          localBrowser = launchLocalBrowser();
+        }
       } catch (error) {
         consola.error('Local puppeteer launch failed, fallback to remote browser', error);
       }
