@@ -36,13 +36,20 @@ function createHono() {
     const requestId = crypto.randomUUID();
     c.set('requestId', requestId);
 
-    await next();
+    try {
+      await next();
+    } finally {
+      c.res.headers.set('X-Request-Id', requestId);
+      c.res.headers.set(
+        'X-Response-Timestamp',
+        (c.get('responseTimestamp') || new Date()).toISOString()
+      );
 
-    c.res.headers.set('X-Request-Id', requestId);
-    c.res.headers.set(
-      'X-Response-Timestamp',
-      (c.get('responseTimestamp') || new Date()).toISOString()
-    );
+      const contentType = c.res.headers.get('content-type');
+      if (contentType && contentType.toLowerCase().startsWith('application/json')) {
+        c.res.headers.set('Content-Type', 'application/json; charset=utf-8');
+      }
+    }
   });
 
   app.use(
