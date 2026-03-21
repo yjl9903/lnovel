@@ -68,7 +68,7 @@ app.use(
       });
     }
 
-    return new HTTPException(500, {
+    return new HTTPException(408, {
       message: `Request timeout after waiting 30 seconds. Please try again later.`
     });
   })
@@ -470,52 +470,56 @@ app.get('/novel/:nid/feed.xml', validateNumericParams('nid'), async (c: Context)
   });
 });
 
-app.get('/novel/:nid/vol/:vid/feed.xml', validateNumericParams('nid', 'vid'), async (c: Context) => {
-  const nid = c.req.param('nid')!;
-  const vid = c.req.param('vid')!;
+app.get(
+  '/novel/:nid/vol/:vid/feed.xml',
+  validateNumericParams('nid', 'vid'),
+  async (c: Context) => {
+    const nid = c.req.param('nid')!;
+    const vid = c.req.param('vid')!;
 
-  const fetched = engine.run(getGlobal(c), getNovelVolume, +nid, +vid);
-  const db = await getNovelVolumeFromDatabase(nid, vid);
+    const fetched = engine.run(getGlobal(c), getNovelVolume, +nid, +vid);
+    const db = await getNovelVolumeFromDatabase(nid, vid);
 
-  const data = db ? db : await fetched;
+    const data = db ? db : await fetched;
 
-  const author = data.authors.find((author) => author.position === 'author');
+    const author = data.authors.find((author) => author.position === 'author');
 
-  const chapters = [];
-  for (const chapter of data.chapters) {
-    const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
-    if (db) {
-      chapters.push(db);
-    } else {
-      break;
+    const chapters = [];
+    for (const chapter of data.chapters) {
+      const db = await getNovelChapterFromDatabase(nid, '' + chapter.cid);
+      if (db) {
+        chapters.push(db);
+      } else {
+        break;
+      }
     }
+
+    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+
+    return getFeedResponse(c, {
+      title: `${data.name}`,
+      description: normalizeDescription(data.description),
+      link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
+      rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
+      author: author ? transformAuthor(author) : undefined,
+      image: data.cover,
+      items: chapters.map((chapter, index) => ({
+        title: `${data.name} ${chapter.title}`,
+        id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
+        link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
+        // author: data.authors.map((author) => transformAuthor(author)),
+        // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
+        date: new Date(data.updatedAt.getTime() + 1000 * index),
+        categories: data.labels,
+        content: chapter.content
+      })),
+      follow: {
+        feedId: await getFoloFeedId(getFeedURL(c)),
+        userId: getFoloUserId()
+      }
+    });
   }
-
-  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
-
-  return getFeedResponse(c, {
-    title: `${data.name}`,
-    description: normalizeDescription(data.description),
-    link: `https://www.linovelib.com/novel/${nid}/vol_${vid}.html`,
-    rssLink: buildSite(c, `/bili/novel/${nid}/vol/${vid}/feed.xml`),
-    author: author ? transformAuthor(author) : undefined,
-    image: data.cover,
-    items: chapters.map((chapter, index) => ({
-      title: `${data.name} ${chapter.title}`,
-      id: `/bili/novel/${nid}/chapter/${chapter.cid}`,
-      link: `https://www.linovelib.com/novel/${nid}/${chapter.cid}.html`,
-      // author: data.authors.map((author) => transformAuthor(author)),
-      // @hack 强制 feed item 的时间顺序, 防止阅读器重排序
-      date: new Date(data.updatedAt.getTime() + 1000 * index),
-      categories: data.labels,
-      content: chapter.content
-    })),
-    follow: {
-      feedId: await getFoloFeedId(getFeedURL(c)),
-      userId: getFoloUserId()
-    }
-  });
-});
+);
 
 function validateNumericParams(...names: string[]) {
   return async (c: Context, next: () => Promise<void>) => {
