@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
 ARG NODE_VERSION=24.13.1
-ARG PNPM_VERSION=10.29.2
+ARG PNPM_VERSION=10.33.0
 
 ARG APP_HOST=lnovel.animes.garden
 
