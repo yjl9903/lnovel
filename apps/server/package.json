@@ -49,7 +49,7 @@
     "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.3.1",
-    "drizzle-orm": "0.45.1",
+    "drizzle-orm": "0.45.2",
     "feed": "5.2.0",
     "flomise": "0.0.6",
     "hono": "4.12.9",
