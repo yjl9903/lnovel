@@ -1,5 +1,5 @@
-import type { BilinovelFetch, BilinovelFetchPageOptions } from './types';
-import type { QueryValue } from './utils';
+import type { BilinovelFetch, BilinovelFetchPageOptions } from './types.js';
+import type { QueryValue } from './utils.js';
 
 import {
   applyTransformImgSrc,
@@ -10,7 +10,7 @@ import {
   parseShanghaiDateTime,
   resolveMappedKey,
   resolveMappedValue
-} from './utils';
+} from './utils.js';
 
 export const WENKU_SORT = {
   lastUpdate: 'lastupdate',

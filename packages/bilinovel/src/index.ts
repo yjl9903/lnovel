@@ -1,9 +1,9 @@
-export * from './novel';
+export * from './novel.js';
 
-export * from './top';
+export * from './top.js';
 
-export * from './wenku';
+export * from './wenku.js';
 
-export * from './types';
+export * from './error.js';
 
-export * from './error';
+export type * from './types.js';

@@ -3,12 +3,14 @@ import path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
-import { fetchNovelPage, fetchNovelVolumePage, fetchNovelChapterPages } from '../src/novel';
+import { fetchNovelPage, fetchNovelVolumePage, fetchNovelChapterPages } from '../src/novel.js';
+
+const TEST_TIMEOUT = 30_000;
 
 describe('novel', () => {
   const nid = 1410;
 
-  describe(`nid:${nid}`, async () => {
+  describe(`nid:${nid}`, { timeout: TEST_TIMEOUT }, async () => {
     async function fetchHTML(pathname: string) {
       const filename = pathname
         .replace(/^\//, '')

@@ -3,10 +3,10 @@ import type {
   BilinovelFetchNovelOptions,
   BilinovelFetchNovelVolumeOptions,
   BilinovelFetchNovelChapterOptions
-} from './types';
+} from './types.js';
 
-import { BilinovelError, BilinovelErrorCode } from './error';
-import { createDocument, applyTransformImgSrc, parseShanghaiDateTime } from './utils';
+import { BilinovelError, BilinovelErrorCode } from './error.js';
+import { createDocument, applyTransformImgSrc, parseShanghaiDateTime } from './utils.js';
 
 export interface NovelPageResult {
   nid: number;

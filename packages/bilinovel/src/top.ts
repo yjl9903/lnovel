@@ -1,4 +1,4 @@
-import type { BilinovelFetch, BilinovelFetchPageOptions } from './types';
+import type { BilinovelFetch, BilinovelFetchPageOptions } from './types.js';
 
 import {
   applyTransformImgSrc,
@@ -8,7 +8,7 @@ import {
   parseShanghaiDateTime,
   resolveMappedKey,
   resolveMappedValue
-} from './utils';
+} from './utils.js';
 
 export const TOP_SORT = {
   monthVisit: 'monthvisit',
