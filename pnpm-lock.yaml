@@ -110,7 +110,7 @@ importers:
         version: 2.0.0(hono@4.12.15)
       '@hono/zod-validator':
         specifier: 0.7.6
-        version: 0.7.6(hono@4.12.15)(zod@4.3.6)
+        version: 0.7.6(hono@4.12.15)(zod@4.4.2)
       better-sqlite3:
         specifier: 12.9.0
         version: 12.9.0
@@ -151,8 +151,8 @@ importers:
         specifier: 24.42.0
         version: 24.42.0(typescript@6.0.3)
       zod:
-        specifier: 4.3.6
-        version: 4.3.6
+        specifier: 4.4.2
+        version: 4.4.2
     devDependencies:
       drizzle-kit:
         specifier: 0.31.10
@@ -3600,8 +3600,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.6:
-    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
 
 snapshots:
 
@@ -4222,10 +4222,10 @@ snapshots:
     dependencies:
       hono: 4.12.15
 
-  '@hono/zod-validator@0.7.6(hono@4.12.15)(zod@4.3.6)':
+  '@hono/zod-validator@0.7.6(hono@4.12.15)(zod@4.4.2)':
     dependencies:
       hono: 4.12.15
-      zod: 4.3.6
+      zod: 4.4.2
 
   '@hugeicons/core-free-icons@4.1.1': {}
 
@@ -6682,4 +6682,4 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.3.6: {}
+  zod@4.4.2: {}
