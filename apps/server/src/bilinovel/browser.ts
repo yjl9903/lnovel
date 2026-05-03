@@ -44,19 +44,27 @@ const launchLocalBrowser = async (): Promise<Browser> => {
     } catch {}
   }
 
+  consola.log('Connecting to local browser', executablePath);
+
   localStartedAt = new Date();
 
-  return puppeteer.launch({
+  const browser = await puppeteer.launch({
     executablePath,
     defaultViewport: null,
     userDataDir: process.env.CHROMIUM_USER_DIR,
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
+
+  consola.log('Connected to local browser', browser.connected);
+
+  return browser;
 };
 
 let localBrowser = launchLocalBrowser();
 
 const connectScrapeless = async (options: ScrapelessOptions) => {
+  consola.log('Connecting to remote browser');
+
   const query = new URLSearchParams({
     token: options.token || process.env.SCRAPELESS_TOKEN!,
     // proxyCountry: 'ANY',
@@ -151,10 +159,13 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
       await Promise.race([
         (async () => {
           if (!(await isLocal())) {
+            consola.log('Closing local browser');
             await (await browser).close();
           }
         })(),
-        sleep(2 * 1000)
+        sleep(2 * 1000).then(() => {
+          consola.log('Closing local browser timeout');
+        })
       ]);
     } catch {
       // ignore error
@@ -172,6 +183,10 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
           browser = connect();
         }
 
+        const local = await isLocal();
+
+        consola.log(`Creating new ${local ? 'local' : 'remote'} page`);
+
         try {
           const page = await (await browser).newPage();
           await interceptor(page);
@@ -185,7 +200,10 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
           return page;
         }
       })(),
-      sleep(10 * 1000).then(() => undefined)
+      sleep(10 * 1000).then(() => {
+        consola.error('Creating new page timeout');
+        return undefined;
+      })
     ]);
 
     async function interceptor(page: Page) {
@@ -311,11 +329,15 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
               return content;
             })(),
-            sleep(2 * 60 * 1000).then(() => undefined)
+            sleep(2 * 60 * 1000).then(() => {
+              consola.error(`Navigating to ${url.toString()} timeout`);
+              return undefined;
+            })
           ]);
 
           if (local && page) {
             try {
+              consola.log('Closing local page');
               await page.close().catch(() => {});
             } catch {}
           }

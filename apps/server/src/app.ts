@@ -132,7 +132,7 @@ export async function startCron() {
   });
 
   // 延迟一会后, 手动触发任务执行
-  setTimeout(() => {
-    biliJob.trigger();
-  }, 60 * 1000);
+  // setTimeout(() => {
+  //   biliJob.trigger();
+  // }, 60 * 1000);
 }
