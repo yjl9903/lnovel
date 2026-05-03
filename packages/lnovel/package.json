@@ -51,7 +51,7 @@
     "bilinovel": "workspace:*",
     "breadc": "^1.0.0-beta.15",
     "epubook": "^0.0.11",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.4"
   },
   "engines": {
     "node": ">=v20.0.0"
