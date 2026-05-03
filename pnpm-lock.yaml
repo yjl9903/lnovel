@@ -106,11 +106,11 @@ importers:
   apps/server:
     dependencies:
       '@hono/node-server':
-        specifier: 2.0.0
-        version: 2.0.0(hono@4.12.15)
+        specifier: 2.0.1
+        version: 2.0.1(hono@4.12.16)
       '@hono/zod-validator':
         specifier: 0.7.6
-        version: 0.7.6(hono@4.12.15)(zod@4.4.2)
+        version: 0.7.6(hono@4.12.16)(zod@4.4.2)
       better-sqlite3:
         specifier: 12.9.0
         version: 12.9.0
@@ -139,8 +139,8 @@ importers:
         specifier: 0.0.6
         version: 0.0.6
       hono:
-        specifier: 4.12.15
-        version: 4.12.15
+        specifier: 4.12.16
+        version: 4.12.16
       lnovel:
         specifier: workspace:*
         version: link:../../packages/lnovel
@@ -964,8 +964,8 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/node-server@2.0.0':
-    resolution: {integrity: sha512-n3GfHwwCvHCkGmOwKfxUPOlbfzuO64Sbc5XC4NGPIXxkuOnJrdgExdRKmHfF924r914WRJPT397GdqLvdYTeyQ==}
+  '@hono/node-server@2.0.1':
+    resolution: {integrity: sha512-jI9yMDyFpqBeSighf/zlXnQG/nl9AyBc6aAgy4XtxJMyt/CNyJpvPfzDD+bCc2zAOmhhqtF6TnmIaY+xV4mIrw==}
     engines: {node: '>=20'}
     peerDependencies:
       hono: ^4
@@ -2283,8 +2283,8 @@ packages:
   headers-polyfill@5.0.1:
     resolution: {integrity: sha512-1TJ6Fih/b8h5TIcv+1+Hw0PDQWJTKDKzFZzcKOiW1wJza3XoAQlkCuXLbymPYB8+ZQyw8mHvdw560e8zVFIWyA==}
 
-  hono@4.12.15:
-    resolution: {integrity: sha512-qM0jDhFEaCBb4TxoW7f53Qrpv9RBiayUHo0S52JudprkhvpjIrGoU1mnnr29Fvd1U335ZFPZQY1wlkqgfGXyLg==}
+  hono@4.12.16:
+    resolution: {integrity: sha512-jN0ZewiNAWSe5khM3EyCmBb250+b40wWbwNILNfEvq84VREWwOIkuUsFONk/3i3nqkz7Oe1PcpM2mwQEK2L9Kg==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.1:
@@ -4207,17 +4207,17 @@ snapshots:
 
   '@fontsource-variable/ibm-plex-sans@5.2.8': {}
 
-  '@hono/node-server@1.19.14(hono@4.12.15)':
+  '@hono/node-server@1.19.14(hono@4.12.16)':
     dependencies:
-      hono: 4.12.15
+      hono: 4.12.16
 
-  '@hono/node-server@2.0.0(hono@4.12.15)':
+  '@hono/node-server@2.0.1(hono@4.12.16)':
     dependencies:
-      hono: 4.12.15
+      hono: 4.12.16
 
-  '@hono/zod-validator@0.7.6(hono@4.12.15)(zod@4.4.2)':
+  '@hono/zod-validator@0.7.6(hono@4.12.16)(zod@4.4.2)':
     dependencies:
-      hono: 4.12.15
+      hono: 4.12.16
       zod: 4.4.2
 
   '@hugeicons/core-free-icons@4.1.1': {}
@@ -4274,7 +4274,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.29.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 1.19.14(hono@4.12.15)
+      '@hono/node-server': 1.19.14(hono@4.12.16)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -4284,7 +4284,7 @@ snapshots:
       eventsource-parser: 3.0.8
       express: 5.2.1
       express-rate-limit: 8.4.1(express@5.2.1)
-      hono: 4.12.15
+      hono: 4.12.16
       jose: 6.2.2
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -5401,7 +5401,7 @@ snapshots:
       '@types/set-cookie-parser': 2.4.10
       set-cookie-parser: 3.1.0
 
-  hono@4.12.15: {}
+  hono@4.12.16: {}
 
   hookable@6.1.1: {}
 
