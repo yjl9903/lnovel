@@ -54,7 +54,7 @@
     "flomise": "0.0.6",
     "hono": "4.12.16",
     "lnovel": "workspace:*",
-    "lru-cache": "11.3.5",
+    "lru-cache": "11.3.6",
     "puppeteer": "24.42.0",
     "zod": "4.4.3"
   },
