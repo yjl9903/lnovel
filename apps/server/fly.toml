@@ -10,12 +10,11 @@ primary_region = 'lax'
 dockerfile = 'Dockerfile'
 
 [build.args]
-NODE_VERSION = '24.13.1'
-PNPM_VERSION = '10.33.0'
+NODE_VERSION = '24.15.0'
 APP_HOST = 'lnvoel.animes.garden'
 
 [processes]
-server = 'node apps/server/cli.mjs start --cron'
+server = 'node apps/server/cli.mjs start'
 
 [http_service]
 internal_port = 3000

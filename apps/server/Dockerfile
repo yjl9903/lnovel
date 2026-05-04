@@ -1,11 +1,12 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=24.13.1
-ARG PNPM_VERSION=10.33.0
+ARG NODE_VERSION=24.15.0
+
+ARG HOST=0.0.0.0
+ARG PORT=3000
 
 ARG APP_HOST=lnovel.animes.garden
-
-ARG PORT=3000
+ARG FOLLOW_USER_ID=41508082357911552
 
 # Base Image
 FROM node:${NODE_VERSION}-slim AS base
@@ -18,8 +19,8 @@ WORKDIR /lnovel
 # Set production environment
 ENV NODE_ENV="production"
 
-# Install pnpm
-RUN npm install -g pnpm@$PNPM_VERSION
+# Enable corepack
+RUN corepack enable pnpm
 
 
 # Throw-away build stage to reduce size of final image
@@ -44,11 +45,8 @@ COPY --link . .
 # Setup CI environment
 ENV CI=true NODE_ENV="production"
 
-# Build application
-RUN pnpm run build
-
-# Remove development dependencies
-RUN pnpm prune --prod
+# Build application and remove development dependencies
+RUN pnpm run build && pnpm prune --prod
 
 
 # Final stage for app image
@@ -57,8 +55,13 @@ FROM base
 # Copy built application
 COPY --from=build /lnovel /lnovel
 
-# 设置浏览器下载路径，避免放在临时目录被清理
-ENV PUPPETEER_CACHE_DIR=/puppeteer
+# 设置 env
+ARG HOST PORT APP_HOST FOLLOW_USER_ID
+ENV HOST=${HOST} PORT=${PORT} APP_HOST=${APP_HOST} \
+    FOLLOW_USER_ID=${FOLLOW_USER_ID} \
+    DATABASE_FILE=/data/sqlite.db \
+    PUPPETEER_CACHE_DIR=/puppeteer \
+    CHROMIUM_USER_DIR=/data/profile
 
 # 安装 Chrome 及其所需的系统依赖 (System Deps)
 # --install-deps 会自动运行 apt-get 安装 libnss3, libatk 等库
@@ -67,14 +70,7 @@ RUN apt-get update && \
     npx puppeteer browsers install chrome --install-deps && \
     rm -rf /var/lib/apt/lists/*
 
-# Declare args
-ARG PORT APP_HOST
-ENV HOST=0.0.0.0 PORT=${PORT} APP_HOST=${APP_HOST} \
-    FOLLOW_USER_ID=41508082357911552 \
-    DATABASE_FILE=/data/sqlite.db \
-    CHROMIUM_USER_DIR=/data/profile
-
 # Start the server by default, this can be overwritten at runtime
 EXPOSE ${PORT}
 
-CMD [ "node", "apps/server/cli.mjs", "start", "--cron" ]
+CMD [ "node", "apps/server/cli.mjs", "start" ]
