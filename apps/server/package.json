@@ -52,7 +52,7 @@
     "drizzle-orm": "0.45.2",
     "feed": "5.2.1",
     "flomise": "0.0.6",
-    "hono": "4.12.16",
+    "hono": "4.12.17",
     "lnovel": "workspace:*",
     "lru-cache": "11.3.6",
     "puppeteer": "24.42.0",
