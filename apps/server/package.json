@@ -55,7 +55,7 @@
     "hono": "4.12.17",
     "lnovel": "workspace:*",
     "lru-cache": "11.3.6",
-    "puppeteer": "24.42.0",
+    "puppeteer": "24.43.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
