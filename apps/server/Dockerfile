@@ -1,7 +1,5 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=26.1.0
-
 ARG HOST=0.0.0.0
 ARG PORT=3000
 
@@ -9,7 +7,7 @@ ARG APP_HOST=lnovel.animes.garden
 ARG FOLLOW_USER_ID=41508082357911552
 
 # Base Image
-FROM node:${NODE_VERSION}-slim AS base
+FROM node:26.1.0-slim AS base
 
 LABEL fly_launch_runtime="Node.js"
 
@@ -18,10 +16,6 @@ WORKDIR /lnovel
 
 # Set production environment
 ENV NODE_ENV="production"
-
-# Enable corepack
-RUN corepack enable pnpm
-
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build
@@ -36,6 +30,9 @@ COPY ./apps/server/package.json ./apps/server/
 COPY ./apps/landing/package.json ./apps/landing/
 COPY ./packages/lnovel/package.json ./packages/lnovel/
 COPY ./packages/bilinovel/package.json ./packages/bilinovel/
+
+# Install the package manager version declared by the workspace root.
+RUN npm install -g $(node -p "require('./package.json').packageManager")
 
 RUN pnpm install --frozen-lockfile --prod=false
 
