@@ -33,7 +33,13 @@ const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
 
 const MAX_ERROR = 10;
 
-let localStartedAt = new Date();
+const LOCAL_BROWSER_TTL = 12 * 60 * 60 * 1000;
+const LOCAL_LAUNCH_RETRY_DELAY = 60 * 1000;
+
+let localStartedAt: Date | undefined;
+let localBrowser: Promise<Browser> | undefined;
+let localBrowserLock: Promise<void> = Promise.resolve();
+let localRetryAfter = 0;
 
 const launchLocalBrowser = async (): Promise<Browser> => {
   let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -46,8 +52,6 @@ const launchLocalBrowser = async (): Promise<Browser> => {
 
   consola.log('Connecting to local browser', executablePath);
 
-  localStartedAt = new Date();
-
   const browser = await puppeteer.launch({
     executablePath,
     defaultViewport: null,
@@ -55,18 +59,80 @@ const launchLocalBrowser = async (): Promise<Browser> => {
     args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
 
+  localStartedAt = new Date();
   consola.log('Connected to local browser', browser.connected);
 
   return browser;
 };
 
-let localBrowser = launchLocalBrowser();
+const withLocalBrowserLock = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const previous = localBrowserLock;
+  let release: () => void = () => {};
+  localBrowserLock = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  await previous.catch(() => {});
+
+  try {
+    return await fn();
+  } finally {
+    release();
+  }
+};
+
+const getLocalBrowser = async (): Promise<Browser> => {
+  return await withLocalBrowserLock(async () => {
+    const now = Date.now();
+    if (now < localRetryAfter) {
+      throw new Error(
+        `Local browser launch is cooling down until ${new Date(localRetryAfter).toISOString()}`
+      );
+    }
+
+    if (localBrowser) {
+      try {
+        const browser = await localBrowser;
+        const expired = !localStartedAt || now - localStartedAt.getTime() > LOCAL_BROWSER_TTL;
+
+        if (browser.connected && !expired) {
+          return browser;
+        }
+
+        consola.log('Restarting local browser');
+        await browser.close().catch(() => {});
+      } catch (error) {
+        consola.error('Local browser is unavailable', error);
+      } finally {
+        localBrowser = undefined;
+        localStartedAt = undefined;
+      }
+    }
+
+    const pending = launchLocalBrowser().catch((error) => {
+      if (localBrowser === pending) {
+        localBrowser = undefined;
+        localStartedAt = undefined;
+        localRetryAfter = Date.now() + LOCAL_LAUNCH_RETRY_DELAY;
+      }
+      throw error;
+    });
+
+    localBrowser = pending;
+    return await pending;
+  });
+};
 
 const connectScrapeless = async (options: ScrapelessOptions) => {
   consola.log('Connecting to remote browser');
 
+  const token = options.token || process.env.SCRAPELESS_TOKEN;
+  if (!token) {
+    throw new Error('SCRAPELESS_TOKEN is required to connect to remote browser');
+  }
+
   const query = new URLSearchParams({
-    token: options.token || process.env.SCRAPELESS_TOKEN!,
+    token,
     // proxyCountry: 'ANY',
     proxyCountry: 'US',
     proxyState: 'CA',
@@ -76,10 +142,17 @@ const connectScrapeless = async (options: ScrapelessOptions) => {
 
   const connectionURL = `wss://browser.scrapeless.com/api/v2/browser?${query.toString()}`;
 
-  const browser = await puppeteer.connect({
-    browserWSEndpoint: connectionURL,
-    defaultViewport: null
-  });
+  let browser: Browser;
+  try {
+    browser = await puppeteer.connect({
+      browserWSEndpoint: connectionURL,
+      defaultViewport: null
+    });
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('Remote browser connection failed', { cause: error });
+  }
 
   consola.log('Connected to remote browser', browser.connected);
 
@@ -126,7 +199,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   const isLocal = async () => {
     if (!browser) return false;
     try {
-      return (await browser) === (await localBrowser);
+      return !!localBrowser && (await browser) === (await localBrowser);
     } catch {
       return false;
     }
@@ -137,14 +210,8 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
     if (!forceRemote) {
       try {
-        if (new Date().getTime() - localStartedAt.getTime() <= 12 * 60 * 60 * 1000) {
-          browser = Promise.resolve(localBrowser);
-          return localBrowser;
-        } else {
-          // Restart a new local browser
-          await (await localBrowser).close().catch(() => {});
-          localBrowser = launchLocalBrowser();
-        }
+        browser = getLocalBrowser();
+        return await browser;
       } catch (error) {
         consola.error('Local puppeteer launch failed, fallback to remote browser', error);
       }
@@ -159,12 +226,12 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
       await Promise.race([
         (async () => {
           if (!(await isLocal())) {
-            consola.log('Closing local browser');
+            consola.log('Closing remote browser');
             await (await browser).close();
           }
         })(),
         sleep(2 * 1000).then(() => {
-          consola.log('Closing local browser timeout');
+          consola.log('Closing browser timeout');
         })
       ]);
     } catch {
