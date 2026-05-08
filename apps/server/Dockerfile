@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1
 
-ARG NODE_VERSION=24.15.0
+ARG NODE_VERSION=26.1.0
 
 ARG HOST=0.0.0.0
 ARG PORT=3000
@@ -31,7 +31,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential node-gyp pkg-config python-is-python3 git
 
 # Install node modules
-COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .npmrc .node-version ./
+COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .node-version ./
 COPY ./apps/server/package.json ./apps/server/
 COPY ./apps/landing/package.json ./apps/landing/
 COPY ./packages/lnovel/package.json ./packages/lnovel/
