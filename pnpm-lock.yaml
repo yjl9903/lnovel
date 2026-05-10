@@ -51,8 +51,8 @@ importers:
         specifier: 5.2.8
         version: 5.2.8
       '@hugeicons/core-free-icons':
-        specifier: 4.1.2
-        version: 4.1.2
+        specifier: 4.1.3
+        version: 4.1.3
       '@hugeicons/react':
         specifier: 1.1.6
         version: 1.1.6(react@19.2.6)
@@ -976,8 +976,8 @@ packages:
       hono: '>=4.10.0'
       zod: ^3.25.0 || ^4.0.0
 
-  '@hugeicons/core-free-icons@4.1.2':
-    resolution: {integrity: sha512-7PfGYaUyExpAMA8ZC7gfXykttrBDIUutU/yQHIBgz0L61ENSM73mqg/9hCTZemiEUVtj2raRRjhoJMGdAFwetQ==}
+  '@hugeicons/core-free-icons@4.1.3':
+    resolution: {integrity: sha512-FWPrKnlYKpSaitUtlZhFlDQXDgHiayTPFJYWvyIKkW2RI6Vj5KBvjxI+lAnnFPu07SwgIMiDDj+Gttl0t+o/oQ==}
 
   '@hugeicons/react@1.1.6':
     resolution: {integrity: sha512-c2LhXJMAW5wN1pC/smBXG0YPqUON6ceR/ZdXHCjEI9KvB+hjtqYjmzIxok5hAQOeXGz0WtORgCQMzqewFKAZwg==}
@@ -4334,7 +4334,7 @@ snapshots:
       hono: 4.12.18
       zod: 4.4.3
 
-  '@hugeicons/core-free-icons@4.1.2': {}
+  '@hugeicons/core-free-icons@4.1.3': {}
 
   '@hugeicons/react@1.1.6(react@19.2.6)':
     dependencies:
