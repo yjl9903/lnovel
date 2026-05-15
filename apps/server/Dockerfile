@@ -57,14 +57,13 @@ ARG HOST PORT APP_HOST FOLLOW_USER_ID
 ENV HOST=${HOST} PORT=${PORT} APP_HOST=${APP_HOST} \
     FOLLOW_USER_ID=${FOLLOW_USER_ID} \
     DATABASE_FILE=/data/sqlite.db \
-    PUPPETEER_CACHE_DIR=/puppeteer \
+    CLOAKBROWSER_CACHE_DIR=/cloakbrowser \
     CHROMIUM_USER_DIR=/data/profile
 
-# 安装 Chrome 及其所需的系统依赖 (System Deps)
-# --install-deps 会自动运行 apt-get 安装 libnss3, libatk 等库
-# 运行完后清理 apt 缓存以减小体积
+# 安装 Chromium 所需的系统依赖并预下载 CloakBrowser 二进制
 RUN apt-get update && \
-    npx puppeteer browsers install chrome --install-deps && \
+    npx playwright-core install-deps chromium && \
+    npx cloakbrowser install && \
     rm -rf /var/lib/apt/lists/*
 
 # Start the server by default, this can be overwritten at runtime

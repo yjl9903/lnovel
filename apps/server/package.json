@@ -35,9 +35,9 @@
   ],
   "scripts": {
     "build": "tsdown",
+    "browser:prepare": "cloakbrowser install",
     "drizzle": "drizzle-kit",
     "drizzle:generate": "drizzle-kit generate",
-    "puppeteer:prepare": "puppeteer browsers install chrome --install-deps",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -45,6 +45,7 @@
     "@hono/zod-validator": "0.8.0",
     "bilinovel": "workspace:*",
     "breadc": "1.0.0-beta.15",
+    "cloakbrowser": "0.3.28",
     "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.4.2",
@@ -55,13 +56,13 @@
     "hono": "4.12.18",
     "lnovel": "workspace:*",
     "lru-cache": "11.3.6",
-    "puppeteer": "24.43.1",
+    "playwright-core": "1.60.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "drizzle-kit": "0.31.10"
   },
   "engines": {
-    "node": ">=v20.8.0"
+    "node": ">=v24.0.0"
   }
 }

@@ -5,7 +5,6 @@ packages:
 allowBuilds:
   esbuild: true
   msw: true
-  puppeteer: true
 
 shellEmulator: true
 ignoreWorkspaceRootCheck: true
