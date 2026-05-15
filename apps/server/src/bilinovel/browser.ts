@@ -46,7 +46,7 @@ const launchLocalBrowser = async (): Promise<Browser> => {
 
   if (!executablePath) {
     try {
-      executablePath = puppeteer.executablePath();
+      executablePath = await puppeteer.executablePath();
     } catch {}
   }
 
