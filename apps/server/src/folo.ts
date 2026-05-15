@@ -20,7 +20,7 @@ export async function getFoloFeedId(url: string) {
 
     const [resp] = await database.select().from(folos).where(eq(folos.url, url));
     if (resp) {
-      consola.log(`get folo feedId ${url} -> ${resp.feedId}`);
+      // consola.log(`get folo feedId ${url} -> ${resp.feedId}`);
       return resp.feedId;
     }
   } catch {
