@@ -1,21 +1,20 @@
 import path from 'node:path';
-import Database from 'better-sqlite3';
-import { drizzle, BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+
+import { migrate } from 'drizzle-sqlite/migrator';
+import { drizzle, NodeSQLiteDatabase } from 'drizzle-sqlite';
 
 import { biliNovels, biliVolumes, biliChapters, folos } from './schema';
 
 export async function connectDatabase(file: string): Promise<
-  BetterSQLite3Database<{
+  NodeSQLiteDatabase<{
     biliNovels: typeof biliNovels;
     biliVolumes: typeof biliVolumes;
     biliChapters: typeof biliChapters;
     folos: typeof folos;
   }>
 > {
-  const client = new Database(file);
-
-  const database = drizzle(client, {
+  const database = drizzle({
+    connection: file,
     schema: {
       biliNovels,
       biliVolumes,
