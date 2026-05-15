@@ -94,7 +94,21 @@ const withTimeout = async <T>(
   timeout: number,
   onTimeout: () => T
 ): Promise<T> => {
-  return await Promise.race([task, sleep(timeout).then(onTimeout)]);
+  let timer: NodeJS.Timeout | undefined;
+  const promise = await Promise.race([
+    task,
+    new Promise<T>((res, rej) => {
+      timer = setTimeout(async () => {
+        try {
+          res(await onTimeout());
+        } catch (error) {
+          rej(error);
+        }
+      }, timeout);
+    })
+  ]);
+  timer && clearTimeout(timer);
+  return promise;
 };
 
 const withLocalBrowserLock = async <T>(fn: () => Promise<T>): Promise<T> => {
