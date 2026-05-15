@@ -120,7 +120,7 @@ export async function startCron() {
 
   const biliJob = new Cron('0 * * * *', { timezone: 'Asia/Shanghai', protect: true }, async () => {
     try {
-      const APP_HOST = process.env.APP_HOST || 'lnvoel.animes.garden';
+      const APP_HOST = process.env.APP_HOST || 'lnovel.animes.garden';
       const req = new Request(`https://${APP_HOST}/bili/_/cron`, {
         method: 'POST'
       });

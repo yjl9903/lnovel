@@ -10,7 +10,7 @@ primary_region = 'lax'
 dockerfile = 'Dockerfile'
 
 [build.args]
-APP_HOST = 'lnvoel.animes.garden'
+APP_HOST = 'lnovel.animes.garden'
 
 [processes]
 server = 'node apps/server/cli.mjs start'

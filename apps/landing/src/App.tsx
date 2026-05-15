@@ -374,7 +374,7 @@ export default function App() {
               </span>
               <span> | </span>
               <span>
-                <a href={`https://github.com/yjl9903/lnvoel`} target="_blank">
+                <a href={`https://github.com/yjl9903/lnovel`} target="_blank">
                   GitHub
                 </a>
               </span>
