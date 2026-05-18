@@ -55,7 +55,7 @@
     "flomise": "0.0.6",
     "hono": "4.12.19",
     "lnovel": "workspace:*",
-    "lru-cache": "11.3.6",
+    "lru-cache": "11.4.0",
     "playwright-core": "1.60.0",
     "zod": "4.4.3"
   },
