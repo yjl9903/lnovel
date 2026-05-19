@@ -104,10 +104,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 2.0.3
-        version: 2.0.3(hono@4.12.19)
+        version: 2.0.3(hono@4.12.21)
       '@hono/zod-validator':
         specifier: 0.8.0
-        version: 0.8.0(hono@4.12.19)(zod@4.4.3)
+        version: 0.8.0(hono@4.12.21)(zod@4.4.3)
       bilinovel:
         specifier: workspace:*
         version: link:../../packages/bilinovel
@@ -139,8 +139,8 @@ importers:
         specifier: 0.0.6
         version: 0.0.6
       hono:
-        specifier: 4.12.19
-        version: 4.12.19
+        specifier: 4.12.21
+        version: 4.12.21
       lnovel:
         specifier: workspace:*
         version: link:../../packages/lnovel
@@ -2158,6 +2158,10 @@ packages:
     resolution: {integrity: sha512-xa3eYXYXx68XTT4hZ7dRzsXBhaq85ToSrlUJNoR0gwz/1Ap/CNwX47wfvV7pc/xWhjKVVkLT7zBJy8chhNguqQ==}
     engines: {node: '>=16.9.0'}
 
+  hono@4.12.21:
+    resolution: {integrity: sha512-uV63apnb0kyPtAUwoWgaGh9HyIFcv8lgmzPZSiTBQAFOFGIzka5EZ1dZocmGnn0XdX0+XTqJ6Tqv7selMuGLRQ==}
+    engines: {node: '>=16.9.0'}
+
   hookable@6.1.1:
     resolution: {integrity: sha512-U9LYDy1CwhMCnprUfeAZWZGByVbhd54hwepegYTK7Pi5NvqEj63ifz5z+xukznehT7i6NIZRu89Ay1AZmRsLEQ==}
 
@@ -3952,13 +3956,13 @@ snapshots:
     dependencies:
       hono: 4.12.19
 
-  '@hono/node-server@2.0.3(hono@4.12.19)':
+  '@hono/node-server@2.0.3(hono@4.12.21)':
     dependencies:
-      hono: 4.12.19
+      hono: 4.12.21
 
-  '@hono/zod-validator@0.8.0(hono@4.12.19)(zod@4.4.3)':
+  '@hono/zod-validator@0.8.0(hono@4.12.21)(zod@4.4.3)':
     dependencies:
-      hono: 4.12.19
+      hono: 4.12.21
       zod: 4.4.3
 
   '@hugeicons/core-free-icons@4.1.4': {}
@@ -4986,6 +4990,8 @@ snapshots:
       set-cookie-parser: 3.1.0
 
   hono@4.12.19: {}
+
+  hono@4.12.21: {}
 
   hookable@6.1.1: {}
 
