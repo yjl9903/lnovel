@@ -53,7 +53,7 @@
     "drizzle-sqlite": "^0.0.1",
     "feed": "5.2.1",
     "flomise": "0.0.6",
-    "hono": "4.12.22",
+    "hono": "4.12.23",
     "lnovel": "workspace:*",
     "lru-cache": "11.5.0",
     "playwright-core": "1.60.0",
