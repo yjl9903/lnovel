@@ -7,7 +7,7 @@ ARG APP_HOST=lnovel.animes.garden
 ARG FOLLOW_USER_ID=41508082357911552
 
 # Base Image
-FROM platformatic/node-caged:26.1.0-slim AS base
+FROM platformatic/node-caged:26.3.1-slim AS base
 
 LABEL fly_launch_runtime="Node.js"
 
