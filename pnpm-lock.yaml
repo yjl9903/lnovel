@@ -130,8 +130,8 @@ importers:
         specifier: 0.45.2
         version: 0.45.2
       drizzle-sqlite:
-        specifier: ^0.0.1
-        version: 0.0.1(drizzle-orm@0.45.2)
+        specifier: ^0.1.0
+        version: 0.1.0(drizzle-orm@0.45.2)
       feed:
         specifier: 5.2.1
         version: 5.2.1
@@ -1791,9 +1791,9 @@ packages:
       sqlite3:
         optional: true
 
-  drizzle-sqlite@0.0.1:
-    resolution: {integrity: sha512-ZHQMVwc7q+pnRNcXJ8SuuXnMbuFp6F6lE2UfRSDXYIJvgrqAPMB+JmEFalCV7cfUEZpyTSo75oZQh4vuSfIOvA==}
-    engines: {node: '>=v24.0.0'}
+  drizzle-sqlite@0.1.0:
+    resolution: {integrity: sha512-WJn0flxreGojdCh7EKCouhrxzV2vgStBxdRSQNMsmKG2AZgzzY9tL4DFCEnGcc26eUPOOHd8UYpEafKOOgffJw==}
+    engines: {node: '>=22.16.0'}
     peerDependencies:
       drizzle-orm: ^0.45.2
 
@@ -4454,7 +4454,7 @@ snapshots:
 
   drizzle-orm@0.45.2: {}
 
-  drizzle-sqlite@0.0.1(drizzle-orm@0.45.2):
+  drizzle-sqlite@0.1.0(drizzle-orm@0.45.2):
     dependencies:
       drizzle-orm: 0.45.2
 
