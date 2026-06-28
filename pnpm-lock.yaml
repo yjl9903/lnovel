@@ -18,8 +18,8 @@ importers:
         specifier: latest
         version: 11.1.0
       prettier:
-        specifier: ^3.8.5
-        version: 3.8.5
+        specifier: ^3.9.0
+        version: 3.9.0
       tsdown:
         specifier: ^0.22.3
         version: 0.22.3(tsx@4.22.4)(typescript@6.0.3)
@@ -2577,8 +2577,8 @@ packages:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
     engines: {node: '>=20'}
 
-  prettier@3.8.5:
-    resolution: {integrity: sha512-zxcTTCedNGJM4R8sj/Cq/F0W/c4iE0afWBcBwMTRtw4WHYP9TWkYjdiH3npPRUYsXQCPR0hTU9yjovOu+E6EQA==}
+  prettier@3.9.0:
+    resolution: {integrity: sha512-LjIqSIC5VYLzs9WedVmJ2ljNAGnU+DteIClbahu4L/DBeWjZ6iT/k1lAYyu9JUh+1xINxWadaPw/Pl63y/agAw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -5183,7 +5183,7 @@ snapshots:
 
   powershell-utils@0.1.0: {}
 
-  prettier@3.8.5: {}
+  prettier@3.9.0: {}
 
   pretty-ms@9.3.0:
     dependencies:
