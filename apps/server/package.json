@@ -51,7 +51,7 @@
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
     "drizzle-sqlite": "^0.1.0",
-    "feed": "5.2.1",
+    "feed": "6.0.0",
     "flomise": "0.0.6",
     "hono": "4.12.27",
     "lnovel": "workspace:*",
