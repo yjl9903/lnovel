@@ -41,8 +41,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "2.0.8",
-    "@hono/zod-validator": "0.8.0",
+    "@hono/node-server": "2.0.10",
+    "@hono/zod-validator": "0.9.0",
     "bilinovel": "workspace:*",
     "breadc": "1.0.0-beta.17",
     "cloakbrowser": "0.4.11",
@@ -53,7 +53,7 @@
     "drizzle-sqlite": "^0.1.0",
     "feed": "6.0.0",
     "flomise": "0.0.6",
-    "hono": "4.12.28",
+    "hono": "4.12.30",
     "lnovel": "workspace:*",
     "lru-cache": "11.5.2",
     "playwright-core": "1.61.1",
