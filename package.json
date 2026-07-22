@@ -20,7 +20,7 @@
     "@types/jsdom": "^28.0.3",
     "@types/node": "^24.13.3",
     "bumpp": "latest",
-    "prettier": "^3.9.5",
+    "prettier": "^3.9.6",
     "tsdown": "^0.22.12",
     "tsx": "^4.23.1",
     "turbo": "^2.10.5",
