@@ -16,10 +16,10 @@ importers:
         version: 24.13.3
       bumpp:
         specifier: latest
-        version: 11.1.0
+        version: 12.0.0
       prettier:
-        specifier: ^3.9.5
-        version: 3.9.5
+        specifier: ^3.9.6
+        version: 3.9.6
       tsdown:
         specifier: ^0.22.12
         version: 0.22.12(tsx@4.23.1)(typescript@7.0.2)
@@ -1787,9 +1787,9 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bumpp@11.1.0:
-    resolution: {integrity: sha512-jdwOGMyX8JIqpQ0N2RMRR87DHZaoJnUtui5lU9LqFfFK5JC0H8qY9uWqXoa+dEWt/K7rOmmsoyiZB8RBM7RPBQ==}
-    engines: {node: '>=20.19.0'}
+  bumpp@12.0.0:
+    resolution: {integrity: sha512-2uuObtROJvEGZJk4T6t3fDgUAmgDYF0PeSZt23GCn1ItxECvR+ROVJNYT7r1lS8nIMJae6IkIgcDEIbT5iwWAA==}
+    engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
 
   bundle-name@4.1.0:
@@ -2901,8 +2901,8 @@ packages:
     resolution: {integrity: sha512-dM0jVuXJPsDN6DvRpea484tCUaMiXWjuCn++HGTqUWzGDjv5tZkEZldAJ/UMlqRYGFrD/etByo4/xOuC/snX2A==}
     engines: {node: '>=20'}
 
-  prettier@3.9.5:
-    resolution: {integrity: sha512-/FVl766LpUfB5vXgCYOYa0MeV/441Ia99AeICQIQFTY/Nw0roZwULcXpku5i1/m5kt/baz+s4Zogspd839HSMg==}
+  prettier@3.9.6:
+    resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4755,16 +4755,16 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bumpp@11.1.0:
+  bumpp@12.0.0:
     dependencies:
       args-tokenizer: 0.3.0
       cac: 7.0.0
       jsonc-parser: 3.3.1
       package-manager-detector: 1.7.0
-      semver: 7.8.5
       tinyexec: 1.2.4
       tinyglobby: 0.2.17
       unconfig: 7.5.0
+      verkit: 0.1.2
       yaml: 2.9.0
 
   bundle-name@4.1.0:
@@ -5700,7 +5700,7 @@ snapshots:
 
   powershell-utils@0.1.0: {}
 
-  prettier@3.9.5: {}
+  prettier@3.9.6: {}
 
   pretty-ms@9.3.0:
     dependencies:
