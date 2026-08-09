@@ -16,7 +16,7 @@ importers:
         version: 24.13.3
       bumpp:
         specifier: latest
-        version: 12.1.1
+        version: 12.2.0
       prettier:
         specifier: ^3.9.6
         version: 3.9.6
@@ -115,8 +115,8 @@ importers:
         specifier: 1.0.0-beta.18
         version: 1.0.0-beta.18
       cloakbrowser:
-        specifier: 0.5.3
-        version: 0.5.3(playwright-core@1.62.1)
+        specifier: 0.5.6
+        version: 0.5.6(playwright-core@1.62.1)
       consola:
         specifier: 3.4.2
         version: 3.4.2
@@ -1664,8 +1664,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bumpp@12.1.1:
-    resolution: {integrity: sha512-6zniIxMtt+yeEwmyL4s+gB54A1J8HVQPOIeABaFB2ScmG993Q+3+5MYAbJYu/kmZ1ZXS+KzwVb/ff5V4vBXiHA==}
+  bumpp@12.2.0:
+    resolution: {integrity: sha512-pQuDUxqHpxxjfie/KABu0fppefIthnC/ZEIzcoSDy3RVxhascgsl+NI21+wQec6tTLr+wNQTLcjSeTSGr80qAw==}
     engines: {node: ^22.18.0 || ^24.11.0 || >=26.0.0}
     hasBin: true
 
@@ -1719,8 +1719,8 @@ packages:
     resolution: {integrity: sha512-ywqV+5MmyL4E7ybXgKys4DugZbX0FC6LnwrhjuykIjnK9k8OQacQ7axGKnjDXWNhns0xot3bZI5h55H8yo9cJg==}
     engines: {node: '>=6'}
 
-  cloakbrowser@0.5.3:
-    resolution: {integrity: sha512-awxjoA3y+id0H9m9278GXftCkgcRcJSWu9D1Oc5E76L063GyMkNbTii8ZCrEQ4zA7b3H3zjRWF+HCtwpHwrsrw==}
+  cloakbrowser@0.5.6:
+    resolution: {integrity: sha512-fxn9m/t6p10iuWsfNxxuJ2lniXCI8fvpeRX/D/DKZNLA3p/urfFmDy0oAkumP2k5E8OjPpJRxfehmWSUBZSEqA==}
     engines: {node: '>=20.0.0'}
     hasBin: true
     peerDependencies:
@@ -3320,6 +3320,10 @@ packages:
     resolution: {integrity: sha512-w2Eo8LSIIoW7qxNBzT7/17k+bh8plXo7G3dHjEIDqPlnluhzaxr9JX8F28VSYEtDvc1/a3WBDih6xNUZseebXg==}
     engines: {node: '>=18.12.0'}
 
+  verkit@0.3.2:
+    resolution: {integrity: sha512-zj/ob3UsvJGN0whEAKFp53REA5X66hvffVqoCtVQAakJKnKlH+/PcOfMoFwIG/o4rElqLv/ycAFlx8ZlXUorCg==}
+    engines: {node: '>=18.12.0'}
+
   vite@8.2.0:
     resolution: {integrity: sha512-pn+CFpM0lwDeKwmOq1ZaBK/9sjorZcgqxki6MbY/jPEVd9vichIlmlD4HmQ5wdP5EgqQCFRaACBxMC7uEGc6lQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -4629,7 +4633,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bumpp@12.1.1:
+  bumpp@12.2.0:
     dependencies:
       args-tokenizer: 0.3.0
       cac: 7.0.0
@@ -4638,7 +4642,7 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       unconfig: 7.5.0
-      verkit: 0.3.1
+      verkit: 0.3.2
       yaml: 2.9.0
 
   bundle-name@4.1.0:
@@ -4679,7 +4683,7 @@ snapshots:
 
   cli-spinners@2.9.2: {}
 
-  cloakbrowser@0.5.3(playwright-core@1.62.1):
+  cloakbrowser@0.5.6(playwright-core@1.62.1):
     dependencies:
       tar: 7.5.22
     optionalDependencies:
@@ -6115,6 +6119,8 @@ snapshots:
   vary@1.1.2: {}
 
   verkit@0.3.1: {}
+
+  verkit@0.3.2: {}
 
   vite@8.2.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.23.5)(yaml@2.9.0):
     dependencies:
