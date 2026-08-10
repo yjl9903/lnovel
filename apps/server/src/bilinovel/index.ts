@@ -379,7 +379,7 @@ app.get('/wenku/feed.xml', async (c: Context) => {
     title: formatWenkuFilterTitle(filter),
     description:
       '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
-    link: data.url,
+    link: new URL(data.url, 'https://www.linovelib.com').toString(),
     rssLink: buildSite(c, `/wenku/feed.xml${url.search}`),
     image: 'https://www.bilinovel.com/logo.png',
     items,
@@ -428,7 +428,7 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
     title: formatTopFilterTitle(filter),
     description:
       '轻小说文库，哔哩轻小说，是收录最全更新最快的动漫 sf 轻小说网站，提供轻小说在线阅读，TXT 与电子书下载。',
-    link: data.url,
+    link: new URL(data.url, 'https://www.linovelib.com').toString(),
     rssLink: buildSite(c, `/top/${filter.sort}/feed.xml${url.search}`),
     image: 'https://www.bilinovel.com/logo.png',
     items,
