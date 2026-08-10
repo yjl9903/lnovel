@@ -106,6 +106,25 @@ app.use(
 
 app.onError(async (error: unknown, c: Context) => {
   const url = new URL(c.req.url);
+  const status =
+    error instanceof WorkflowException
+      ? error.status
+      : error instanceof HTTPException
+        ? error.status
+        : 500;
+
+  if (status >= 500) {
+    consola.error(
+      'Request failed',
+      {
+        requestId: c.get('requestId'),
+        method: c.req.method,
+        url: url.toString(),
+        status
+      },
+      error
+    );
+  }
 
   if (error instanceof HTTPException) {
     return error.getResponse();
