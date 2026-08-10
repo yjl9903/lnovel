@@ -474,6 +474,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
     const browser = await getRemoteBrowser();
     const context = browser.contexts()[0] ?? (await browser.newContext());
     const page = await context.newPage();
+    consola.log('Created new remote page', `active:${context.pages().length}`);
     await interceptPage(page);
     return { kind: 'remote' as const, page };
   };
@@ -481,6 +482,7 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   const createLocalPage = async () => {
     const browser = await getLocalBrowser();
     const page = await browser.context.newPage();
+    consola.log('Created new local page', `active:${browser.context.pages().length}`);
     await interceptPage(page);
     return { kind: 'local' as const, page };
   };
