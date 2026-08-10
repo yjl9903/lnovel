@@ -41,11 +41,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hono/node-server": "2.0.11",
+    "@hono/node-server": "2.1.0",
     "@hono/zod-validator": "0.9.0",
     "bilinovel": "workspace:*",
-    "breadc": "1.0.0-beta.17",
-    "cloakbrowser": "0.4.12",
+    "breadc": "1.0.0-beta.18",
+    "cloakbrowser": "0.5.6",
     "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.4.2",
@@ -53,10 +53,10 @@
     "drizzle-sqlite": "^0.1.0",
     "feed": "6.0.0",
     "flomise": "0.0.6",
-    "hono": "4.12.31",
+    "hono": "4.13.1",
     "lnovel": "workspace:*",
     "lru-cache": "11.5.2",
-    "playwright-core": "1.61.1",
+    "playwright-core": "1.62.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
