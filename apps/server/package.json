@@ -34,10 +34,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown",
     "browser:prepare": "cloakbrowser install",
+    "build": "tsdown",
     "drizzle": "drizzle-kit",
     "drizzle:generate": "drizzle-kit generate",
+    "test:ci": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

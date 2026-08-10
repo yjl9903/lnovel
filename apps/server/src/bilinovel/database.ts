@@ -9,9 +9,17 @@ import {
 import { database } from '../database';
 import { biliChapters, biliNovels, biliVolumes } from '../schema';
 
-export type NovelResult = NovelPageResult & { fetchedAt: Date; done: boolean };
+export type NovelResult = NovelPageResult & {
+  fetchedAt: Date;
+  done: boolean;
+  isDeleted: boolean;
+};
 
-export type NovelVolumeResult = NovelVolumePageResult & { fetchedAt: Date; done: boolean };
+export type NovelVolumeResult = NovelVolumePageResult & {
+  fetchedAt: Date;
+  done: boolean;
+  isDeleted: boolean;
+};
 
 export type NovelChapterResult = NovelChapterPagesResult & { vid: number; fetchedAt: Date };
 
@@ -44,6 +52,7 @@ export const getNovelFromDatabase = async (
       updatedAt: novel.updatedAt,
       fetchedAt: novel.fetchedAt,
       done: novel.done || false,
+      isDeleted: novel.isDeleted || false,
       volumes: volumes.map((vol) => ({
         nid: +nid,
         vid: vol.vid,
@@ -80,7 +89,8 @@ export const getNovelsFromDatabase = async ({ done }: { done?: boolean } = {}): 
       labels: novel.labels || [],
       updatedAt: novel.updatedAt,
       fetchedAt: novel.fetchedAt,
-      done: novel.done || false
+      done: novel.done || false,
+      isDeleted: novel.isDeleted || false
     };
   });
 };
@@ -113,7 +123,8 @@ export const getNovelVolumeFromDatabase = async (
         chapters: chapters.map((ch) => ({ nid: +nid, vid: +vid, cid: ch.cid, title: ch.title })),
         updatedAt: volume.updatedAt,
         fetchedAt: volume.fetchedAt,
-        done: volume.done || false
+        done: volume.done || false,
+        isDeleted: volume.isDeleted || false
       };
     }
   }
@@ -157,4 +168,18 @@ export const updateNovelChapterToDatabase = async (chapter: NovelChapterPagesRes
     .returning({ cid: biliChapters.cid });
 
   return resp.length > 0;
+};
+
+export const markNovelAsDeletedInDatabase = async (nid: number | string) => {
+  const rows = await database
+    .update(biliNovels)
+    .set({
+      isDeleted: true,
+      done: true,
+      fetchedAt: new Date()
+    })
+    .where(eq(biliNovels.nid, +nid))
+    .returning({ nid: biliNovels.nid });
+
+  return rows.length > 0;
 };

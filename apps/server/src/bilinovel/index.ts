@@ -236,14 +236,8 @@ app.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
 
   const nid = c.req.param('nid')!;
 
-  const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid, false);
-  if (db && !force) {
-    const data = await attachFoloFeedId(c, db);
-    return c.json({ ok: true, provider: Provider.bilinovel, data });
-  }
-
-  const data = await fetched;
+  const data = db && !force ? db : await engine.run(getGlobal(c), getNovel, +nid);
 
   engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
 
@@ -442,10 +436,9 @@ app.get('/top/:sort/feed.xml', async (c: Context) => {
 app.get('/novel/:nid/feed.xml', validateNumericParams('nid'), async (c: Context) => {
   const nid = c.req.param('nid')!;
 
-  const fetched = engine.run(getGlobal(c), getNovel, +nid);
   const db = await getNovelFromDatabase(nid);
 
-  const data = db ? db : await fetched;
+  const data = db ?? (await engine.run(getGlobal(c), getNovel, +nid));
 
   const author = data.authors.find((author) => author.position === 'author');
 

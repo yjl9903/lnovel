@@ -3,11 +3,27 @@ import path from 'node:path';
 
 import { describe, it, expect } from 'vitest';
 
+import { BilinovelErrorCode } from '../src/error.js';
 import { fetchNovelPage, fetchNovelVolumePage, fetchNovelChapterPages } from '../src/novel.js';
 
 const TEST_TIMEOUT = 30_000;
 
 describe('novel', () => {
+  it('should identify a taken-down novel', async () => {
+    const fetchHTML = async () => `
+      <html>
+        <body>
+          <div class="wrap">抱歉，作品已下架！</div>
+        </body>
+      </html>
+    `;
+
+    await expect(fetchNovelPage(fetchHTML, 4695)).rejects.toMatchObject({
+      code: BilinovelErrorCode.banned,
+      pathname: '/novel/4695.html'
+    });
+  });
+
   const nid = 1410;
 
   describe(`nid:${nid}`, { timeout: TEST_TIMEOUT }, async () => {

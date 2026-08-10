@@ -5,6 +5,8 @@ import { LRUCache } from 'lru-cache';
 import { workflow, newQueue, createEngine, Context, Workflow } from 'flomise';
 
 import {
+  BilinovelError,
+  BilinovelErrorCode,
   type BilinovelFetchTopFilter,
   type BilinovelFetchWenkuFilter,
   fetchTopPage,
@@ -22,7 +24,11 @@ import { biliChapters, biliNovels, biliVolumes } from '../schema';
 
 import { consola, transformImgSrc, tryResult } from './utils';
 import { type Session, createBilinovelSession } from './browser';
-import { getNovelFromDatabase, updateNovelChapterToDatabase } from './database';
+import {
+  getNovelFromDatabase,
+  markNovelAsDeletedInDatabase,
+  updateNovelChapterToDatabase
+} from './database';
 
 // top 和 wenku 页使用的并发控制
 const indexLimit = newQueue(1);
@@ -96,6 +102,14 @@ export const getNovel = workflow('getNovel', {
       }
     } catch (error) {
       consola.error(`Failed fetching novel page`, `nid:${nid}`, error);
+
+      if (error instanceof BilinovelError && error.code === BilinovelErrorCode.banned) {
+        const marked = await markNovelAsDeletedInDatabase(nid);
+        consola.warn(
+          marked ? `Marked novel as deleted` : `Unable to mark missing novel as deleted`,
+          `nid:${nid}`
+        );
+      }
 
       throw new WorkflowException(`Failed fetching novel page nid:${nid}`, 500, error);
     }
@@ -208,6 +222,7 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
       const dbNovel = await getNovelFromDatabase('' + nid, false);
       if (
         dbNovel &&
+        !dbNovel.isDeleted &&
         new Date().getTime() - dbNovel.fetchedAt.getTime() <=
           (dbNovel.done ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000)
       ) {
@@ -251,6 +266,7 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
           labels: novel.labels,
           updatedAt: novel.updatedAt,
           done: false,
+          isDeleted: false,
           fetchedAt: novel.fetchedAt
         })
         .onConflictDoUpdate({
@@ -262,7 +278,8 @@ export const updateNovel = workflow('updateNovel', { concurrency: 1 })
             cover: novel.cover,
             labels: novel.labels,
             updatedAt: novel.updatedAt,
-            done: false
+            done: false,
+            isDeleted: false
           }
         });
 

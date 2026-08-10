@@ -102,8 +102,7 @@ export const WENKU_PROGRESS = {
 } as const;
 
 export type WenkuProgress =
-  | keyof typeof WENKU_PROGRESS
-  | (typeof WENKU_PROGRESS)[keyof typeof WENKU_PROGRESS];
+  keyof typeof WENKU_PROGRESS | (typeof WENKU_PROGRESS)[keyof typeof WENKU_PROGRESS];
 
 export const WENKU_ANIMATION = {
   all: 0,
@@ -112,8 +111,7 @@ export const WENKU_ANIMATION = {
 } as const;
 
 export type WenkuAnimation =
-  | keyof typeof WENKU_ANIMATION
-  | (typeof WENKU_ANIMATION)[keyof typeof WENKU_ANIMATION];
+  keyof typeof WENKU_ANIMATION | (typeof WENKU_ANIMATION)[keyof typeof WENKU_ANIMATION];
 
 export const WENKU_REGION = {
   all: 0,
@@ -125,8 +123,7 @@ export const WENKU_REGION = {
 } as const;
 
 export type WenkuRegion =
-  | keyof typeof WENKU_REGION
-  | (typeof WENKU_REGION)[keyof typeof WENKU_REGION];
+  keyof typeof WENKU_REGION | (typeof WENKU_REGION)[keyof typeof WENKU_REGION];
 
 export const WENKU_WORD_COUNT = {
   all: 0,
@@ -138,8 +135,7 @@ export const WENKU_WORD_COUNT = {
 } as const;
 
 export type WenkuWordCount =
-  | keyof typeof WENKU_WORD_COUNT
-  | (typeof WENKU_WORD_COUNT)[keyof typeof WENKU_WORD_COUNT];
+  keyof typeof WENKU_WORD_COUNT | (typeof WENKU_WORD_COUNT)[keyof typeof WENKU_WORD_COUNT];
 
 export const WENKU_UPDATED_WITHIN = {
   all: 0,
@@ -158,16 +154,14 @@ export const WENKU_CHANNEL = {
 } as const;
 
 export type WenkuChannel =
-  | keyof typeof WENKU_CHANNEL
-  | (typeof WENKU_CHANNEL)[keyof typeof WENKU_CHANNEL];
+  keyof typeof WENKU_CHANNEL | (typeof WENKU_CHANNEL)[keyof typeof WENKU_CHANNEL];
 
 export const WENKU_INITIAL = {
   all: 0
 } as const;
 
 export type WenkuInitial =
-  | keyof typeof WENKU_INITIAL
-  | (typeof WENKU_INITIAL)[keyof typeof WENKU_INITIAL];
+  keyof typeof WENKU_INITIAL | (typeof WENKU_INITIAL)[keyof typeof WENKU_INITIAL];
 
 const WENKU_REGION_LABELS: Record<keyof typeof WENKU_REGION, string> = {
   all: '不限',
@@ -454,10 +448,7 @@ export async function fetchWenkuPage(
 
 type WenkuFilterQueryValue = QueryValue;
 type WenkuFilterQueryInput =
-  | string
-  | URL
-  | URLSearchParams
-  | Record<string, WenkuFilterQueryValue | WenkuFilterQueryValue[]>;
+  string | URL | URLSearchParams | Record<string, WenkuFilterQueryValue | WenkuFilterQueryValue[]>;
 
 function buildWenkuURL(filter: BilinovelFetchWenkuFilter, options?: BilinovelFetchPageOptions) {
   const sort = resolveMappedValue(WENKU_SORT, filter.sort, 'lastUpdate');
