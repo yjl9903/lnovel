@@ -28,8 +28,8 @@ soft_limit = 10
 
 [[http_service.checks]]
 grace_period = "30s"
-interval = "60s"
-timeout = "10s"
+interval = "120s"
+timeout = "30s"
 method = "GET"
 path = "/health"
 
@@ -41,7 +41,7 @@ processes = ['server']
 [[vm]]
 cpu_kind = 'shared'
 cpus = 1
-memory = '1g'
+memory = '2g'
 processes = ['server']
 
 [mounts]
