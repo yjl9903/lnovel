@@ -7,10 +7,11 @@
 | 测试文件 | 验证内容 | 隔离边界 |
 | --- | --- | --- |
 | `packages/bilinovel/test/novel.test.ts` | 小说、卷、分页章节、图片转换和下架识别 | 从 `__assets__/` 读取 HTML，使用快照 |
+| `apps/server/test/bilinovel.routes.test.ts` | JSON 命名空间迁移、原 RSS/图片契约、筛选与 force、错误及超时 | 真实路由/中间件与 RSS 序列化，替换数据库/工作流/网络/Folo 边界 |
 | `apps/server/test/bilinovel.database.test.ts` | 下架标记后保留已有小说与卷数据 | 临时 SQLite，运行真实迁移 |
-| `apps/web/test/gateway.test.ts` | 路由转发、方法/请求体/取消、SEO 文件、SSR 请求头 | 注入 fetch handler |
+| `apps/web/test/gateway.test.ts` | JSON 与保留资源分流、旧 JSON 路径交给页面、方法/请求体/取消、允许 RSS 抓取的 SEO 文件、SSR 请求头 | 注入 fetch handler |
 | `apps/web/test/top.test.ts` | Query hydration、SSR 失败重试、实例隔离和响应解析 | mock API 获取边界 |
-| `apps/web/test/server.test.ts` | 经网关访问真实 Server 的状态、正文、ETag 与缓存语义 | 临时 SQLite，仅调用不触发抓取的路由 |
+| `apps/web/test/server.test.ts` | 经网关访问真实 Server 的状态、正文、ETag、缓存语义与新 API 请求日志关联 | 临时 SQLite，仅调用不触发抓取的路由 |
 | `apps/web/test/production.test.ts` | 客户端依赖隔离、生产 SSR、静态资源、SEO、404 与并发请求 | 子进程运行构建产物，loader 用固定 API 替身替换 Server |
 | `packages/lnovel/test/index.test.ts` | 占位断言 | 不验证 CLI 业务 |
 

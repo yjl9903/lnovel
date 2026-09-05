@@ -73,6 +73,9 @@ describe('production web bundle', () => {
     expect(response.status).toBe(200);
     expect(html).toContain('测试小说 1');
     expect(html).toContain('测试小说 9');
+    expect(html).toContain('/bili/top/weekvisit/feed.xml');
+    expect(html).toContain('/bili/novel/1/feed.xml');
+    expect(html).toContain('/bili/files/cover.jpg');
     expect(html).toContain('lang="zh-Hans"');
     expect(html).toContain('fd9582a9-0a42-45d4-9e50-e9d9b410a1dc');
     const after = await (await fetch(`${origin}/health`)).json();
@@ -160,9 +163,26 @@ describe('production web bundle', () => {
 
   it('returns an unindexed 404 without fetching home data, and preserves API errors', async () => {
     const before = await (await fetch(`${origin}/health`)).json();
-    for (const path of ['/old/page', '/bilingual', '/missing.css', '/sitemap.xml/missing']) {
+    for (const path of [
+      '/old/page',
+      '/bilingual',
+      '/missing.css',
+      '/sitemap.xml/missing',
+      '/bili',
+      '/bili/',
+      '/bili/contexts',
+      '/bili/wenku',
+      '/bili/top/weekvisit',
+      '/bili/novels',
+      '/bili/novel/1',
+      '/bili/novel/1/vol/2',
+      '/bili/novel/1/chapter/3',
+      '/bili/missing'
+    ]) {
       const response = await fetch(`${origin}${path}`);
       expect(response.status).toBe(404);
+      expect(response.redirected).toBe(false);
+      expect(response.headers.get('content-type')).toContain('text/html');
       const html = await response.text();
       expect(html).toContain('页面不存在');
       expect(html).toMatch(/<a[^>]*href="\/"[^>]*>返回首页<\/a>/);
@@ -176,7 +196,7 @@ describe('production web bundle', () => {
     }
     const after = await (await fetch(`${origin}/health`)).json();
     expect(after.calls).toBe(before.calls);
-    expect((await fetch(`${origin}/bili/missing`)).status).toBe(404);
+    expect((await fetch(`${origin}/api/bili/missing`)).status).toBe(404);
   });
 
   it('renders loading on SSR failure and isolates simultaneous requests', async () => {

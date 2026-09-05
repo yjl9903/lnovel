@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 
 export const items = Array.from({ length: 9 }, (_, index) => ({
   nid: index + 1,
+  cover: '/bili/files/cover.jpg',
   title: `测试小说 ${index + 1}`,
   author: '测试作者',
   library: '测试文库',
@@ -16,7 +17,7 @@ export function createApp() {
   const app = new Hono();
   let calls = 0;
   app.get('/health', (c) => c.json({ ok: true, calls }));
-  app.get('/bili/top/weekvisit', (c) => {
+  app.get('/api/bili/top/weekvisit', (c) => {
     calls++;
     const cookie = c.req.header('cookie') || '';
     if (cookie.includes('fixture=error')) return c.json({ ok: false }, 500);

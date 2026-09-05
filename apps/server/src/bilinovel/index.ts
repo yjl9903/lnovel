@@ -38,17 +38,18 @@ import {
   getNovelChapterFromDatabase
 } from './database';
 
-export const app = new Hono<AppEnv>();
+function createBilinovelApp() {
+  const app = new Hono<AppEnv>();
 
-app.use(
-  '*',
-  timeout(30 * 1000, (c: Context) => {
-    const url = new URL(c.req.url);
+  app.use(
+    '*',
+    timeout(30 * 1000, (c: Context) => {
+      const url = new URL(c.req.url);
 
-    if (url.pathname.endsWith('/feed.xml')) {
-      return new HTTPException(500, {
-        res: new Response(
-          `<!DOCTYPE html>
+      if (url.pathname.endsWith('/feed.xml')) {
+        return new HTTPException(500, {
+          res: new Response(
+            `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -60,91 +61,91 @@ app.use(
   <p>Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
 </body>
 </html>`,
-          {
-            headers: {
-              'Content-Type': 'text/html'
+            {
+              headers: {
+                'Content-Type': 'text/html'
+              }
             }
-          }
-        )
+          )
+        });
+      }
+
+      return new HTTPException(408, {
+        message: `Request timeout after waiting 30 seconds. Please try again later.`
       });
+    })
+  );
+
+  app.use('*', async (c: Context, next) => {
+    await next();
+
+    // 更新 folo feed id
+    const feedURL = new URL(getFeedURL(c));
+    if (feedURL.pathname.startsWith('/bili/') && feedURL.pathname.endsWith('/feed.xml')) {
+      scheduleTask(
+        'folo.update',
+        {},
+        async () => {
+          await setFoloFeedId(feedURL);
+        },
+        1000
+      );
     }
 
-    return new HTTPException(408, {
-      message: `Request timeout after waiting 30 seconds. Please try again later.`
-    });
-  })
-);
-
-app.use('*', async (c: Context, next) => {
-  await next();
-
-  // 更新 folo feed id
-  const feedURL = new URL(getFeedURL(c));
-  if (feedURL.pathname.endsWith('/feed.xml')) {
-    scheduleTask(
-      'folo.update',
-      {},
-      async () => {
-        await setFoloFeedId(feedURL);
-      },
-      1000
-    );
-  }
-
-  const enableCache = !feedURL.pathname.endsWith('/contexts');
-  if (enableCache) {
-    // 设置缓存 header
-    if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
-      c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+    const enableCache = !feedURL.pathname.endsWith('/contexts');
+    if (enableCache) {
+      // 设置缓存 header
+      if (c.res.status === 200 && !c.res.headers.get('Cache-Control')) {
+        c.res.headers.set('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+      }
+    } else {
+      // 禁止缓存
+      c.res.headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
     }
-  } else {
-    // 禁止缓存
-    c.res.headers.set('Cache-Control', 'no-store, no-cache, max-age=0');
-  }
-});
+  });
 
-app.use(
-  '*',
-  etag({
-    retainedHeaders: ['X-Request-Id', 'X-Response-Timestamp', ...RETAINED_304_HEADERS]
-  })
-);
+  app.use(
+    '*',
+    etag({
+      retainedHeaders: ['X-Request-Id', 'X-Response-Timestamp', ...RETAINED_304_HEADERS]
+    })
+  );
 
-app.onError(async (error: unknown, c: Context) => {
-  const url = new URL(c.req.url);
-  const status =
-    error instanceof WorkflowException
-      ? error.status
-      : error instanceof HTTPException
-        ? error.status
-        : 500;
-
-  if (status >= 500) {
-    logger.error(
-      'Request failed',
-      {
-        event: 'request.failed',
-        ...{
-          request_id: c.get('requestId'),
-          method: c.req.method,
-          url: safeUrl(url),
-          status
-        }
-      },
-      error
-    );
-  }
-
-  if (error instanceof HTTPException) {
-    return error.getResponse();
-  } else if (url.pathname.endsWith('/feed.xml')) {
-    const message =
+  app.onError(async (error: unknown, c: Context) => {
+    const url = new URL(c.req.url);
+    const status =
       error instanceof WorkflowException
-        ? error.getMessage()
-        : (error as Error)?.message || 'unknown';
+        ? error.status
+        : error instanceof HTTPException
+          ? error.status
+          : 500;
 
-    return c.html(
-      `<!DOCTYPE html>
+    if (status >= 500) {
+      logger.error(
+        'Request failed',
+        {
+          event: 'request.failed',
+          ...{
+            request_id: c.get('requestId'),
+            method: c.req.method,
+            url: safeUrl(url),
+            status
+          }
+        },
+        error
+      );
+    }
+
+    if (error instanceof HTTPException) {
+      return error.getResponse();
+    } else if (url.pathname.endsWith('/feed.xml')) {
+      const message =
+        error instanceof WorkflowException
+          ? error.getMessage()
+          : (error as Error)?.message || 'unknown';
+
+      return c.html(
+        `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -156,33 +157,39 @@ app.onError(async (error: unknown, c: Context) => {
   <p>Please try <a href="${getFeedURL(c)}">RSS link</a> again later.</p>
 </body>
 </html>`,
-      error instanceof WorkflowException ? error.status : 500
-    );
-  } else {
-    const message =
-      error instanceof WorkflowException
-        ? error.getMessage()
-        : (error as Error)?.message || 'unknown';
+        error instanceof WorkflowException ? error.status : 500
+      );
+    } else {
+      const message =
+        error instanceof WorkflowException
+          ? error.getMessage()
+          : (error as Error)?.message || 'unknown';
 
-    return c.json(
-      {
-        ok: false,
-        provider: Provider.bilinovel,
-        message
-      },
-      error instanceof WorkflowException ? error.status : 500
-    );
-  }
-});
+      return c.json(
+        {
+          ok: false,
+          provider: Provider.bilinovel,
+          message
+        },
+        error instanceof WorkflowException ? error.status : 500
+      );
+    }
+  });
 
-app.get('/', async (c: Context) => {
+  return app;
+}
+
+export const app = createBilinovelApp();
+export const apiApp = createBilinovelApp();
+
+apiApp.get('/', async (c: Context) => {
   return c.json({
     ok: true,
     provider: Provider.bilinovel
   });
 });
 
-app.get('/contexts', async (c: Context) => {
+apiApp.get('/contexts', async (c: Context) => {
   const stores = engine.getStores();
   const contexts = stores.map((store) => [...store.contexts.values()]).flat();
   const data = contexts.map((ctx) => ({
@@ -201,7 +208,7 @@ app.get('/contexts', async (c: Context) => {
   });
 });
 
-app.get('/wenku', async (c: Context) => {
+apiApp.get('/wenku', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
   logger.info('Workflow requested', {
@@ -223,7 +230,7 @@ app.get('/wenku', async (c: Context) => {
   });
 });
 
-app.get('/top/:sort', async (c: Context) => {
+apiApp.get('/top/:sort', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseTopFilter(url);
   logger.info('Workflow requested', {
@@ -245,13 +252,13 @@ app.get('/top/:sort', async (c: Context) => {
   });
 });
 
-app.get('/novels', async (c: Context) => {
+apiApp.get('/novels', async (c: Context) => {
   const novels = await getNovelsFromDatabase();
   const data = await attachFoloFeedIds(c, novels);
   return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
 
-app.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
+apiApp.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
@@ -284,7 +291,7 @@ app.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
   return c.json({ ok: true, provider: Provider.bilinovel, data: await attachFoloFeedId(c, data) });
 });
 
-app.get('/novel/:nid/vol/:vid', validateNumericParams('nid', 'vid'), async (c: Context) => {
+apiApp.get('/novel/:nid/vol/:vid', validateNumericParams('nid', 'vid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 
@@ -339,7 +346,7 @@ app.get('/novel/:nid/vol/:vid', validateNumericParams('nid', 'vid'), async (c: C
   });
 });
 
-app.get('/novel/:nid/chapter/:cid', validateNumericParams('nid', 'cid'), async (c: Context) => {
+apiApp.get('/novel/:nid/chapter/:cid', validateNumericParams('nid', 'cid'), async (c: Context) => {
   const url = new URL(c.req.url);
   const force = !!url.searchParams.get('force');
 

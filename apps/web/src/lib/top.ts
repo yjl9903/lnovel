@@ -31,7 +31,8 @@ export async function parseTopResponse(response: Response) {
 export const topWeekvisitOptions = () =>
   queryOptions({
     queryKey: ['top-weekvisit'],
-    queryFn: async ({ signal }) => parseTopResponse(await apiFetch('/bili/top/weekvisit', signal)),
+    queryFn: async ({ signal }) =>
+      parseTopResponse(await apiFetch('/api/bili/top/weekvisit', signal)),
     staleTime: 60_000
   });
 

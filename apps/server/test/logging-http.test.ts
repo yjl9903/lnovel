@@ -40,10 +40,12 @@ describe('request logging', () => {
       expect(result.headers.get('x-request-id')).toBe(outer);
       return c.json({ request_id: outer });
     });
-    gateway.get('/bili', (c) => api.fetch(c.req.raw));
+    gateway.get('/api/bili', (c) => api.fetch(c.req.raw));
     const responses = await Promise.all(
       Array.from({ length: 8 }, (_, index) =>
-        gateway.request(index % 2 ? '/bili' : '/ssr', { headers: { 'X-Request-Id': 'untrusted' } })
+        gateway.request(index % 2 ? '/api/bili' : '/ssr', {
+          headers: { 'X-Request-Id': 'untrusted' }
+        })
       )
     );
     const ids = await Promise.all(

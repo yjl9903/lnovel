@@ -30,12 +30,12 @@ describe('existing API contract through web', () => {
     logRecords.length = 0;
     const ssr = createGateway({
       apiFetch: (request) => api.fetch(request),
-      startFetch: () => api.request('/bili/novels')
+      startFetch: () => api.request('/api/bili/novels')
     });
     const responses = await Promise.all([
-      gateway.request('/bili/novels'),
+      gateway.request('/api/bili/novels'),
       ssr.request('/page'),
-      api.request('/bili/novels')
+      api.request('/api/bili/novels')
     ]);
     const ids = responses.map((response) => response.headers.get('x-request-id'));
     expect(new Set(ids).size).toBe(3);
@@ -53,15 +53,20 @@ describe('existing API contract through web', () => {
   });
   it.each([
     ['/health', 200],
-    ['/bili/', 200],
-    ['/bili/contexts', 200],
-    ['/bili/novels', 200],
-    ['/bili/novel/invalid', 400],
-    ['/bili/novel/1/vol/invalid', 400],
-    ['/bili/novel/1/chapter/invalid', 400],
+    ['/api', 404],
+    ['/api/unknown', 404],
+    ['/api/bili/novels/feed.xml', 404],
+    ['/api/bili/files/cover.jpg', 404],
+    ['/api/bili/img3/cover.jpg', 404],
+    ['/api/bili/', 200],
+    ['/api/bili/contexts', 200],
+    ['/api/bili/novels', 200],
+    ['/api/bili/novel/invalid', 400],
+    ['/api/bili/novel/1/vol/invalid', 400],
+    ['/api/bili/novel/1/chapter/invalid', 400],
     ['/bili/novel/invalid/feed.xml', 400],
     ['/bili/novel/1/vol/invalid/feed.xml', 400],
-    ['/bili/missing', 404]
+    ['/api/bili/missing', 404]
   ])('%s retains status %s, body and cache behavior', async (pathname, status) => {
     const url = `https://public.example${pathname}`;
     const direct = await api.fetch(new Request(url));
@@ -72,15 +77,20 @@ describe('existing API contract through web', () => {
     for (const name of ['content-type', 'cache-control', 'etag']) {
       expect(forwarded.headers.get(name)).toBe(direct.headers.get(name));
     }
+    if (pathname === '/api/bili/contexts') {
+      expect(forwarded.headers.get('cache-control')).toBe('no-store, no-cache, max-age=0');
+    }
     expect(forwarded.headers.get('x-request-id')).toBeTruthy();
     expect(forwarded.headers.get('x-response-timestamp')).toBeTruthy();
   });
 
   it('preserves conditional API requests', async () => {
-    const first = await gateway.request('/bili/');
+    const first = await gateway.request('/api/bili/');
     const etag = first.headers.get('etag');
     expect(etag).toBeTruthy();
-    const conditional = await gateway.request('/bili/', { headers: { 'if-none-match': etag! } });
+    const conditional = await gateway.request('/api/bili/', {
+      headers: { 'if-none-match': etag! }
+    });
     expect(conditional.status).toBe(304);
     expect(await conditional.text()).toBe('');
   });

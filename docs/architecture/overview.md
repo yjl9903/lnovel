@@ -6,7 +6,7 @@
 
 | 目录 | 职责 | 当前边界 |
 | --- | --- | --- |
-| `apps/web` | 页面渲染、SSR 数据预取、状态与网关 | 服务端使用 `@lnovel/server`，浏览器访问同源 `/bili/*` |
+| `apps/web` | 页面渲染、SSR 数据预取、状态与网关 | 服务端使用 `@lnovel/server`，浏览器访问同源 `/api/bili/*` |
 | `apps/server` | Hono API、RSS、抓取调度、浏览器、SQLite、Folo 和 cron | 通过 `bilinovel` 解析页面；拥有抓取与持久化副作用 |
 | `packages/bilinovel` | 小说、卷、章节、排行榜与分类页解析 | 调用注入的 HTML 获取函数，不启动浏览器、不连接数据库 |
 | `packages/lnovel` | 库和 CLI 入口 | 当前库仅导出占位值，业务 CLI action 尚未实现 |
@@ -16,7 +16,7 @@
 
 ## 请求与更新
 
-1. Web 网关处理 `robots.txt`、`sitemap.xml`，将 `/health`、`/bili` 和 `/bili/*` 交给进程内 Hono app，其余请求先尝试静态资源，再进入 Start。
+1. Web 网关处理 `robots.txt`、`sitemap.xml`，将 `/health`、`/api`、`/api/*` 及原有五类 RSS 和两类图片代理交给进程内 Hono app，其余请求先尝试静态资源，再进入 Start。
 2. 首页 loader 通过该 Hono app 预取周点击榜，将 Query 缓存交给浏览器 hydration；浏览器后续请求使用同源 API。
 3. API 按路由读取 SQLite 或执行抓取工作流。排行榜与分类页读取完成后会排队更新相关小说，小说相关请求也会触发后台更新。
 4. 工作流使用浏览器会话取得 HTML，交给 `bilinovel` 解析，再由 Server 更新小说、卷、章节数据。

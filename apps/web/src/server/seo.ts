@@ -2,9 +2,9 @@ import { site } from '../lib/site';
 
 export const robots = `User-agent: *
 Allow: /
-Disallow: /bili$
-Disallow: /bili?
-Disallow: /bili/
+Disallow: /api$
+Disallow: /api?
+Disallow: /api/
 Allow: /bili/files/
 Allow: /bili/img3/
 Disallow: /health

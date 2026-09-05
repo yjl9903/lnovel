@@ -30,7 +30,7 @@ pnpm --filter @lnovel/server browser:prepare
 pnpm web:dev
 ```
 
-`pnpm dev` 等价于上述入口。脚本先构建 Web 的 workspace 依赖，再启动 Vite，开发服务默认监听 `0.0.0.0:3000`。页面与 `/bili/*` 共用进程内 Server，首页预取可能触发真实抓取。修改 Server 或业务包后停止并重新运行该命令，使依赖产物更新。
+`pnpm dev` 等价于上述入口。脚本先构建 Web 的 workspace 依赖，再启动 Vite，开发服务默认监听 `0.0.0.0:3000`。JSON `/api/bili/*`、原 `/bili/.../feed.xml` RSS 和图片代理由同一进程内 Server 提供，其他 `/bili` 路径交给 Web 页面，首页预取可能触发真实抓取。修改 Server 或业务包后停止并重新运行该命令，使依赖产物更新。
 
 只调试 API 时先构建依赖，再启动源码入口：
 

@@ -17,6 +17,7 @@ describe('home query lifecycle', () => {
     hydrate(client, dehydrate(server));
     expect(await client.fetchQuery(topWeekvisitOptions())).toEqual(data);
     expect(apiFetch).toHaveBeenCalledTimes(1);
+    expect(apiFetch).toHaveBeenCalledWith('/api/bili/top/weekvisit', expect.any(AbortSignal));
     server.clear();
     client.clear();
   });

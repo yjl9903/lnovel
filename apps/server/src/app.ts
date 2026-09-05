@@ -5,7 +5,11 @@ import { HTTPException } from 'hono/http-exception';
 import { Cron } from 'croner';
 
 import { getOrigin } from './utils/url.js';
-import { app as bilinovel, updatePendingNovels } from './bilinovel/index.js';
+import {
+  app as bilinovel,
+  apiApp as bilinovelApi,
+  updatePendingNovels
+} from './bilinovel/index.js';
 import { createLogger, requestLogging, runTask, addShutdownHook } from './logging';
 
 export const logger = createLogger('server');
@@ -93,6 +97,7 @@ function createHono() {
 export function createApp() {
   const app = createHono();
 
+  app.route('/api/bili/', bilinovelApi);
   app.route('/bili/', bilinovel);
 
   return app;

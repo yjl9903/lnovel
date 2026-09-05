@@ -4,27 +4,29 @@ Server 位于 `apps/server`。[`src/app.ts`](../../apps/server/src/app.ts) 导�
 
 ## HTTP 与 RSS
 
-路由集中在 [`src/bilinovel/index.ts`](../../apps/server/src/bilinovel/index.ts)，统一挂载于 `/bili/`。
+路由集中在 [`src/bilinovel/index.ts`](../../apps/server/src/bilinovel/index.ts)，JSON 子应用挂载于 `/api/bili/`，RSS 与图片子应用保留在 `/bili/`。两个子应用通过共同初始化函数复用超时、缓存、ETag 和错误处理，请求日志由外层 app 统一记录。
 
 | 路由 | 行为 |
 | --- | --- |
 | `/health` | 返回服务健康响应，不发起抓取 |
-| `/bili/` | 返回 provider 信息 |
-| `/bili/contexts` | 当前进程的工作流状态与进度 |
-| `/bili/wenku`、`/bili/top/:sort` | 分类筛选结果与排行榜 |
-| `/bili/novels` | 数据库中的小说列表 |
-| `/bili/novel/:nid` | 小说信息 |
-| `/bili/novel/:nid/vol/:vid` | 卷信息 |
-| `/bili/novel/:nid/chapter/:cid` | 章节内容 |
+| `/api/bili/` | 返回 provider 信息 |
+| `/api/bili/contexts` | 当前进程的工作流状态与进度 |
+| `/api/bili/wenku`、`/api/bili/top/:sort` | 分类筛选结果与排行榜 |
+| `/api/bili/novels` | 数据库中的小说列表 |
+| `/api/bili/novel/:nid` | 小说信息 |
+| `/api/bili/novel/:nid/vol/:vid` | 卷信息 |
+| `/api/bili/novel/:nid/chapter/:cid` | 章节内容 |
 | `/bili/novels/feed.xml`、`/bili/wenku/feed.xml`、`/bili/top/:sort/feed.xml` | 列表 RSS |
 | `/bili/novel/:nid/feed.xml`、`/bili/novel/:nid/vol/:vid/feed.xml` | 小说与卷 RSS |
 | `/bili/files/*`、`/bili/img3/*` | 图片代理 |
+
+旧 JSON 地址不保留别名或重定向；独立 Server 返回 404，Web 将这些地址交给页面层。`/api` 下不提供 RSS 或图片代理副本。
 
 小说、卷、章节 ID 由路由参数校验器检查；筛选规则来自 `bilinovel` 的 `parseTopFilter` 与 `parseWenkuFilter`。相关 JSON 路由优先读取数据库，`force` 查询值非空时跳过该次数据库直返，但不代表清空工作流缓存。
 
 全局中间件记录请求并添加 `X-Request-Id`、`X-Response-Timestamp`。业务路由使用 ETag；没有既有缓存头的 200 响应默认公开缓存一天，`/contexts` 禁用缓存。业务请求超时设为 30 秒，JSON 与 RSS 的超时/错误响应形式不同，网关不将它们统一改写。
 
-`src/rss/feed.ts` 使用 `feed` 生成 RSS 2.0 XML。链接基于请求与转发头计算的 origin，区别于 Web SEO 的固定正式地址。`src/folo.ts` 在配置 `FOLLOW_USER_ID` 时启用 feed ID 查询与保存；外部查询失败可返回缺失映射。
+`src/rss/feed.ts` 使用 `feed` 生成 RSS 2.0 XML。链接基于请求与转发头计算的 origin，区别于 Web SEO 的固定正式地址。`src/folo.ts` 在配置 `FOLLOW_USER_ID` 时启用 feed ID 查询与保存；外部查询失败可返回缺失映射。请求中间件的延迟更新仅适用于 `/bili/` 下的 `feed.xml` 地址，不为不存在的 `/api` RSS 地址触发查询。
 
 ## 抓取与更新
 

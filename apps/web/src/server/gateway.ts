@@ -36,9 +36,21 @@ export function createGateway(options: {
 
   app.all('/health', (c) => forward(c.req.raw));
 
-  app.all('/bili', (c) => forward(c.req.raw));
+  app.all('/api', (c) => forward(c.req.raw));
+  app.all('/api/*', (c) => forward(c.req.raw));
 
-  app.all('/bili/*', (c) => forward(c.req.raw));
+  // Reserve only existing feeds and images; other /bili paths belong to pages.
+  for (const path of [
+    '/bili/novels/feed.xml',
+    '/bili/wenku/feed.xml',
+    '/bili/top/:sort/feed.xml',
+    '/bili/novel/:nid/feed.xml',
+    '/bili/novel/:nid/vol/:vid/feed.xml',
+    '/bili/files/*',
+    '/bili/img3/*'
+  ]) {
+    app.all(path, (c) => forward(c.req.raw));
+  }
 
   if (options.assets) {
     const assets = options.assets;

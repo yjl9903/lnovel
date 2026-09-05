@@ -39,7 +39,7 @@ logger.error('Novel update failed', { event: 'novel.update.failed', novel_id: 12
 一条日志形如以下内容；实际输出不缩进，异常堆栈中的换行也经过 JSON 转义：
 
 ```json
-{"timestamp":"2026-09-06T08:30:00.000Z","severity_text":"INFO","severity_number":9,"body":"Request completed","scope":"web","resource":{"service.name":"lnovel-web","service.version":"0.0.4","deployment.environment.name":"production"},"attributes":{"event":"http.request.completed","request_id":"generated-uuid","method":"GET","pathname":"/bili/novel/123","status":200,"duration_ms":420}}
+{"timestamp":"2026-09-06T08:30:00.000Z","severity_text":"INFO","severity_number":9,"body":"Request completed","scope":"web","resource":{"service.name":"lnovel-web","service.version":"0.0.4","deployment.environment.name":"production"},"attributes":{"event":"http.request.completed","request_id":"generated-uuid","method":"GET","pathname":"/api/bili/novel/123","status":200,"duration_ms":420}}
 ```
 
 `resource` 还包含 SDK 默认资源属性。`attributes` 是业务字段容器：

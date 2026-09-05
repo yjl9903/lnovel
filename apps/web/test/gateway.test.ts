@@ -4,15 +4,18 @@ import { createApiRequest } from '../src/server/api-request';
 
 const paths = [
   '/health',
-  '/bili',
-  '/bili/',
-  '/bili/contexts',
-  '/bili/wenku?sort=lastupdate',
-  '/bili/top/weekvisit',
-  '/bili/novels',
-  '/bili/novel/1',
-  '/bili/novel/1/vol/2',
-  '/bili/novel/1/chapter/3',
+  '/api',
+  '/api/',
+  '/api/missing',
+  '/api/bili',
+  '/api/bili/',
+  '/api/bili/contexts',
+  '/api/bili/wenku?sort=lastupdate',
+  '/api/bili/top/weekvisit',
+  '/api/bili/novels',
+  '/api/bili/novel/1',
+  '/api/bili/novel/1/vol/2',
+  '/api/bili/novel/1/chapter/3',
   '/bili/novels/feed.xml',
   '/bili/wenku/feed.xml',
   '/bili/top/weekvisit/feed.xml',
@@ -20,7 +23,7 @@ const paths = [
   '/bili/novel/1/vol/2/feed.xml',
   '/bili/files/cover.jpg',
   '/bili/img3/cover.jpg',
-  '/bili/missing'
+  '/api/bili/missing'
 ];
 
 describe('web gateway', () => {
@@ -61,15 +64,15 @@ describe('web gateway', () => {
     expect(xml).not.toMatch(/lastmod|changefreq|priority|other\.example|spoofed\.example/);
   });
 
-  it('allows page rendering resources while discouraging API and internal crawling', async () => {
+  it('allows pages, RSS and images while discouraging API and internal crawling', async () => {
     const app = createGateway({ apiFetch: vi.fn(), startFetch: vi.fn() });
     const body = await (await app.request('/robots.txt')).text();
     expect(body.split('\n').filter(Boolean)).toEqual([
       'User-agent: *',
       'Allow: /',
-      'Disallow: /bili$',
-      'Disallow: /bili?',
-      'Disallow: /bili/',
+      'Disallow: /api$',
+      'Disallow: /api?',
+      'Disallow: /api/',
       'Allow: /bili/files/',
       'Allow: /bili/img3/',
       'Disallow: /health',
@@ -91,7 +94,8 @@ describe('web gateway', () => {
     });
     const apiFetch = vi.fn(() => response);
     const startFetch = vi.fn(() => new Response('page'));
-    const app = createGateway({ apiFetch, startFetch });
+    const assets = vi.fn(async () => new Response('asset'));
+    const app = createGateway({ apiFetch, startFetch, assets });
     const request = new Request(`https://public.example${path}`, {
       headers: {
         'x-forwarded-proto': 'https',
@@ -102,6 +106,7 @@ describe('web gateway', () => {
     const actual = await app.fetch(request);
     expect(apiFetch).toHaveBeenCalledWith(request);
     expect(actual).toBe(response);
+    expect(assets).not.toHaveBeenCalled();
     expect(startFetch).not.toHaveBeenCalled();
   });
 
@@ -110,12 +115,12 @@ describe('web gateway', () => {
       apiFetch: () => new Response(status === 304 ? null : 'error', { status }),
       startFetch: () => new Response('page')
     });
-    expect((await app.request('/bili/novel/invalid')).status).toBe(status);
+    expect((await app.request('/api/bili/novel/invalid')).status).toBe(status);
   });
 
   it('preserves POST bodies, method and cancellation', async () => {
     const controller = new AbortController();
-    const request = new Request('https://example.test/bili/future?force=1', {
+    const request = new Request('https://example.test/api/bili/future?force=1', {
       method: 'POST',
       body: 'payload',
       signal: controller.signal
@@ -134,14 +139,28 @@ describe('web gateway', () => {
     expect((await app.fetch(request)).status).toBe(204);
   });
 
-  it.each(['/', '/old/page', '/_server/function', '/bilingual'])(
-    'delegates %s to Start',
-    async (path) => {
-      const startFetch = vi.fn(() => new Response('page'));
-      const app = createGateway({ apiFetch: vi.fn(), startFetch });
-      expect(await (await app.request(path)).text()).toBe('page');
-    }
-  );
+  it.each([
+    '/',
+    '/old/page',
+    '/_server/function',
+    '/bilingual',
+    '/apiculture',
+    '/bili',
+    '/bili/',
+    '/bili/contexts',
+    '/bili/wenku',
+    '/bili/top/weekvisit',
+    '/bili/novels',
+    '/bili/novel/1',
+    '/bili/novel/1/vol/2',
+    '/bili/novel/1/chapter/3',
+    '/bili/missing',
+    '/bili/missing/feed.xml'
+  ])('delegates %s to Start', async (path) => {
+    const startFetch = vi.fn(() => new Response('page'));
+    const app = createGateway({ apiFetch: vi.fn(), startFetch });
+    expect(await (await app.request(path)).text()).toBe('page');
+  });
 });
 
 describe('SSR API request', () => {
@@ -157,8 +176,8 @@ describe('SSR API request', () => {
         accept: 'text/html'
       }
     });
-    const request = createApiRequest(incoming, '/bili/top/weekvisit');
-    expect(request.url).toBe('http://internal:3000/bili/top/weekvisit');
+    const request = createApiRequest(incoming, '/api/bili/top/weekvisit');
+    expect(request.url).toBe('http://internal:3000/api/bili/top/weekvisit');
     expect(Object.fromEntries(request.headers)).toEqual({
       accept: 'application/json',
       authorization: 'Bearer token',
@@ -173,12 +192,16 @@ describe('SSR API request', () => {
     const query = new AbortController();
     const req = createApiRequest(
       new Request('https://example.test', { signal: document.signal }),
-      '/bili/',
+      '/api/bili/',
       query.signal
     );
     document.abort();
     expect(req.signal.aborted).toBe(true);
-    const second = createApiRequest(new Request('https://example.test'), '/bili/', query.signal);
+    const second = createApiRequest(
+      new Request('https://example.test'),
+      '/api/bili/',
+      query.signal
+    );
     query.abort();
     expect(second.signal.aborted).toBe(true);
   });
