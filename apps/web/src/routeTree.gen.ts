@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BiliNovelNidRouteImport } from './routes/bili.novel.$nid'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BiliNovelNidRoute = BiliNovelNidRouteImport.update({
+  id: '/bili/novel/$nid',
+  path: '/bili/novel/$nid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/bili/novel/$nid': typeof BiliNovelNidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/bili/novel/$nid': typeof BiliNovelNidRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/bili/novel/$nid': typeof BiliNovelNidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/bili/novel/$nid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/bili/novel/$nid'
+  id: '__root__' | '/' | '/bili/novel/$nid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BiliNovelNidRoute: typeof BiliNovelNidRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +58,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/bili/novel/$nid': {
+      id: '/bili/novel/$nid'
+      path: '/bili/novel/$nid'
+      fullPath: '/bili/novel/$nid'
+      preLoaderRoute: typeof BiliNovelNidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BiliNovelNidRoute: BiliNovelNidRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

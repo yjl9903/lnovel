@@ -82,6 +82,100 @@ describe('production web bundle', () => {
     expect(after.calls - before.calls).toBe(1);
   });
 
+  it.each(['/bili/novel/1', '/bili/novel/1/', '/bili/novel/1?utm_source=test'])(
+    'renders novel details and stable SEO without fetching the home at %s',
+    async (path) => {
+      const before = await (await fetch(`${origin}/health`)).json();
+      const response = await fetch(`${origin}${path}`, {
+        headers: { 'x-forwarded-host': 'other.example' }
+      });
+      const html = await response.text();
+      const head = html.match(/<head>([\s\S]*?)<\/head>/)![1];
+      expect(response.status).toBe(200);
+      expect(response.redirected).toBe(false);
+      expect(html).toContain('测试小说 1');
+      expect(html).toContain('插画：测试画师');
+      expect(html).toContain('2026/09/06');
+      expect(html).toContain('第一卷 起点');
+      expect(html).toContain('第二卷 新的旅程');
+      expect(html).toContain('暂无封面');
+      expect(html).toContain('/bili/novel/1/feed.xml');
+      expect(html).toContain('/bili/novel/1/vol/10/feed.xml');
+      expect(html).toContain('https://www.linovelib.com/novel/1/vol_10.html');
+      expect(html).toContain('https://app.folo.is/share/feeds/fixture-1');
+      expect(html).toContain('第一段 &amp; 简介\n换行内容\n\n第二段 &lt;文字&gt;');
+      expect(html).not.toContain('unsafeScript');
+      expect(head).toContain('<title>测试小说 1 · lnovel</title>');
+      expect(head).toContain('rel="canonical" href="https://lnovel.animes.garden/bili/novel/1"');
+      expect(head).toContain('name="robots" content="index, follow"');
+      expect(head).not.toMatch(/property="og:|name="twitter:|application\/ld\+json/);
+      const after = await (await fetch(`${origin}/health`)).json();
+      expect(after.calls).toBe(before.calls);
+      expect(after.novelCalls - before.novelCalls).toBe(1);
+    }
+  );
+
+  it('links every home novel to its internal detail page', async () => {
+    const html = await (await fetch(origin)).text();
+    for (let nid = 1; nid <= 9; nid++) expect(html).toContain(`href="/bili/novel/${nid}"`);
+    expect(html).not.toContain('href="https://www.linovelib.com/novel/');
+  });
+
+  it('returns novel 404s without retrying and validates IDs before fetching', async () => {
+    for (const id of ['abc', '-1', '1.5', '9007199254740992', '404']) {
+      const before = await (await fetch(`${origin}/health`)).json();
+      const response = await fetch(`${origin}/bili/novel/${id}`);
+      expect(response.status).toBe(404);
+      const html = await response.text();
+      expect(html).toContain('小说不存在');
+      const head = html.match(/<head>([\s\S]*?)<\/head>/)![1];
+      expect(head).toContain('name="robots" content="noindex"');
+      expect(head).not.toMatch(
+        /rel="canonical"|property="og:|name="twitter:|application\/ld\+json/
+      );
+      const after = await (await fetch(`${origin}/health`)).json();
+      expect(after.calls).toBe(before.calls);
+      expect(after.novelCalls - before.novelCalls).toBe(id === '404' ? 1 : 0);
+    }
+  });
+
+  it('keeps saved deleted data, supports empty details, and isolates concurrent novels', async () => {
+    const [deleted, empty, other] = await Promise.all([
+      fetch(`${origin}/bili/novel/1`, { headers: { cookie: 'fixture=deleted' } }),
+      fetch(`${origin}/bili/novel/1`, { headers: { cookie: 'fixture=empty' } }),
+      fetch(`${origin}/bili/novel/2`)
+    ]);
+    const deletedHtml = await deleted.text();
+    expect(deletedHtml).toContain('作品已下架');
+    expect(deletedHtml).toContain('第一卷 起点');
+    expect(deletedHtml).toContain('name="robots" content="noindex"');
+    const emptyHtml = await empty.text();
+    for (const text of ['作者：未知', '暂无简介。', '暂无分卷信息。', '暂无封面'])
+      expect(emptyHtml).toContain(text);
+    expect(emptyHtml).not.toContain('app.folo.is');
+    const otherHtml = await other.text();
+    expect(otherHtml).toContain('测试小说 2');
+    expect(otherHtml).not.toContain('作品已下架');
+  });
+
+  it.each(['error', 'timeout', 'invalid'])(
+    'falls back to unindexed loading on SSR %s',
+    async (fixture) => {
+      const before = await (await fetch(`${origin}/health`)).json();
+      const response = await fetch(`${origin}/bili/novel/1`, {
+        headers: { cookie: `fixture=${fixture}` }
+      });
+      const html = await response.text();
+      expect(response.status).toBe(200);
+      expect(html).toContain('role="status" aria-label="加载中"');
+      expect(html).not.toContain('正在加载小说详情');
+      expect(html).toContain('name="robots" content="noindex"');
+      expect(html).not.toContain('rel="canonical"');
+      const after = await (await fetch(`${origin}/health`)).json();
+      expect(after.novelCalls - before.novelCalls).toBe(1);
+    }
+  );
+
   it('serves assets independently of the current working directory', async () => {
     const html = await (await fetch(origin)).text();
     const css = html.match(/href="([^"]+\.css)"/)?.[1];
@@ -174,7 +268,6 @@ describe('production web bundle', () => {
       '/bili/wenku',
       '/bili/top/weekvisit',
       '/bili/novels',
-      '/bili/novel/1',
       '/bili/novel/1/vol/2',
       '/bili/novel/1/chapter/3',
       '/bili/missing'
@@ -196,6 +289,7 @@ describe('production web bundle', () => {
     }
     const after = await (await fetch(`${origin}/health`)).json();
     expect(after.calls).toBe(before.calls);
+    expect(after.novelCalls).toBe(before.novelCalls);
     expect((await fetch(`${origin}/api/bili/missing`)).status).toBe(404);
   });
 

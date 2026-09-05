@@ -1,114 +1,13 @@
-import clsx from 'clsx';
+import { Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@tanstack/react-store';
 import { topWeekvisitOptions } from './lib/top';
 import { createHomeStore } from './lib/home-store';
-
-import feedIcon from './assets/feed.svg';
-import foloIcon from './assets/folo.svg';
-
-const buildNovelUrl = (nid: number) => `https://www.linovelib.com/novel/${nid}.html`;
-const buildFeedUrl = (nid: number) => `/bili/novel/${nid}/feed.xml`;
-const buildFoloShareUrl = (feedId: string) => `https://app.folo.is/share/feeds/${feedId}`;
-const buildFoloDeeplink = (feedId: string, view = 'timeline') => `feed?id=${feedId}&view=${view}`;
-
-const FOLO_APP_PROTOCOL = 'folo';
-const FOLO_DEEPLINK_SCHEME = `${FOLO_APP_PROTOCOL}://`;
-
-type CoverProps = {
-  src?: string;
-  title: string;
-  className?: string;
-};
-
-function Cover({ src, title, className }: CoverProps) {
-  return (
-    <div className={`overflow-hidden bg-slate-100 ${className ?? ''}`.trim()}>
-      {src ? (
-        <img src={src} alt={title} className="h-full w-full object-cover" loading="lazy" />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
-          暂无封面
-        </div>
-      )}
-    </div>
-  );
-}
-
-type RssButtonProps = {
-  href: string;
-  className?: string;
-};
-
-function RssButton({ href, className }: RssButtonProps) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      className={clsx(
-        'inline-flex items-center gap-1 rounded-full border border-amber-400 bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 hover:border-amber-500 hover:bg-amber-200',
-        className
-      )}
-    >
-      <img src={feedIcon} alt="" className="h-3 w-3" />
-      RSS
-    </a>
-  );
-}
-
-const openInFoloApp = ({ deeplink, fallbackUrl }: { deeplink: string; fallbackUrl?: string }) => {
-  const timeout = 500;
-  let isAppOpened = false;
-
-  const handleBlur = () => {
-    isAppOpened = true;
-    window.removeEventListener('blur', handleBlur);
-  };
-
-  window.addEventListener('blur', handleBlur);
-  window.location.href = `${FOLO_DEEPLINK_SCHEME}${deeplink}`;
-
-  window.setTimeout(() => {
-    window.removeEventListener('blur', handleBlur);
-    if (!isAppOpened && fallbackUrl) {
-      window.location.href = fallbackUrl;
-    }
-  }, timeout);
-};
-
-type FoloButtonProps = {
-  feedId: string;
-  className?: string;
-};
-
-function FoloButton({ feedId, className }: FoloButtonProps) {
-  const feedURL = buildFoloShareUrl(feedId);
-
-  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!feedId) return;
-    event.preventDefault();
-    openInFoloApp({
-      deeplink: buildFoloDeeplink(feedId),
-      fallbackUrl: feedURL
-    });
-  };
-
-  return (
-    <a
-      href={feedURL}
-      onClick={handleClick}
-      target="_blank"
-      className={clsx(
-        'inline-flex items-center gap-1 rounded-full border border-[#ff6e2d]/40 bg-[#ff6e2d]/15 px-2 py-0.5 text-[10px] font-medium text-[#ff6e2d] hover:border-[#ff6e2d]/60 hover:bg-[#ff6e2d]/25',
-        className
-      )}
-    >
-      <img src={foloIcon} alt="" className="h-3 w-3" />
-      Folo
-    </a>
-  );
-}
+import { buildFeedUrl } from './lib/novel-links';
+import { Cover, RssButton, FoloButton, NovelTag } from './components/novel-shared';
+import { SiteFooter } from './components/site-footer';
+import { Skeleton } from './components/ui/skeleton';
 
 export default function App() {
   const { data, isLoading, error } = useQuery(topWeekvisitOptions());
@@ -128,12 +27,8 @@ export default function App() {
 
   const feedURL = `/bili/top/weekvisit/feed.xml`;
   const foloFeedId = '231789721946592256';
-  const foloURL = buildFoloShareUrl(foloFeedId);
 
   const activeItem = featured[activeIndex];
-  const descriptionLineCount = activeItem?.description
-    ? activeItem.description.split(/\r?\n+/).filter(Boolean).length
-    : 0;
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -159,12 +54,9 @@ export default function App() {
 
           <main className="flex-1">
             {isLoading ? (
-              <div className="mt-4 space-y-3">
+              <div role="status" aria-label="加载中" className="mt-4 space-y-3">
                 {[...Array(4)].map((_, index) => (
-                  <div
-                    key={`loading-${index}`}
-                    className="h-16 rounded-2xl border border-slate-100 bg-slate-50"
-                  />
+                  <Skeleton key={`loading-${index}`} className="h-16" />
                 ))}
               </div>
             ) : null}
@@ -181,10 +73,9 @@ export default function App() {
                   <section className="mt-4">
                     <div className="grid gap-6 sm:grid-cols-[220px_1fr]">
                       <div className="flex flex-col gap-3">
-                        <a
-                          href={buildNovelUrl(activeItem.nid)}
-                          target="_blank"
-                          rel="noreferrer"
+                        <Link
+                          to="/bili/novel/$nid"
+                          params={{ nid: String(activeItem.nid) }}
                           className="block"
                         >
                           <Cover
@@ -192,19 +83,18 @@ export default function App() {
                             title={activeItem.title}
                             className="aspect-[3/4] rounded-2xl"
                           />
-                        </a>
+                        </Link>
                       </div>
                       <div className="flex flex-col gap-4">
                         <div>
                           <h3 className="mt-2 flex flex-wrap items-center gap-2 text-lg font-semibold text-slate-900 line-clamp-1">
-                            <a
-                              href={buildNovelUrl(activeItem.nid)}
-                              target="_blank"
-                              rel="noreferrer"
+                            <Link
+                              to="/bili/novel/$nid"
+                              params={{ nid: String(activeItem.nid) }}
                               className="min-w-0 hover:underline"
                             >
                               {activeItem.title}
-                            </a>
+                            </Link>
                             <RssButton href={buildFeedUrl(activeItem.nid)} className="shrink-0" />
                             {activeItem.follow ? (
                               <FoloButton feedId={activeItem.follow.feedId} className="shrink-0" />
@@ -215,9 +105,9 @@ export default function App() {
                             {activeItem.library ? ` · ${activeItem.library}` : ''}
                             {activeItem.status ? ` · ${activeItem.status}` : ''}
                             {activeItem.latestChapter ? (
-                              <span className="inline-flex w-fit items-center rounded-full bg-slate-100 ml-4 px-2 py-1 text-xs text-slate-600">
+                              <NovelTag className="ml-4 align-middle">
                                 最新：{activeItem.latestChapter}
-                              </span>
+                              </NovelTag>
                             ) : null}
                           </p>
                         </div>
@@ -227,11 +117,10 @@ export default function App() {
                         {featured.length > 1 ? (
                           <div className="grid grid-cols-4 gap-3 sm:grid-cols-5 lg:grid-cols-6">
                             {featured.map((item, index) => (
-                              <a
+                              <Link
                                 key={item.nid}
-                                href={buildNovelUrl(item.nid)}
-                                target="_blank"
-                                rel="noreferrer"
+                                to="/bili/novel/$nid"
+                                params={{ nid: String(item.nid) }}
                                 onMouseEnter={() => setActiveIndex(index)}
                                 onFocus={() => setActiveIndex(index)}
                                 className="text-left"
@@ -248,7 +137,7 @@ export default function App() {
                                 <p className="mt-2 flex items-center gap-2 text-xs font-medium text-slate-700">
                                   <span className="min-w-0 truncate">{item.title}</span>
                                 </p>
-                              </a>
+                              </Link>
                             ))}
                           </div>
                         ) : null}
@@ -264,10 +153,9 @@ export default function App() {
                         key={item.nid}
                         className="flex gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm max-w-full"
                       >
-                        <a
-                          href={buildNovelUrl(item.nid)}
-                          target="_blank"
-                          rel="noreferrer"
+                        <Link
+                          to="/bili/novel/$nid"
+                          params={{ nid: String(item.nid) }}
                           className="shrink-0"
                         >
                           <Cover
@@ -275,19 +163,18 @@ export default function App() {
                             title={item.title}
                             className="aspect-3/4 w-16 lg:w-24 rounded-xl"
                           />
-                        </a>
+                        </Link>
                         <div className="flex-auto grow-0">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                                <a
-                                  href={buildNovelUrl(item.nid)}
-                                  target="_blank"
-                                  rel="noreferrer"
+                                <Link
+                                  to="/bili/novel/$nid"
+                                  params={{ nid: String(item.nid) }}
                                   className="min-w-0 max-w-40 lg:max-w-full truncate hover:underline"
                                 >
                                   {item.title}
-                                </a>
+                                </Link>
                                 <RssButton href={buildFeedUrl(item.nid)} className="shrink-0" />
                                 {item.follow ? (
                                   <FoloButton feedId={item.follow.feedId} className="shrink-0" />
@@ -296,9 +183,11 @@ export default function App() {
                               <p className="mt-2 text-xs text-slate-500">
                                 <span>{item.author ? `${item.author} · ` : ''}</span>
                                 <span>{item.status ?? '连载中'}</span>
-                                <span className="ml-4 rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600">
-                                  {item.latestChapter}
-                                </span>
+                                {item.latestChapter ? (
+                                  <NovelTag className="ml-4 align-middle">
+                                    {item.latestChapter}
+                                  </NovelTag>
+                                ) : null}
                               </p>
                             </div>
                           </div>
@@ -320,35 +209,7 @@ export default function App() {
             ) : null}
           </main>
 
-          <footer className="mt-12 border-t border-slate-200 pt-6 text-center text-sm text-slate-500 [&_a]:hover:underline">
-            <p>
-              <span>
-                © 2025{' '}
-                <a href="https://github.com/animegarden" target="_blank">
-                  Anime Space
-                </a>
-                .
-              </span>
-              <span> | </span>
-              <span>
-                <a href={`https://github.com/yjl9903/lnovel`} target="_blank">
-                  GitHub
-                </a>
-              </span>
-              <span> | </span>
-              <span>
-                <a href={feedURL} target="_blank">
-                  RSS
-                </a>
-              </span>
-              <span> | </span>
-              <span>
-                <a href={foloURL} target="_blank">
-                  Folo
-                </a>
-              </span>
-            </p>
-          </footer>
+          <SiteFooter feedUrl={feedURL} foloFeedId={foloFeedId} />
         </div>
       </div>
     </div>

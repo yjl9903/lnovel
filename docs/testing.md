@@ -11,9 +11,12 @@
 | `apps/server/test/bilinovel.database.test.ts` | 下架标记后保留已有小说与卷数据 | 临时 SQLite，运行真实迁移 |
 | `apps/web/test/gateway.test.ts` | JSON 与保留资源分流、旧 JSON 路径交给页面、方法/请求体/取消、允许 RSS 抓取的 SEO 文件、SSR 请求头 | 注入 fetch handler |
 | `apps/web/test/top.test.ts` | Query hydration、SSR 失败重试、实例隔离和响应解析 | mock API 获取边界 |
+| `apps/web/test/novel.test.ts` | 详情 Query 恢复与隔离、ID/响应校验、404 不重试、简介纯文本转换、日期和 SEO | mock API 获取边界 |
 | `apps/web/test/server.test.ts` | 经网关访问真实 Server 的状态、正文、ETag、缓存语义与新 API 请求日志关联 | 临时 SQLite，仅调用不触发抓取的路由 |
-| `apps/web/test/production.test.ts` | 客户端依赖隔离、生产 SSR、静态资源、SEO、404 与并发请求 | 子进程运行构建产物，loader 用固定 API 替身替换 Server |
+| `apps/web/test/production.test.ts` | 客户端依赖隔离、生产首页/详情 SSR、站内入口、静态资源、SEO、404、下架/空态与并发请求 | 子进程运行构建产物，loader 用固定 API 替身替换 Server |
 | `packages/lnovel/test/index.test.ts` | 占位断言 | 不验证 CLI 业务 |
+
+详情生产 fixture 包含成功、缺失、下架、空数据、错误、超时和无效响应；未知卷页/章节页同时断言不请求小说 API。浏览器验收应检查 375px 手机和桌面布局、长标题、封面失败、首页跳转、前进后退、恢复后的 SEO，以及 SSR 恢复后不立即重复请求。
 
 生产构建测试验证 Web 产物与 API 边界组合，不等价于完整在线抓取测试。当前没有覆盖浏览器回退、真实外站可用性或完整工作流更新链路的端到端测试；不要将已有测试通过表述为这些能力已验收。
 
