@@ -7,13 +7,13 @@ app = 'lnovel-production'
 primary_region = 'lax'
 
 [build]
-dockerfile = 'Dockerfile'
+dockerfile = 'apps/web/Dockerfile'
 
 [build.args]
 APP_HOST = 'lnovel.animes.garden'
 
 [processes]
-server = 'node apps/server/cli.mjs start'
+server = 'node apps/web/cli.mjs start'
 
 [http_service]
 internal_port = 3000

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "pnpm web:dev",
     "format": "prettier --write '**/*.{ts,tsx,js,mjs}'",
     "lnovel": "tsx packages/lnovel/src/cli.ts",
     "release": "bumpp package.json apps/*/package.json packages/*/package.json --commit --push --tag && pnpm -r publish --access public",
@@ -14,7 +14,9 @@
     "test:ci": "turbo run test:ci",
     "typecheck": "turbo run typecheck",
     "preversion": "turbo run test:ci",
-    "postversion": "turbo run build"
+    "postversion": "turbo run build",
+    "web:dev": "turbo run build --filter=@lnovel/web^... && pnpm --filter @lnovel/web dev",
+    "web:start": "node apps/web/cli.mjs"
   },
   "devDependencies": {
     "@types/jsdom": "^30.0.0",

@@ -27,7 +27,7 @@ RUN apt-get update -qq && \
 # Install node modules
 COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .node-version ./
 COPY ./apps/server/package.json ./apps/server/
-COPY ./apps/landing/package.json ./apps/landing/
+COPY ./apps/web/package.json ./apps/web/
 COPY ./packages/lnovel/package.json ./packages/lnovel/
 COPY ./packages/bilinovel/package.json ./packages/bilinovel/
 
@@ -53,7 +53,10 @@ FROM base
 COPY --from=build /lnovel /lnovel
 
 # 设置 env
-ARG HOST PORT APP_HOST FOLLOW_USER_ID
+ARG HOST=0.0.0.0
+ARG PORT=3000
+ARG APP_HOST=lnovel.animes.garden
+ARG FOLLOW_USER_ID=41508082357911552
 ENV HOST=${HOST} PORT=${PORT} APP_HOST=${APP_HOST} \
     FOLLOW_USER_ID=${FOLLOW_USER_ID} \
     DATABASE_FILE=/data/sqlite.db \
@@ -69,4 +72,4 @@ RUN apt-get update && \
 # Start the server by default, this can be overwritten at runtime
 EXPOSE ${PORT}
 
-CMD [ "node", "apps/server/cli.mjs", "start" ]
+CMD [ "node", "apps/web/cli.mjs", "start" ]

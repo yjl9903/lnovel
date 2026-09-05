@@ -1,5 +1,6 @@
 # Dependency directory
 node_modules
+.pnpm-store
 
 # Environment
 .env
@@ -9,6 +10,12 @@ node_modules
 # user data
 .data
 .profile
+.screenshot
+*.db
+*.db-*
+tmp
+.git
+apps/server/public
 
 # Build output
 dist
@@ -19,6 +26,7 @@ dist
 .nitro
 .cache
 .wrangler
+.tanstack
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs

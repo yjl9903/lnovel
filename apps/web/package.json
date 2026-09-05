@@ -1,8 +1,8 @@
 {
-  "name": "@lnovel/landing",
+  "name": "@lnovel/web",
   "version": "0.0.4",
   "private": true,
-  "description": "lnovel landing page implementation",
+  "description": "lnovel web application",
   "keywords": [
     "light-novels"
   ],
@@ -20,17 +20,29 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite",
-    "preview": "vite preview"
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "start": "node cli.mjs",
+    "preview": "node cli.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:ci": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
     "@fontsource-variable/ibm-plex-sans": "5.3.0",
+    "@hono/node-server": "2.1.1",
     "@hugeicons/core-free-icons": "4.3.0",
     "@hugeicons/react": "1.1.10",
+    "@lnovel/server": "workspace:*",
     "@tanstack/react-query": "5.102.8",
+    "@tanstack/react-router": "1.170.32",
+    "@tanstack/react-router-ssr-query": "1.167.2",
+    "@tanstack/react-start": "1.168.49",
+    "@tanstack/react-store": "0.11.1",
+    "@tanstack/store": "0.11.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
+    "dotenv": "17.4.2",
+    "hono": "4.13.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "shadcn": "4.21.0",
@@ -43,7 +55,6 @@
     "@types/react-dom": "19.2.7",
     "@vitejs/plugin-react": "6.1.1",
     "tailwindcss": "4.3.3",
-    "unplugin-analytics": "0.0.13",
     "vite": "8.2.2"
   },
   "engines": {

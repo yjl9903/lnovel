@@ -1,54 +1,12 @@
 import clsx from 'clsx';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState, type MouseEvent } from 'react';
+import { useStore } from '@tanstack/react-store';
+import { topWeekvisitOptions } from './lib/top';
+import { createHomeStore } from './lib/home-store';
 
 import feedIcon from './assets/feed.svg';
 import foloIcon from './assets/folo.svg';
-
-type TopNovelItem = {
-  nid: number;
-  title: string;
-  cover?: string;
-  author?: string;
-  library?: string;
-  status?: string;
-  updatedAt?: string;
-  latestChapter?: string;
-  description?: string;
-  rank?: number;
-  follow?: {
-    feedId: string;
-  };
-};
-
-type TopResponse = {
-  ok: boolean;
-  message?: string;
-  data?: {
-    title?: string;
-    items: TopNovelItem[];
-  };
-};
-
-const fetchTopWeekvisit = async () => {
-  const response = await fetch('/bili/top/weekvisit', {
-    headers: {
-      Accept: 'application/json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch recommendations.');
-  }
-
-  const payload = (await response.json()) as TopResponse;
-
-  if (!payload.ok || !payload.data) {
-    throw new Error(payload.message || 'No data received.');
-  }
-
-  return payload.data;
-};
 
 const buildNovelUrl = (nid: number) => `https://www.linovelib.com/novel/${nid}.html`;
 const buildFeedUrl = (nid: number) => `/bili/novel/${nid}/feed.xml`;
@@ -153,15 +111,14 @@ function FoloButton({ feedId, className }: FoloButtonProps) {
 }
 
 export default function App() {
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['top-weekvisit'],
-    queryFn: fetchTopWeekvisit
-  });
+  const { data, isLoading, error } = useQuery(topWeekvisitOptions());
 
   const items = data?.items ?? [];
   const featured = items.slice(0, 6);
   const rest = items.slice(6);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [store] = useState(createHomeStore);
+  const activeIndex = useStore(store, (state) => state.activeIndex);
+  const setActiveIndex = (activeIndex: number) => store.setState(() => ({ activeIndex }));
 
   useEffect(() => {
     if (activeIndex >= featured.length) {

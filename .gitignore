@@ -22,6 +22,7 @@ dist
 .nitro
 .cache
 .wrangler
+.tanstack
 apps/server/public
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore

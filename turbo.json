@@ -2,40 +2,33 @@
   "$schema": "https://turborepo.org/schema.json",
   "tasks": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "outputs": [
-        "dist/**"
-      ]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
     },
     "typecheck": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "src/**/*.ts",
-        "test/**/*.ts"
-      ]
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "test:ci": {
-      "dependsOn": [
-        "build",
-        "typecheck"
-      ],
-      "inputs": [
-        "src/**/*.ts",
-        "test/**/*.ts"
-      ]
+      "dependsOn": ["build", "typecheck"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "format": {
-      "inputs": [
-        "src/**/*.ts",
-        "test/**/*.ts"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true,
+      "passThroughEnv": [
+        "HOST",
+        "PORT",
+        "DATABASE_FILE",
+        "CHROMIUM_USER_DIR",
+        "CLOAKBROWSER_*",
+        "SCRAPELESS_TOKEN",
+        "APP_HOST",
+        "FOLLOW_USER_ID"
+      ]
     }
   }
 }
