@@ -42,7 +42,7 @@
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "dotenv": "17.4.2",
-    "hono": "4.13.5",
+    "hono": "4.13.7",
     "parse5": "8.0.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
