@@ -1,0 +1,38 @@
+diff --git a/dist/index.mjs b/dist/index.mjs
+index b25ab3abd57f32fdb4dac3f2c1a712e3fb699110..0ec150ab900f85124a32d3ae3da9e7caa25ed0f4 100644
+--- a/dist/index.mjs
++++ b/dist/index.mjs
+@@ -1,3 +1,5 @@
++import { AsyncResource } from "node:async_hooks";
++
+ //#region src/queue.ts
+ const Promize = Promise;
+ /**
+@@ -30,7 +32,8 @@ const newQueue = (concurrency) => {
+ 	};
+ 	return queue = {
+ 		add(p) {
+-			let node = { p };
++			// Preserve the submitter context when another job drains the queue.
++			let node = { p: AsyncResource.bind(p) };
+ 			let promise = new Promize((res, rej) => {
+ 				node.res = res;
+ 				node.rej = rej;
+@@ -169,7 +172,7 @@ var Context = class {
+ 					const hooks = this.workflow._hooks;
+ 					let attempt = 0;
+ 					while (true) try {
+-						return await this.engine.getQueue(this.workflow).add(async () => {
++						return await this.engine.getQueue(this.workflow).add(AsyncResource.bind(async () => {
+ 							for (const hook of hooks?.get("pre:exec") ?? []) await hook(this);
+ 							this._status = ContextStatus.running;
+ 							const result = await this.workflow._action(this, ...this._input);
+@@ -182,7 +185,7 @@ var Context = class {
+ 							} catch {}
+ 							for (const hook of hooks?.get("post:exec") ?? []) await hook(this);
+ 							return result;
+-						});
++						}));
+ 					} catch (error) {
+ 						if (attempt >= maxRetry) throw error;
+ 						attempt += 1;

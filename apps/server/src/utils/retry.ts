@@ -1,7 +1,7 @@
-import type { ConsolaInstance } from 'consola';
+import type { Logger } from '../logging';
 
 export interface RetryOptions {
-  logger?: ConsolaInstance;
+  logger?: Logger;
   signal?: AbortSignal;
 }
 
@@ -25,7 +25,11 @@ export async function retryFn<T>(
       }
 
       if (options.logger && i < count) {
-        options.logger.error(`Retry ${i + 1} / ${count}, due to`, err);
+        options.logger.warn(
+          'Retrying operation',
+          { event: 'operation.retry', attempt: i + 2, max_attempts: count + 1, wait_ms: delay },
+          err
+        );
       }
 
       await sleep(delay);

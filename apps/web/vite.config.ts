@@ -17,12 +17,15 @@ export default defineConfig({
   plugins: [
     tanstackStart({
       prerender: { enabled: false },
-      importProtection: { behavior: 'error', client: { specifiers: ['@lnovel/server', /^node:/] } }
+      importProtection: {
+        behavior: 'error',
+        client: { specifiers: [/^@lnovel\/server(?:\/|$)/, /^@opentelemetry\//, /^node:/] }
+      }
     }),
     react(),
     tailwindcss()
   ],
-  ssr: { external: ['@lnovel/server'] },
-  optimizeDeps: { exclude: ['@lnovel/server', '@hono/node-server'] },
+  ssr: { external: ['@lnovel/server', '@lnovel/server/logging'] },
+  optimizeDeps: { exclude: ['@lnovel/server', '@lnovel/server/logging', '@hono/node-server'] },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } }
 });

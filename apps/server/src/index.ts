@@ -1,5 +1,7 @@
 import { serve } from '@hono/node-server';
-import { consola, createApp as createServerApp } from './app';
+import { createApp as createServerApp } from './app';
+import { createLogger, addShutdownHook, shutdownLogging } from './logging';
+const logger = createLogger('server');
 
 export { createApp } from './app';
 
@@ -20,15 +22,25 @@ export function startServer(app: ReturnType<typeof createServerApp>, options: Li
       port
     },
     (info) => {
-      consola.log(`Start listening on http://${info.address}:${info.port}`);
+      logger.info('Server started', {
+        event: 'server.started',
+        address: info.address,
+        port: info.port
+      });
     }
   );
 
+  const removeHook = addShutdownHook(
+    () => new Promise<void>((resolve) => server.close(() => resolve()))
+  );
   return new Promise<void>((res) => {
-    server.addListener('close', () => res());
+    server.addListener('close', () => {
+      removeHook();
+      res();
+    });
     server.addListener('error', (err) => {
-      consola.error(err);
-      process.exit(1);
+      logger.error('Server failed', { event: 'server.failed' }, err);
+      void shutdownLogging().finally(() => process.exit(1));
     });
   });
 }

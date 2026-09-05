@@ -1,13 +1,21 @@
 import 'dotenv/config';
 
 import { breadc } from 'breadc';
-import { createConsola } from 'consola';
 
 import { description, version } from '../package.json';
+import {
+  initializeLogging,
+  createLogger,
+  installProcessHandlers,
+  shutdownLogging
+} from './logging';
 
-import { createApp, startCron, startServer } from './index';
+initializeLogging({ serviceName: 'lnovel-server' });
+installProcessHandlers();
 
-const consola = createConsola().withTag('cli');
+const { createApp, startCron, startServer } = await import('./index');
+
+const logger = createLogger('cli');
 
 const app = breadc('lnovel-server', { description, version })
   .option('--secret <string>', 'Admin auth secret')
@@ -34,14 +42,8 @@ app.command('bili volume <nid> <vid>').action(async (nid: string, vid: string) =
 
 app.command('bili chapter <nid> <cid>').action(async (nid: string, cid: string) => {});
 
-consola.wrapConsole();
-
-process.on('uncaughtException', (err) => {
-  consola.error('Uncaught Exception', err);
+await app.run(process.argv.slice(2)).catch(async (error) => {
+  logger.error('Command failed', { event: 'cli.failed' }, error);
+  await shutdownLogging();
+  process.exitCode = 1;
 });
-
-process.on('unhandledRejection', (err) => {
-  consola.error('Unhandled Rejection', err);
-});
-
-await app.run(process.argv.slice(2)).catch((err) => console.error(err));

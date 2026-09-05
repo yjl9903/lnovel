@@ -1,10 +1,9 @@
-import { createConsola } from 'consola';
-
 import type { AuthorResult } from 'bilinovel';
 
 import { Provider } from '../constants';
+import { createLogger, safeUrl } from '../logging';
 
-export const consola = createConsola().withTag(Provider.bilinovel);
+export const logger = createLogger(Provider.bilinovel);
 
 export async function tryResult<T, E>(
   ok: () => Promise<T>,
@@ -38,7 +37,11 @@ export function transformImgSrc(origin: string, _url: string) {
 
     return _url;
   } catch (error) {
-    consola.error('Transform img src', error, _url);
+    logger.error(
+      'Transform img src',
+      { event: 'transform.img.src', upstream_url: safeUrl(_url) },
+      error
+    );
     return _url;
   }
 }

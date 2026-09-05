@@ -26,6 +26,7 @@ RUN apt-get update -qq && \
 
 # Install node modules
 COPY --link package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json .node-version ./
+COPY --link patches ./patches
 COPY ./apps/server/package.json ./apps/server/
 COPY ./apps/web/package.json ./apps/web/
 COPY ./packages/lnovel/package.json ./packages/lnovel/

@@ -3,6 +3,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { createGateway } from '../src/server/gateway';
+import { initializeLogging } from '@lnovel/server/logging';
+
+const logRecords: any[] = [];
+const logging = initializeLogging({
+  level: 'debug',
+  write: (line, done) => {
+    logRecords.push(JSON.parse(line));
+    done();
+  }
+});
 
 const directory = await mkdtemp(path.join(os.tmpdir(), 'lnovel-web-api-'));
 process.env.DATABASE_FILE = path.join(directory, 'test.db');
@@ -15,6 +25,32 @@ const gateway = createGateway({
 afterAll(() => rm(directory, { recursive: true, force: true }));
 
 describe('existing API contract through web', () => {
+  it('correlates real API response IDs with the outer request, including SSR calls', async () => {
+    await logging.forceFlush();
+    logRecords.length = 0;
+    const ssr = createGateway({
+      apiFetch: (request) => api.fetch(request),
+      startFetch: () => api.request('/bili/novels')
+    });
+    const responses = await Promise.all([
+      gateway.request('/bili/novels'),
+      ssr.request('/page'),
+      api.request('/bili/novels')
+    ]);
+    const ids = responses.map((response) => response.headers.get('x-request-id'));
+    expect(new Set(ids).size).toBe(3);
+    await logging.forceFlush();
+    for (const [index, id] of ids.entries()) {
+      expect(id).toBeTruthy();
+      const events = logRecords.filter((record) => record.attributes.request_id === id);
+      expect(
+        events.filter((record) => record.attributes.event === 'http.request.completed')
+      ).toHaveLength(1);
+      expect(
+        events.filter((record) => record.attributes.event === 'api.call.completed')
+      ).toHaveLength(index < 2 ? 1 : 0);
+    }
+  });
   it.each([
     ['/health', 200],
     ['/bili/', 200],

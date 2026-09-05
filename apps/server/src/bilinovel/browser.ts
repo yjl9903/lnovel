@@ -2,13 +2,13 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import { LRUCache } from 'lru-cache';
-import { createConsola } from 'consola';
 import { launchPersistentContext } from 'cloakbrowser';
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright-core';
 
 import type { BilinovelFetch } from 'bilinovel';
 
 import { sleep } from '../utils';
+import { createLogger, safeUrl } from '../logging';
 
 interface ScrapelessOptions {
   /**
@@ -24,7 +24,7 @@ interface ScrapelessOptions {
 
 const BASE_URL = 'https://www.linovelib.com';
 
-const consola = createConsola().withTag('browser');
+const logger = createLogger('browser');
 
 // 防止请求雪崩, 缓存一定时间失败的链接
 const ERRORS = new LRUCache<string, { count: number; error: unknown }>({
@@ -130,7 +130,10 @@ const withLocalBrowserLock = async <T>(fn: () => Promise<T>): Promise<T> => {
 const launchLocalBrowser = async (): Promise<LocalBrowser> => {
   const userDataDir = process.env.CHROMIUM_USER_DIR || path.resolve('.profile');
 
-  consola.log('Connecting to local CloakBrowser', userDataDir);
+  logger.info('Connecting to local CloakBrowser', {
+    event: 'connecting.to.local.cloakbrowser',
+    profile_path: userDataDir
+  });
 
   const context = await launchPersistentContext({
     userDataDir,
@@ -154,7 +157,7 @@ const launchLocalBrowser = async (): Promise<LocalBrowser> => {
     browser.closed = true;
   });
 
-  consola.log('Connected to local CloakBrowser');
+  logger.info('Connected to local CloakBrowser', { event: 'connected.to.local.cloakbrowser' });
 
   return browser;
 };
@@ -177,10 +180,14 @@ const getLocalBrowser = async (): Promise<LocalBrowser> => {
           return browser;
         }
 
-        consola.log('Restarting local browser');
+        logger.info('Restarting local browser', { event: 'restarting.local.browser' });
         await browser.context.close().catch(() => {});
       } catch (error) {
-        consola.error('Local browser is unavailable', error);
+        logger.error(
+          'Local browser is unavailable',
+          { event: 'local.browser.is.unavailable' },
+          error
+        );
       }
 
       localBrowser = undefined;
@@ -221,13 +228,16 @@ const connectScrapeless = async (options: ScrapelessOptions): Promise<Browser> =
     sessionTTL: String(options.sessionTTL ?? 60 * 3)
   });
 
-  consola.log('Connecting to remote browser');
+  logger.info('Connecting to remote browser', { event: 'connecting.to.remote.browser' });
 
   try {
     const browser = await chromium.connectOverCDP(
       `wss://browser.scrapeless.com/api/v2/browser?${query.toString()}`
     );
-    consola.log('Connected to remote browser', browser.isConnected());
+    logger.info('Connected to remote browser', {
+      event: 'connected.to.remote.browser',
+      connected: browser.isConnected()
+    });
     return browser;
   } catch (error) {
     if (isScrapelessInsufficientBalanceError(error)) {
@@ -262,7 +272,7 @@ const waitForNavigationSlot = async (interval: number) => {
   try {
     const wait = Math.max(0, nextNavigationAt - Date.now());
     if (wait > 0) {
-      consola.log(`Waiting ${Math.round(wait / 1000)}s before next navigation`);
+      logger.info('Waiting before navigation', { event: 'browser.navigation.wait', wait_ms: wait });
       await sleep(wait);
     }
 
@@ -276,7 +286,7 @@ const waitForRateLimit = async (delay: number) => {
   const wait = delay + Math.random() * delay;
   nextNavigationAt = Math.max(nextNavigationAt, Date.now() + wait);
 
-  consola.log(`Rate limited, waiting ${Math.round(wait / 1000)}s before retry`);
+  logger.warn('Rate limited', { event: 'browser.rate_limited', wait_ms: wait });
   await sleep(wait);
 };
 
@@ -397,9 +407,9 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   const closeRemoteBrowser = async (browser: Browser | undefined) => {
     if (!browser) return;
 
-    consola.log('Closing remote browser');
+    logger.info('Closing remote browser', { event: 'closing.remote.browser' });
     await withTimeout(browser.close(), PAGE_CLOSE_TIMEOUT, () => {
-      consola.log('Closing browser timeout');
+      logger.info('Closing browser timeout', { event: 'closing.browser.timeout' });
     }).catch(() => {});
   };
 
@@ -474,7 +484,10 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
     const browser = await getRemoteBrowser();
     const context = browser.contexts()[0] ?? (await browser.newContext());
     const page = await context.newPage();
-    consola.log('Created new remote page', `active:${context.pages().length}`);
+    logger.info('Created new remote page', {
+      event: 'created.new.remote.page',
+      active_pages: context.pages().length
+    });
     await interceptPage(page);
     return { kind: 'remote' as const, page };
   };
@@ -482,7 +495,10 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   const createLocalPage = async () => {
     const browser = await getLocalBrowser();
     const page = await browser.context.newPage();
-    consola.log('Created new local page', `active:${browser.context.pages().length}`);
+    logger.info('Created new local page', {
+      event: 'created.new.local.page',
+      active_pages: browser.context.pages().length
+    });
     await interceptPage(page);
     return { kind: 'local' as const, page };
   };
@@ -490,21 +506,25 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
   const createPage = async (): Promise<{ kind: BrowserKind; page: Page }> => {
     if (!forceRemote) {
       try {
-        consola.log('Creating new local page');
+        logger.info('Creating new local page', { event: 'creating.new.local.page' });
         return await createLocalPage();
       } catch (error) {
-        consola.error('Failed creating local page, fallback to remote browser', error);
+        logger.error(
+          'Failed creating local page, fallback to remote browser',
+          { event: 'failed.creating.local.page.fallback.to.remote.browser' },
+          error
+        );
         forceRemote = true;
       }
     }
 
-    consola.log('Creating new remote page');
+    logger.info('Creating new remote page', { event: 'creating.new.remote.page' });
     return await createRemotePage();
   };
 
   const newPageWithKind = async () => {
     return await withTimeout(createPage(), PAGE_CREATE_TIMEOUT, () => {
-      consola.error('Creating new page timeout');
+      logger.error('Creating new page timeout', { event: 'creating.new.page.timeout' });
       return undefined;
     });
   };
@@ -517,7 +537,12 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
     url: URL,
     selector: string | undefined
   ) => {
-    consola.log(`Start ${kind} navigating to ${url.toString()}`);
+    const started = performance.now();
+    logger.info('Navigation started', {
+      event: 'browser.navigation.started',
+      browser_kind: kind,
+      upstream_url: safeUrl(url)
+    });
 
     await page.goto(url.toString(), {
       timeout: GOTO_TIMEOUT,
@@ -537,7 +562,12 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
     }
 
     ERRORS.delete(url.toString());
-    consola.log(`Finish ${kind} navigating to ${url.toString()}`);
+    logger.info('Navigation completed', {
+      event: 'browser.navigation.completed',
+      browser_kind: kind,
+      upstream_url: safeUrl(url),
+      duration_ms: performance.now() - started
+    });
 
     return content;
   };
@@ -547,7 +577,11 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
       const url = new URL(pathname, BASE_URL);
       const lastError = ERRORS.get(url.toString());
       if (lastError && lastError.count > MAX_ERROR) {
-        consola.log(`Skip navigating to ${url.toString()} (repeated ${lastError.count} times)`);
+        logger.warn('Navigation skipped after repeated failures', {
+          event: 'browser.navigation.skipped',
+          upstream_url: safeUrl(url),
+          failure_count: lastError.count
+        });
         throw lastError.error;
       }
 
@@ -569,7 +603,11 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             fetchWithPage(current.page, current.kind, url, selector),
             PAGE_NAVIGATION_TIMEOUT,
             () => {
-              consola.error(`Navigating to ${url.toString()} timeout`);
+              logger.error('Navigation timed out', {
+                event: 'browser.navigation.timeout',
+                upstream_url: safeUrl(url),
+                attempt: turn + 1
+              });
               return undefined;
             }
           );
@@ -582,7 +620,11 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
 
           throw new Error(`Fetch timeout: "${url.toString()}"`);
         } catch (error) {
-          consola.error(`Failed fetching "${url.toString()}"`, error);
+          logger.error(
+            'Fetch failed',
+            { event: 'browser.fetch.failed', upstream_url: safeUrl(url), attempt: turn + 1 },
+            error
+          );
 
           forceRemote = true;
 
@@ -597,7 +639,12 @@ export function createBilinovelSession(options: SessionOptions = {}): Session {
             throw error;
           }
 
-          consola.log(`Retry fetching "${url.toString()}"`, `${turn}/${MAX_RETRY}`);
+          logger.warn('Retrying fetch', {
+            event: 'browser.fetch.retry',
+            upstream_url: safeUrl(url),
+            attempt: turn + 2,
+            max_attempts: MAX_RETRY + 1
+          });
 
           if (error instanceof RateLimitError) {
             await waitForRateLimit(delayRateLimited);

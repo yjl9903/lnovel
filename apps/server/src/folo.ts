@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
-import { createConsola } from 'consola';
 
 import { folos } from './schema';
 import { database } from './database';
+import { createLogger, safeUrl } from './logging';
 
-const consola = createConsola().withTag('folo');
+const logger = createLogger('folo');
 
 export function getFoloShareURL(feedId: string) {
   return `https://app.folo.is/share/feeds/${feedId}`;
@@ -20,7 +20,6 @@ export async function getFoloFeedId(url: string) {
 
     const [resp] = await database.select().from(folos).where(eq(folos.url, url));
     if (resp) {
-      // consola.log(`get folo feedId ${url} -> ${resp.feedId}`);
       return resp.feedId;
     }
   } catch {
@@ -44,7 +43,11 @@ export async function setFoloFeedId(url: string | URL) {
       const feedId = body?.data?.feed?.id;
       if (feedId && typeof feedId === 'string') {
         await database.insert(folos).values({ url, feedId });
-        consola.log(`set folo feedId ${url} -> ${feedId}`);
+        logger.info('Folo feed updated', {
+          event: 'folo.feed.updated',
+          feed_url: safeUrl(url),
+          feed_id: feedId
+        });
         return feedId;
       }
     }

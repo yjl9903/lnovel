@@ -12,12 +12,13 @@ import {
 
 import type { AppEnv, Context } from '../app';
 
+import { runTask, scheduleTask, safeUrl } from '../logging';
 import { Provider } from '../constants';
 import { getFeedResponse } from '../rss';
 import { buildSite, getFeedURL } from '../utils';
 import { getFoloUserId, getFoloFeedId, getFoloShareURL, setFoloFeedId } from '../folo';
 
-import { consola, normalizeDescription, transformAuthor } from './utils';
+import { logger, normalizeDescription, transformAuthor } from './utils';
 import {
   engine,
   getTop,
@@ -80,9 +81,14 @@ app.use('*', async (c: Context, next) => {
   // 更新 folo feed id
   const feedURL = new URL(getFeedURL(c));
   if (feedURL.pathname.endsWith('/feed.xml')) {
-    setTimeout(() => {
-      setFoloFeedId(feedURL);
-    }, 1000);
+    scheduleTask(
+      'folo.update',
+      {},
+      async () => {
+        await setFoloFeedId(feedURL);
+      },
+      1000
+    );
   }
 
   const enableCache = !feedURL.pathname.endsWith('/contexts');
@@ -114,13 +120,16 @@ app.onError(async (error: unknown, c: Context) => {
         : 500;
 
   if (status >= 500) {
-    consola.error(
+    logger.error(
       'Request failed',
       {
-        requestId: c.get('requestId'),
-        method: c.req.method,
-        url: url.toString(),
-        status
+        event: 'request.failed',
+        ...{
+          request_id: c.get('requestId'),
+          method: c.req.method,
+          url: safeUrl(url),
+          status
+        }
       },
       error
     );
@@ -195,6 +204,12 @@ app.get('/contexts', async (c: Context) => {
 app.get('/wenku', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: getWenku.scope,
+    workflow_key: getWenku.key(filter),
+    filter
+  });
   const data = await engine.run(getGlobal(c), getWenku, filter);
 
   return c.json({
@@ -211,6 +226,12 @@ app.get('/wenku', async (c: Context) => {
 app.get('/top/:sort', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseTopFilter(url);
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: getTop.scope,
+    workflow_key: getTop.key(filter),
+    filter
+  });
   const data = await engine.run(getGlobal(c), getTop, filter);
 
   return c.json({
@@ -237,9 +258,28 @@ app.get('/novel/:nid', validateNumericParams('nid'), async (c: Context) => {
   const nid = c.req.param('nid')!;
 
   const db = await getNovelFromDatabase(nid, false);
+  if (!db || force) {
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: getNovel.scope,
+      workflow_key: getNovel.key(+nid),
+      novel_id: +nid
+    });
+  }
   const data = db && !force ? db : await engine.run(getGlobal(c), getNovel, +nid);
 
-  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovel.scope,
+    workflow_key: updateNovel.key(+nid),
+    novel_id: +nid,
+    background: true
+  });
+  runTask(
+    'workflow.background',
+    { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+    () => engine.run(getGlobal(c), updateNovel, +nid)
+  ).catch(() => {});
 
   return c.json({ ok: true, provider: Provider.bilinovel, data: await attachFoloFeedId(c, data) });
 });
@@ -254,14 +294,43 @@ app.get('/novel/:nid/vol/:vid', validateNumericParams('nid', 'vid'), async (c: C
   const db = await getNovelVolumeFromDatabase(nid, vid, false);
 
   if (db && !force) {
-    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: updateNovel.scope,
+      workflow_key: updateNovel.key(+nid),
+      novel_id: +nid,
+      background: true
+    });
+    runTask(
+      'workflow.background',
+      { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+      () => engine.run(getGlobal(c), updateNovel, +nid)
+    ).catch(() => {});
     const data = await attachFoloVolumeFeedId(c, db);
     return c.json({ ok: true, provider: Provider.bilinovel, data });
   }
 
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovelVolume.scope,
+    workflow_key: updateNovelVolume.key(+nid, +vid),
+    novel_id: +nid,
+    volume_id: +vid
+  });
   const data = await engine.run(getGlobal(c), updateNovelVolume, +nid, +vid);
 
-  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovel.scope,
+    workflow_key: updateNovel.key(+nid),
+    novel_id: +nid,
+    background: true
+  });
+  runTask(
+    'workflow.background',
+    { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+    () => engine.run(getGlobal(c), updateNovel, +nid)
+  ).catch(() => {});
 
   return c.json({
     ok: true,
@@ -279,13 +348,42 @@ app.get('/novel/:nid/chapter/:cid', validateNumericParams('nid', 'cid'), async (
 
   const db = await getNovelChapterFromDatabase(nid, cid);
   if (db && !force) {
-    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: updateNovel.scope,
+      workflow_key: updateNovel.key(+nid),
+      novel_id: +nid,
+      background: true
+    });
+    runTask(
+      'workflow.background',
+      { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+      () => engine.run(getGlobal(c), updateNovel, +nid)
+    ).catch(() => {});
     return c.json({ ok: true, provider: Provider.bilinovel, data: db });
   }
 
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovelChapter.scope,
+    workflow_key: updateNovelChapter.key(+nid, +cid),
+    novel_id: +nid,
+    chapter_id: +cid
+  });
   const data = await engine.run(getGlobal(c), updateNovelChapter, +nid, +cid);
 
-  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovel.scope,
+    workflow_key: updateNovel.key(+nid),
+    novel_id: +nid,
+    background: true
+  });
+  runTask(
+    'workflow.background',
+    { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+    () => engine.run(getGlobal(c), updateNovel, +nid)
+  ).catch(() => {});
 
   return c.json({ ok: true, provider: Provider.bilinovel, data });
 });
@@ -329,7 +427,7 @@ app.get('/novels/feed.xml', async (c: Context) => {
       }
     });
   } catch (error) {
-    consola.error(error);
+    logger.error('Failed rendering novels feed', { event: 'feed.render.failed' }, error);
     return c.text(`Internal Error`, 500);
   }
 });
@@ -337,6 +435,12 @@ app.get('/novels/feed.xml', async (c: Context) => {
 app.get('/wenku/feed.xml', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseWenkuFilter(url.searchParams);
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: getWenku.scope,
+    workflow_key: getWenku.key(filter),
+    filter
+  });
   const data = await engine.run(getGlobal(c), getWenku, filter);
 
   const items = await Promise.all(
@@ -387,6 +491,12 @@ app.get('/wenku/feed.xml', async (c: Context) => {
 app.get('/top/:sort/feed.xml', async (c: Context) => {
   const url = new URL(c.req.url);
   const filter = parseTopFilter(url);
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: getTop.scope,
+    workflow_key: getTop.key(filter),
+    filter
+  });
   const data = await engine.run(getGlobal(c), getTop, filter);
 
   const items = await Promise.all(
@@ -438,6 +548,14 @@ app.get('/novel/:nid/feed.xml', validateNumericParams('nid'), async (c: Context)
 
   const db = await getNovelFromDatabase(nid);
 
+  if (db == null) {
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: getNovel.scope,
+      workflow_key: getNovel.key(+nid),
+      novel_id: +nid
+    });
+  }
   const data = db ?? (await engine.run(getGlobal(c), getNovel, +nid));
 
   const author = data.authors.find((author) => author.position === 'author');
@@ -465,7 +583,18 @@ app.get('/novel/:nid/feed.xml', validateNumericParams('nid'), async (c: Context)
     })
   );
 
-  engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+  logger.info('Workflow requested', {
+    event: 'workflow.requested',
+    workflow: updateNovel.scope,
+    workflow_key: updateNovel.key(+nid),
+    novel_id: +nid,
+    background: true
+  });
+  runTask(
+    'workflow.background',
+    { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+    () => engine.run(getGlobal(c), updateNovel, +nid)
+  ).catch(() => {});
 
   return getFeedResponse(c, {
     title: data.name,
@@ -489,6 +618,13 @@ app.get(
     const nid = c.req.param('nid')!;
     const vid = c.req.param('vid')!;
 
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: getNovelVolume.scope,
+      workflow_key: getNovelVolume.key(+nid, +vid),
+      novel_id: +nid,
+      volume_id: +vid
+    });
     const fetched = engine.run(getGlobal(c), getNovelVolume, +nid, +vid);
     const db = await getNovelVolumeFromDatabase(nid, vid);
 
@@ -506,7 +642,18 @@ app.get(
       }
     }
 
-    engine.run(getGlobal(c), updateNovel, +nid).catch(() => {});
+    logger.info('Workflow requested', {
+      event: 'workflow.requested',
+      workflow: updateNovel.scope,
+      workflow_key: updateNovel.key(+nid),
+      novel_id: +nid,
+      background: true
+    });
+    runTask(
+      'workflow.background',
+      { workflow: updateNovel.scope, workflow_key: updateNovel.key(+nid) },
+      () => engine.run(getGlobal(c), updateNovel, +nid)
+    ).catch(() => {});
 
     return getFeedResponse(c, {
       title: `${data.name}`,
@@ -592,21 +739,35 @@ export async function updatePendingNovels(c: Context) {
     const novels = (await getNovelsFromDatabase({ done: false })).sort(
       (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()
     );
-    consola.log(
-      'Trigger updating pending novels',
-      now,
-      novels.map((n) => ({ nid: n.nid, name: n.name }))
-    );
+    logger.info('Trigger updating pending novels', {
+      event: 'trigger.updating.pending.novels',
+      scheduled_at: now,
+      novel_ids: novels.map((n) => n.nid),
+      count: novels.length
+    });
     for (const { nid } of novels) {
       const novel = await getNovelFromDatabase('' + nid, false);
       if (!novel || !novel.done) {
+        logger.info('Workflow requested', {
+          event: 'workflow.requested',
+          workflow: updateNovel.scope,
+          workflow_key: updateNovel.key(nid),
+          novel_id: nid
+        });
         await engine.run(getGlobal(c), updateNovel, nid);
       }
     }
   } catch (error) {
-    consola.error('Failed updating pending novels', now, error);
+    logger.error(
+      'Failed updating pending novels',
+      { event: 'failed.updating.pending.novels', scheduled_at: now },
+      error
+    );
   } finally {
-    consola.log('Finish updating pending novels', now);
+    logger.info('Finish updating pending novels', {
+      event: 'finish.updating.pending.novels',
+      scheduled_at: now
+    });
   }
 }
 
@@ -616,7 +777,11 @@ app.get('/files/*', async (c: Context) => {
 
   c.res.headers.set('X-Forward-Img', target.toString());
 
-  consola.log('Fetch', c.req.url, '->', target.toString());
+  logger.debug('Proxy fetch', {
+    event: 'proxy.fetch',
+    pathname: c.req.path,
+    upstream_url: safeUrl(target)
+  });
 
   const resp = await fetch(target, {
     headers: {
@@ -646,7 +811,11 @@ app.get('/img3/*', async (c: Context) => {
 
   c.res.headers.set('X-Forward-Img', target.toString());
 
-  consola.log('Fetch', c.req.url, '->', target.toString());
+  logger.debug('Proxy fetch', {
+    event: 'proxy.fetch',
+    pathname: c.req.path,
+    upstream_url: safeUrl(target)
+  });
 
   const resp = await fetch(target, {
     headers: {

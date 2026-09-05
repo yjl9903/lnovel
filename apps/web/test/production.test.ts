@@ -21,15 +21,23 @@ beforeAll(async () => {
       ],
       {
         cwd: os.tmpdir(),
-        env: { ...process.env, DATABASE_FILE: '/nonexistent/do-not-open.db' },
+        env: { ...process.env, LOG_LEVEL: 'info', DATABASE_FILE: '/nonexistent/do-not-open.db' },
         stdio: 'pipe'
       }
     );
     let output = '';
     child.stdout!.on('data', (chunk) => {
       output += chunk.toString();
-      const match = output.match(/Start listening on (http:\/\/[^\s]+)/);
-      if (match) resolve(match[1]);
+      for (const line of output.split('\n')) {
+        try {
+          const log = JSON.parse(line);
+          if (log.attributes?.event === 'server.started') {
+            resolve(`http://127.0.0.1:${log.attributes.port}`);
+          }
+        } catch {
+          /* Wait for a complete JSON line. */
+        }
+      }
     });
     child.stderr!.on('data', (chunk) => {
       output += chunk.toString();
@@ -53,7 +61,7 @@ describe('production web bundle', () => {
       if (!file.endsWith('.js')) continue;
       const source = await readFile(new URL(file, assets), 'utf8');
       expect(source).not.toMatch(
-        /@lnovel\/server|node:sqlite|cloakbrowser|playwright|DATABASE_FILE|SCRAPELESS_TOKEN/
+        /@lnovel\/server|node:sqlite|cloakbrowser|playwright|DATABASE_FILE|SCRAPELESS_TOKEN|@opentelemetry|JsonLogRecordExporter|LoggerProvider/
       );
     }
   });

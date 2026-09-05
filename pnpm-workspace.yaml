@@ -9,3 +9,5 @@ allowBuilds:
 shellEmulator: true
 ignoreWorkspaceRootCheck: true
 shamefullyHoist: true
+patchedDependencies:
+  flomise@0.0.6: patches/flomise@0.0.6.patch

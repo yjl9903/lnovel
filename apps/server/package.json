@@ -22,6 +22,10 @@
     ".": {
       "types": "./dist/index.d.mts",
       "import": "./dist/index.mjs"
+    },
+    "./logging": {
+      "types": "./dist/logging.d.mts",
+      "import": "./dist/logging.mjs"
     }
   },
   "module": "dist/index.mjs",
@@ -45,10 +49,13 @@
   "dependencies": {
     "@hono/node-server": "2.1.1",
     "@hono/zod-validator": "0.9.1",
+    "@opentelemetry/api-logs": "0.222.0",
+    "@opentelemetry/core": "2.11.0",
+    "@opentelemetry/resources": "2.11.0",
+    "@opentelemetry/sdk-logs": "0.222.0",
     "bilinovel": "workspace:*",
     "breadc": "1.0.0-beta.18",
     "cloakbrowser": "0.5.10",
-    "consola": "3.4.2",
     "croner": "10.0.1",
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
