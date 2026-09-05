@@ -1,0 +1,50 @@
+# 测试与验证
+
+当前测试分布在各 workspace 的 `test/`，使用 Vitest。测试应验证可观察行为，使用确定的输入和独立临时资源，不依赖真实抓取、远端浏览器 token 或生产数据库。
+
+## 现有覆盖
+
+| 测试文件 | 验证内容 | 隔离边界 |
+| --- | --- | --- |
+| `packages/bilinovel/test/novel.test.ts` | 小说、卷、分页章节、图片转换和下架识别 | 从 `__assets__/` 读取 HTML，使用快照 |
+| `apps/server/test/bilinovel.database.test.ts` | 下架标记后保留已有小说与卷数据 | 临时 SQLite，运行真实迁移 |
+| `apps/web/test/gateway.test.ts` | 路由转发、方法/请求体/取消、SEO 文件、SSR 请求头 | 注入 fetch handler |
+| `apps/web/test/top.test.ts` | Query hydration、SSR 失败重试、实例隔离和响应解析 | mock API 获取边界 |
+| `apps/web/test/server.test.ts` | 经网关访问真实 Server 的状态、正文、ETag 与缓存语义 | 临时 SQLite，仅调用不触发抓取的路由 |
+| `apps/web/test/production.test.ts` | 客户端依赖隔离、生产 SSR、静态资源、SEO、404 与并发请求 | 子进程运行构建产物，loader 用固定 API 替身替换 Server |
+| `packages/lnovel/test/index.test.ts` | 占位断言 | 不验证 CLI 业务 |
+
+生产构建测试验证 Web 产物与 API 边界组合，不等价于完整在线抓取测试。当前没有覆盖浏览器回退、真实外站可用性或完整工作流更新链路的端到端测试；不要将已有测试通过表述为这些能力已验收。
+
+## 验证命令
+
+跨包、构建或服务边界变更，在根目录执行：
+
+```sh
+pnpm build
+pnpm typecheck
+pnpm test:ci
+```
+
+CI 当前显式执行安装、构建和 `test:ci`；类型检查由 Turbo 的测试依赖触发。完整检查成功后，无新改动或未解决疑点时无需重复运行。
+
+已有最新构建产物时，可按改动范围执行：
+
+```sh
+pnpm --filter bilinovel test:ci
+pnpm --filter @lnovel/server test:ci
+pnpm --filter @lnovel/web test:ci
+```
+
+Web 生产测试要求 `apps/web/dist/` 存在且对应当前代码；Web 的真实 Server 测试也通过包入口加载 Server 构建产物。首次安装或修改其依赖后先运行根构建。
+
+## 新增和维护测试
+
+- 解析修改使用可复用 HTML fixture，断言公开结果与有意义的失败场景；快照更新需逐项审阅。
+- 数据库测试先设置临时 `DATABASE_FILE`，再动态导入数据库模块；结束后清理临时资源。
+- 网关和页面状态测试使用可控请求边界，保留被测模块的真实行为。需要验证真实 API 契约时沿用 `server.test.ts` 的装配方式。
+- SSR 和浏览器依赖边界变化需要覆盖生产产物，不能只验证源码函数。
+- 新增抓取、缓存或重试测试应替换外部网络与时钟边界，验证结果和副作用，不依赖真实站点或长时间等待。
+- 不为了凑覆盖率给空实现添加机械断言，也不为纯文档改动新增业务测试。
+
+纯文档修改检查链接、路径、脚本名称与实现事实；交付说明列出实际检查和未执行的运行验收。手工请求真实业务接口会触发抓取，不能混同于离线检查。

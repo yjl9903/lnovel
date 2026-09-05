@@ -1,8 +1,8 @@
 ### Health check
-GET https://lnovel.animes.garden
+GET https://lnovel.animes.garden/health
 
-### Get browser tasks
-GET https://lnovel.animes.garden/browser/tasks
+### Get workflow contexts
+GET https://lnovel.animes.garden/bili/contexts
 
 ### Get top novels
 GET https://lnovel.animes.garden/bili/top/weekvisit
