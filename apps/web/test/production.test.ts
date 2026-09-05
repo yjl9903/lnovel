@@ -82,8 +82,92 @@ describe('production web bundle', () => {
     expect((await fetch(`${origin}/robots.txt`)).status).toBe(200);
   });
 
-  it('keeps the old page fallback and API errors separate', async () => {
-    expect(await (await fetch(`${origin}/old/page`)).text()).toContain('测试小说 1');
+  it.each(['/', '/?utm_source=test'])(
+    'renders complete home SEO in the original HTML at %s',
+    async (path) => {
+      const response = await fetch(`${origin}${path}`, {
+        headers: { 'x-forwarded-host': 'other.example', 'x-forwarded-proto': 'http' }
+      });
+      expect(response.status).toBe(200);
+      const html = await response.text();
+      const head = html.match(/<head>([\s\S]*?)<\/head>/)![1];
+      expect(head.match(/<title>.*?<\/title>/g)).toEqual(['<title>lnovel 轻小说聚合站</title>']);
+      expect(head.match(/<link[^>]*rel="canonical"[^>]*>/g)).toEqual([
+        '<link rel="canonical" href="https://lnovel.animes.garden/"/>'
+      ]);
+      expect(head).toContain(
+        'name="description" content="从哔哩轻小说、轻小说文库等站点抓取书籍, 提供轻小说开放接口和 RSS 订阅."'
+      );
+      expect(head.match(/<meta name="robots"[^>]*>/g)).toEqual([
+        '<meta name="robots" content="index, follow"/>'
+      ]);
+      for (const [property, content] of [
+        ['og:type', 'website'],
+        ['og:site_name', 'lnovel 轻小说聚合站'],
+        ['og:title', 'lnovel 轻小说聚合站'],
+        ['og:url', 'https://lnovel.animes.garden/'],
+        ['og:locale', 'zh_CN']
+      ]) {
+        expect(head).toContain(`property="${property}" content="${content}"`);
+      }
+      expect(head).toContain('property="og:description"');
+      expect(head).toContain('name="twitter:card" content="summary"');
+      expect(head).toContain('name="twitter:title" content="lnovel 轻小说聚合站"');
+      expect(head).toContain('name="twitter:description"');
+      const structuredData = [
+        ...head.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)
+      ];
+      expect(structuredData).toHaveLength(1);
+      expect(JSON.parse(structuredData[0][1])).toEqual({
+        '@context': 'https://schema.org',
+        '@type': 'WebSite',
+        name: 'lnovel 轻小说聚合站',
+        url: 'https://lnovel.animes.garden/',
+        description: '从哔哩轻小说、轻小说文库等站点抓取书籍, 提供轻小说开放接口和 RSS 订阅.',
+        inLanguage: 'zh-Hans'
+      });
+    }
+  );
+
+  it('serves crawler documents from the production gateway', async () => {
+    const before = await (await fetch(`${origin}/health`)).json();
+    for (const [path, contentType, content] of [
+      ['/robots.txt', 'text/plain', 'Sitemap: https://lnovel.animes.garden/sitemap.xml'],
+      ['/sitemap.xml', 'application/xml', '<loc>https://lnovel.animes.garden/</loc>']
+    ]) {
+      const response = await fetch(`${origin}${path}`);
+      expect(response.status).toBe(200);
+      expect(response.headers.get('content-type')).toContain(contentType);
+      expect(response.headers.get('cache-control')).toBe('public, max-age=3600');
+      expect(await response.text()).toContain(content);
+      const head = await fetch(`${origin}${path}`, { method: 'HEAD' });
+      expect(head.status).toBe(200);
+      expect(head.headers.get('content-type')).toBe(response.headers.get('content-type'));
+      expect(head.headers.get('cache-control')).toBe(response.headers.get('cache-control'));
+      expect(await head.text()).toBe('');
+    }
+    const after = await (await fetch(`${origin}/health`)).json();
+    expect(after.calls).toBe(before.calls);
+  });
+
+  it('returns an unindexed 404 without fetching home data, and preserves API errors', async () => {
+    const before = await (await fetch(`${origin}/health`)).json();
+    for (const path of ['/old/page', '/bilingual', '/missing.css', '/sitemap.xml/missing']) {
+      const response = await fetch(`${origin}${path}`);
+      expect(response.status).toBe(404);
+      const html = await response.text();
+      expect(html).toContain('页面不存在');
+      expect(html).toMatch(/<a[^>]*href="\/"[^>]*>返回首页<\/a>/);
+      expect(html).not.toContain('测试小说 1');
+      const head = html.match(/<head>([\s\S]*?)<\/head>/)![1];
+      expect(head.match(/<title>.*?<\/title>/g)).toEqual(['<title>页面不存在 · lnovel</title>']);
+      expect(head).toContain('name="robots" content="noindex"');
+      expect(head).not.toMatch(
+        /rel="canonical"|property="og:|name="twitter:|application\/ld\+json/
+      );
+    }
+    const after = await (await fetch(`${origin}/health`)).json();
+    expect(after.calls).toBe(before.calls);
     expect((await fetch(`${origin}/bili/missing`)).status).toBe(404);
   });
 

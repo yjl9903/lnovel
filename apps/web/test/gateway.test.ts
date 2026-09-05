@@ -24,6 +24,60 @@ const paths = [
 ];
 
 describe('web gateway', () => {
+  it.each([
+    ['/robots.txt', 'text/plain'],
+    ['/sitemap.xml', 'application/xml']
+  ])('serves %s before assets and Start for GET and HEAD', async (path, contentType) => {
+    const apiFetch = vi.fn(() => new Response('api'));
+    const startFetch = vi.fn(() => new Response('page'));
+    const assets = vi.fn(async () => new Response('stale static file'));
+    const app = createGateway({ apiFetch, startFetch, assets });
+    const get = await app.request(path);
+    const head = await app.request(path, { method: 'HEAD' });
+    expect(get.status).toBe(200);
+    expect(head.status).toBe(200);
+    expect(get.headers.get('content-type')?.toLowerCase()).toBe(`${contentType}; charset=utf-8`);
+    expect(head.headers.get('content-type')).toBe(get.headers.get('content-type'));
+    expect(get.headers.get('cache-control')).toBe('public, max-age=3600');
+    expect(head.headers.get('cache-control')).toBe(get.headers.get('cache-control'));
+    expect(await get.text()).not.toBe('');
+    expect(await head.text()).toBe('');
+    expect(apiFetch).not.toHaveBeenCalled();
+    expect(startFetch).not.toHaveBeenCalled();
+    expect(assets).not.toHaveBeenCalled();
+  });
+
+  it('publishes only the canonical home URL in its sitemap', async () => {
+    const app = createGateway({ apiFetch: vi.fn(), startFetch: vi.fn() });
+    const response = await app.request('https://other.example/sitemap.xml?source=bot', {
+      headers: { 'x-forwarded-host': 'spoofed.example' }
+    });
+    const xml = await response.text();
+    expect(xml).toMatch(/^<\?xml version="1.0" encoding="UTF-8"\?>/);
+    expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
+    expect(xml.match(/<url>/g)).toHaveLength(1);
+    expect(xml.match(/<loc>(.*?)<\/loc>/g)).toEqual(['<loc>https://lnovel.animes.garden/</loc>']);
+    expect(xml.trim()).toMatch(/<\/urlset>$/);
+    expect(xml).not.toMatch(/lastmod|changefreq|priority|other\.example|spoofed\.example/);
+  });
+
+  it('allows page rendering resources while discouraging API and internal crawling', async () => {
+    const app = createGateway({ apiFetch: vi.fn(), startFetch: vi.fn() });
+    const body = await (await app.request('/robots.txt')).text();
+    expect(body.split('\n').filter(Boolean)).toEqual([
+      'User-agent: *',
+      'Allow: /',
+      'Disallow: /bili$',
+      'Disallow: /bili?',
+      'Disallow: /bili/',
+      'Allow: /bili/files/',
+      'Allow: /bili/img3/',
+      'Disallow: /health',
+      'Disallow: /_serverFn',
+      'Sitemap: https://lnovel.animes.garden/sitemap.xml'
+    ]);
+  });
+
   it.each(paths)('forwards %s without rewriting the request or response', async (path) => {
     const response = new Response('unchanged', {
       status: 200,
