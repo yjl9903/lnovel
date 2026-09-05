@@ -4,11 +4,17 @@
 
 ## 环境与安装
 
-根 `package.json` 要求 Node.js `>=24`，固定包管理器为 `pnpm@11.25.0`。当前版本配置并未统一：`.node-version` 为 `v26.1.0`，CI 使用 `26.7.0`，Docker 基础镜像为 `platformatic/node-caged:26.3.1-slim`。复现问题时应注明实际运行版本；本文不修改这些配置。
+根 `package.json` 要求 Node.js `>=24`，固定包管理器为 `pnpm@12.3.4`。当前 Node.js 版本配置并未统一：`.node-version` 为 `v26.1.0`，CI 使用 `26.8.1`，Renovate 工作流使用 `24.20.0`，Docker 基础镜像为 `platformatic/node-caged:26.3.1-slim`。复现问题时应注明实际运行版本。
+
+按照 [pnpm 官方安装指南](https://pnpm.io/installation)，已有 pnpm `>=11.10.0` 时可在项目根目录执行 `pnpm self-update 12.3.4` 更新项目版本约束；没有 pnpm 时使用 `npx get-pnpm 12.3.4` 安装。pnpm 12 是原生可执行文件，通过 npm 安装需要 Node.js `>=22.13`，本项目仍要求 Node.js `>=24`。不要使用未指定版本的 `latest`，该标签目前仍指向 pnpm 11。
+
+本地、CI 的 `pnpm/action-setup` 和 Docker 的 npm 安装步骤都以根 `package.json#packageManager` 为版本来源。依赖安装继续使用冻结锁文件：
 
 ```sh
 pnpm install --frozen-lockfile
 ```
+
+从 pnpm 11 升级时，按[官方 v12 差异说明](https://pnpm.io/blog/whats-different-in-pnpm-12)保留现有 `pnpm-workspace.yaml` 配置与 v9 锁文件格式，包括 `allowBuilds`、hoist、shell emulator 和 flomise 补丁。仓库未使用已移除的 `--resolution-only`，也没有需要重新解析的 Git 依赖。包管理器自动切换可能在锁文件前部记录自身依赖；这与应用依赖是不同的 YAML 文档。
 
 首次需要本地抓取时准备浏览器二进制：
 

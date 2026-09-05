@@ -18,6 +18,8 @@ Web 将 `@lnovel/server` 保留为外部 workspace 依赖。部署需要 workspa
 docker build --platform linux/amd64 -f apps/web/Dockerfile -t lnovel-web .
 ```
 
+Docker 按阶段设置环境：公共 `base` 阶段不设置 `NODE_ENV`；`build` 阶段设置 `CI=true`，从根 `package.json#packageManager` 安装 pnpm，并用 `pnpm install --frozen-lockfile` 安装完整依赖。仅构建命令使用 `NODE_ENV=production pnpm run build`，随后通过 `pnpm prune --prod` 明确裁剪开发依赖。最终运行阶段统一设置 `NODE_ENV=production`，不继承 `build` 阶段的 `CI`。
+
 镜像安装 Chromium 系统依赖并下载 CloakBrowser 二进制。默认配置：
 
 | 项目 | 当前值 |

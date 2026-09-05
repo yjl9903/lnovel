@@ -18,6 +18,8 @@
 
 当前 `tsdown.config.ts` 只构建库入口 `src/index.ts`。虽然 manifest 声明了 `bilinovel` bin，`cli.mjs` 引用的 `dist/cli.mjs` 没有对应源码与构建入口，因此该 bin 不是可用的 CLI 能力。
 
+根 `tsconfig.json#paths` 将 `bilinovel` 映射到源码，供开发和类型检查使用。Server 仅在生成声明时使用 `apps/server/tsconfig.dts.json` 清空该映射，改从 manifest 的 `exports.types` 读取 `dist/index.d.mts`；根 Turbo 流水线负责先构建上游包。当前 TypeScript 7 声明生成器直接读取 tsconfig 文件，因此使用独立文件，而不是在 `dts.compilerOptions` 中覆盖。这样可避免声明生成跨出 Server 项目，将临时 `.d.ts` 写入 `packages/bilinovel/src/`。声明产物应位于各包的 `dist/`，源码目录只保留手写声明。
+
 ## lnovel
 
 `packages/lnovel/src/index.ts` 当前仅导出 `hello = 1`。`src/cli.ts` 注册了以下命令，但 action 均为空：

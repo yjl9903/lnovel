@@ -14,11 +14,11 @@ LABEL fly_launch_runtime="Node.js"
 # Node.js app lives here
 WORKDIR /lnovel
 
-# Set production environment
-ENV NODE_ENV="production"
-
 # Throw-away build stage to reduce size of final image
 FROM base AS build
+
+# Keep installation non-interactive and include development dependencies.
+ENV CI=true
 
 # Install packages needed to build node modules
 RUN apt-get update -qq && \
@@ -35,20 +35,20 @@ COPY ./packages/bilinovel/package.json ./packages/bilinovel/
 # Install the package manager version declared by the workspace root.
 RUN npm install -g $(node -p "require('./package.json').packageManager")
 
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile
 
 # Copy application code
 COPY --link . .
 
-# Setup CI environment
-ENV CI=true NODE_ENV="production"
-
-# Build application and remove development dependencies
-RUN pnpm run build && pnpm prune --prod
+# Build for production, then explicitly remove development dependencies.
+RUN NODE_ENV=production pnpm run build && pnpm prune --prod
 
 
 # Final stage for app image
 FROM base
+
+# Runtime environment; CI settings belong only to the build stage.
+ENV NODE_ENV=production
 
 # Copy built application
 COPY --from=build /lnovel /lnovel

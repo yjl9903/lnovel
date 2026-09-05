@@ -7,7 +7,10 @@ export default defineConfig({
     logging: 'src/logging.ts'
   },
   format: ['esm'],
-  dts: true,
+  dts: {
+    // Resolve workspace types from package exports only during declaration emit.
+    tsconfig: './tsconfig.dts.json'
+  },
   clean: true,
   outDir: 'dist'
 });
