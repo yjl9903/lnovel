@@ -7,6 +7,7 @@ import {
   Scripts
 } from '@tanstack/react-router';
 import stylesheet from '../index.css?url';
+import { Toaster } from '../components/ui/sonner';
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -43,6 +44,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       </head>
       <body>
         <Outlet />
+        <Toaster />
         <Scripts />
       </body>
     </html>

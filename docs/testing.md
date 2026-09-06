@@ -4,19 +4,21 @@
 
 ## 现有覆盖
 
-| 测试文件 | 验证内容 | 隔离边界 |
-| --- | --- | --- |
-| `packages/bilinovel/test/novel.test.ts` | 小说、卷、分页章节、图片转换和下架识别 | 从 `__assets__/` 读取 HTML，使用快照 |
-| `apps/server/test/bilinovel.routes.test.ts` | JSON 命名空间迁移、原 RSS/图片契约、筛选与 force、错误及超时 | 真实路由/中间件与 RSS 序列化，替换数据库/工作流/网络/Folo 边界 |
-| `apps/server/test/bilinovel.database.test.ts` | 下架标记后保留已有小说与卷数据 | 临时 SQLite，运行真实迁移 |
-| `apps/web/test/gateway.test.ts` | JSON 与保留资源分流、旧 JSON 路径交给页面、方法/请求体/取消、允许 RSS 抓取的 SEO 文件、SSR 请求头 | 注入 fetch handler |
-| `apps/web/test/top.test.ts` | Query hydration、SSR 失败重试、实例隔离和响应解析 | mock API 获取边界 |
-| `apps/web/test/novel.test.ts` | 详情 Query 恢复与隔离、ID/响应校验、404 不重试、简介纯文本转换、日期和 SEO | mock API 获取边界 |
-| `apps/web/test/server.test.ts` | 经网关访问真实 Server 的状态、正文、ETag、缓存语义与新 API 请求日志关联 | 临时 SQLite，仅调用不触发抓取的路由 |
-| `apps/web/test/production.test.ts` | 客户端依赖隔离、生产首页/详情 SSR、站内入口、静态资源、SEO、404、下架/空态与并发请求 | 子进程运行构建产物，loader 用固定 API 替身替换 Server |
-| `packages/lnovel/test/index.test.ts` | 占位断言 | 不验证 CLI 业务 |
+| 测试文件                                      | 验证内容                                                                                          | 隔离边界                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `packages/bilinovel/test/novel.test.ts`       | 小说、卷、分页章节、图片转换和下架识别                                                            | 从 `__assets__/` 读取 HTML，使用快照                           |
+| `apps/server/test/bilinovel.routes.test.ts`   | JSON 命名空间迁移、原 RSS/图片契约、筛选与 force、错误及超时                                      | 真实路由/中间件与 RSS 序列化，替换数据库/工作流/网络/Folo 边界 |
+| `apps/server/test/bilinovel.database.test.ts` | 下架标记后保留已有小说与卷数据                                                                    | 临时 SQLite，运行真实迁移                                      |
+| `apps/web/test/gateway.test.ts`               | JSON 与保留资源分流、旧 JSON 路径交给页面、方法/请求体/取消、允许 RSS 抓取的 SEO 文件、SSR 请求头 | 注入 fetch handler                                             |
+| `apps/web/test/top.test.ts`                   | Query hydration、SSR 失败重试、实例隔离和响应解析                                                 | mock API 获取边界                                              |
+| `apps/web/test/novel.test.ts`                 | 详情 Query 恢复与隔离、ID/响应校验、404 不重试、简介纯文本转换、日期和 SEO                        | mock API 获取边界                                              |
+| `apps/web/test/server.test.ts`                | 经网关访问真实 Server 的状态、正文、ETag、缓存语义与新 API 请求日志关联                           | 临时 SQLite，仅调用不触发抓取的路由                            |
+| `apps/web/test/production.test.ts`            | 客户端依赖隔离、生产首页/详情 SSR、站内入口、静态资源、SEO、404、下架/空态与并发请求              | 子进程运行构建产物，loader 用固定 API 替身替换 Server          |
+| `apps/web/test/volume-epub.test.ts`           | EPUB ZIP、目录与阅读顺序、内部引用、XHTML 清理、元数据、图片格式及失败取消                        | 本地 JSON/图片 fixture、受控 fetch 和 AVIF 转换替身            |
+| `apps/web/test/volume-download.test.tsx`      | 点击后生成、任务排重、Sonner toast 更新/取消/重试/清理、页面切换、迟到结果与 URL 回收             | jsdom、React act，替换生成边界                                 |
+| `packages/lnovel/test/index.test.ts`          | 占位断言                                                                                          | 不验证 CLI 业务                                                |
 
-详情生产 fixture 包含成功、缺失、下架、空数据、错误、超时和无效响应；未知卷页/章节页同时断言不请求小说 API。浏览器验收应检查 375px 手机和桌面布局、长标题、封面失败、首页跳转、前进后退、恢复后的 SEO，以及 SSR 恢复后不立即重复请求。
+详情生产 fixture 包含成功、缺失、下架、空数据、错误、超时和无效响应；未知卷页/章节页同时断言不请求小说 API。详情 SSR 同时断言不请求卷或章节 API；生产 fixture 提供确定的卷、正文与图片响应，供浏览器下载验收。浏览器验收应检查 375px 手机和桌面布局、长标题、封面失败、首页跳转、前进后退、恢复后的 SEO，以及 SSR 恢复后不立即重复请求。
 
 生产构建测试验证 Web 产物与 API 边界组合，不等价于完整在线抓取测试。当前没有覆盖浏览器回退、真实外站可用性或完整工作流更新链路的端到端测试；不要将已有测试通过表述为这些能力已验收。
 
@@ -52,3 +54,11 @@ Web 生产测试要求 `apps/web/dist/` 存在且对应当前代码；Web 的真
 - 不为了凑覆盖率给空实现添加机械断言，也不为纯文档改动新增业务测试。
 
 纯文档修改检查链接、路径、脚本名称与实现事实；交付说明列出实际检查和未执行的运行验收。手工请求真实业务接口会触发抓取，不能混同于离线检查。
+
+## EPUB 验收
+
+新增导出测试只使用 `apps/web/test/fixtures/epub.ts` 的本地数据。ZIP 验证要检查 mimetype 首项不压缩、manifest 和 XHTML 内部引用、spine 顺序、贡献者文本及所有必需资源；不只断言文件扩展名。
+
+浏览器验收可启动带 `apps/web/test/fixtures/loader.mjs` 的生产入口，使用端口 0 和独立临时工作目录，避免加载真实 SQLite 和抓取。检查 375px 与桌面布局、按钮顺序、懒加载、完整下载、未就绪、失败重试及取消；确认状态只出现在 toast 中，进度更新不堆积通知，离开页面后不残留通知；长卷名换行时 loading 图标仍对齐标题首行，取消或重试按钮在文案下方单独一行。下载文件再由 EPUBCheck 校验，并检查阅读器中的封面、目录、正文和插图；jsdom 与模拟图片转换不能代替真实浏览器解码或阅读器验收。
+
+EPUBCheck 是独立验收工具，不作为 Web 运行依赖；可使用相邻 epubook 仓库已安装的 `scripts/epubcheck.sh` 检查临时生成文件，不把生成文件提交到仓库。

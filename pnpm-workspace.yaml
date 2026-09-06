@@ -11,3 +11,7 @@ ignoreWorkspaceRootCheck: true
 shamefullyHoist: true
 patchedDependencies:
   flomise@0.0.6: patches/flomise@0.0.6.patch
+minimumReleaseAgeExclude:
+  - '@epubook/bundler@0.0.12-beta.4'
+  - '@epubook/core@0.0.12-beta.4'
+  - '@epubook/xml@0.0.12-beta.4'

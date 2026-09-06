@@ -5,6 +5,10 @@ import { buildFeedUrl, buildNovelUrl, buildVolumeUrl } from '../lib/novel-links'
 import { Cover, FoloButton, RssButton, NovelTag, SourceButton } from './novel-shared';
 import { SiteFooter } from './site-footer';
 import { Skeleton } from './ui/skeleton';
+import { Badge } from './ui/badge';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Download04Icon } from '@hugeicons/core-free-icons';
+import { useVolumeDownload } from '../lib/use-volume-download';
 
 export function NovelLayout({ children, novel }: { children: ReactNode; novel?: Novel }) {
   return (
@@ -48,6 +52,7 @@ export function NovelLoading() {
 }
 
 export function NovelDetail({ novel }: { novel: Novel }) {
+  const download = useVolumeDownload(novel);
   return (
     <NovelLayout novel={novel}>
       {novel.isDeleted ? (
@@ -148,6 +153,21 @@ export function NovelDetail({ novel }: { novel: Novel }) {
                   </div>
                   <div className="flex shrink-0 flex-wrap items-center gap-3">
                     <RssButton href={buildFeedUrl(novel.nid, vol.vid)} />
+                    <Badge
+                      render={
+                        <button
+                          type="button"
+                          disabled={download.active}
+                          aria-label={'下载 EPUB：' + vol.title}
+                          onClick={() => void download.start(vol)}
+                        />
+                      }
+                      variant="outline"
+                      className="cursor-pointer hover:bg-muted disabled:cursor-wait disabled:opacity-50"
+                    >
+                      <HugeiconsIcon icon={Download04Icon} strokeWidth={2} aria-hidden="true" />
+                      下载 EPUB
+                    </Badge>
                     <SourceButton href={buildVolumeUrl(novel.nid, vol.vid)} />
                   </div>
                 </div>

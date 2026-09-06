@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { epubResponse } from './epub.ts';
 
 export const items = Array.from({ length: 9 }, (_, index) => ({
   nid: index + 1,
@@ -36,7 +37,22 @@ export function createApp() {
   const app = new Hono();
   let calls = 0;
   let novelCalls = 0;
-  app.get('/health', (c) => c.json({ ok: true, calls, novelCalls }));
+  let volumeCalls = 0;
+  let chapterCalls = 0;
+  app.get('/health', (c) => c.json({ ok: true, calls, novelCalls, volumeCalls, chapterCalls }));
+  app.get('/api/bili/novel/:nid/vol/:vid', (c) => {
+    volumeCalls++;
+    if (c.req.param('vid') === '20') {
+      return c.json({ ok: true, data: { nid: 1, vid: 20, done: false, chapters: [] } });
+    }
+    return epubResponse(c.req.url);
+  });
+  app.get('/api/bili/novel/:nid/chapter/:cid', (c) => {
+    chapterCalls++;
+    return epubResponse(c.req.url);
+  });
+  app.get('/bili/files/*', (c) => epubResponse(c.req.url));
+  app.get('/bili/img3/*', (c) => epubResponse(c.req.url));
   app.get('/api/bili/novel/:nid', (c) => {
     novelCalls++;
     const nid = Number(c.req.param('nid'));

@@ -3,6 +3,32 @@
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/ibm-plex-sans";
 
+[data-sonner-toast][data-styled='true'].app-toast {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  align-items: start;
+  column-gap: 8px;
+  row-gap: 12px;
+}
+
+[data-sonner-toast][data-styled='true'].app-toast [data-icon] {
+  grid-column: 1;
+  grid-row: 1;
+  margin-top: calc((1.5em - 16px) / 2);
+}
+
+[data-sonner-toast][data-styled='true'].app-toast [data-content] {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+[data-sonner-toast][data-styled='true'].app-toast [data-button]:first-of-type {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  margin-inline: 0;
+}
+
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

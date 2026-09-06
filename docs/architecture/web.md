@@ -38,6 +38,20 @@
 - 首页的最新章节标签与详情页的作品标签共用 `NovelTag`，基于通用 `Badge` 的 secondary 样式，长文本允许换行。RSS/Folo 链接和小说、分卷共用的 `SourceButton`（前往原站）同样复用 `Badge` 的尺寸、字重和圆角，保留各自颜色与行为，操作入口统一图标在前、文本在后；页面不单独覆盖其尺寸。
 - 封面、RSS/Folo 按钮及页脚供首页与详情页共用；封面缺失或加载失败时显示占位。缺少作者、简介或分卷分别显示空态；详情书名字号与首页轮播一致，统一使用 text-lg（18px），长标题自然换行。详情主封面与首页轮播使用相同的 3:4 比例、圆角及响应式尺寸：sm 起宽 220px，窄屏占满内容区并将信息与订阅按钮排列在封面下方。
 
+## 分卷 EPUB 下载
+
+小说详情页每卷操作按 RSS、下载 EPUB、前往原站排列。下载只在用户点击后启动；SSR、详情 loader 和页面恢复不会预取卷目录、章节或图片二进制。
+
+- `src/lib/use-volume-download.ts` 按页面实例管理单个任务，使用 ref 同步防止重复点击。分卷行只显示操作按钮，任务进行时禁用其他下载入口；准备、正文、图片、打包进度和结果统一由 Sonner toast 展示，根布局通过 `src/components/ui/sonner.tsx` 挂载一个右下角 Toaster。同一任务复用同一 toast ID，并显示卷名，避免进度通知堆积；进行中的 loading toast 不自动消失，提供取消操作。通知图标与标题首行居中对齐，取消或重试按钮在文案下方独占一行，并与文案左侧对齐。成功提示 8 秒、取消提示 4 秒后消失，失败提示保留 8 秒并提供重试，也可再次点击分卷下载按钮。离开小说页面或切换小说时清理该 toast、取消请求并忽略旧任务的迟到结果。
+- `src/lib/volume-epub.ts` 点击后动态加载，使用固定 `0.0.12-beta.4` 的 `@epubook/core`、`@epubook/bundler`、`@epubook/xml`。生成 EPUB 3 的 manifest、spine、封面、目录和正文；不依赖顶层 `epubook`、解析包、Server 或 Node API。
+- 浏览器串行请求 `/api/bili/novel/:nid/vol/:vid` 和目录中的 `/api/bili/novel/:nid/chapter/:cid`，校验 ID 归属、目录重复、响应与非空正文。请求使用 `cache: 'no-store'`、35 秒超时及取消信号，不传 `force`，不自动重试或轮询。只有 `done === true` 且目录非空的卷可以导出；未完成或缺少标记时提示稍后重试。首次抓取返回的数据可能尚无 `done`，同样要求用户稍后重试。
+- `src/lib/epub-images.ts` 将已知原站图片和历史 `/bili/files/`、`/bili/img3/` 代理地址归一到当前同源代理。只使用已有代理，不新增任意 URL 代理；不支持的地址明确失败。图片按归一 URL 去重，正文和封面共用资源，EPUB 内仅保留本地图片引用。
+- 图片格式由字节签名确定，避免把 HTML 错误页或实际 PNG 按 URL 后缀误写成 JPEG。JPEG、PNG、GIF、WebP 原样嵌入；AVIF 使用浏览器解码和 canvas 转 PNG，转换后释放 bitmap/canvas。未知格式或转换失败中止。
+- 正文先解析为惰性 HTML AST，再重建受支持的 XHTML 标签与属性，保留基础排版、换行、ruby、表格和插图，移除脚本、事件属性、外部样式、嵌入对象等。普通链接只允许 HTTP(S)，图片全部内嵌；不向页面 DOM 注入源站正文。
+- 元数据使用小说作者列表，首选 author 角色作为 creator，其余作为 contributor；无作者时使用“未知”。简介依次取卷简介纯文本、小说简介、书名与卷名，保证非空，规避上游空 `dc:description` 问题。文件名使用书名与卷名并清理非法字符。
+- 正文、封面或插图请求失败均中止，不生成缺章或缺图文件；没有封面地址时可导出。完整生成后使用 `application/epub+zip` Blob 下载，Object URL 在 30 秒后或页面离开时释放。
+- 所有数据仅在当前任务内存中保留，不提供持久化缓存、断点续传或后台下载。取消阻止后续获取和下载，但不能保证 Server 已启动的后台抓取停止；打包阶段的 CPU 工作也不能被立即中断，返回后仍检查取消状态。
+
 ## SEO 与抓取声明
 
 `src/lib/site.ts` 固定正式首页为 `https://lnovel.animes.garden/`。地址不随请求 Host、转发头、查询参数或 Server 的 `APP_HOST` 改变。迁移域名需要修改此配置并重新构建。

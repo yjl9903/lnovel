@@ -98,6 +98,7 @@ describe('production web bundle', () => {
       expect(html).toContain('2026/09/06');
       expect(html).toContain('第一卷 起点');
       expect(html).toContain('第二卷 新的旅程');
+      expect(html).toContain('下载 EPUB');
       expect(html).toContain('暂无封面');
       expect(html).toContain('/bili/novel/1/feed.xml');
       expect(html).toContain('/bili/novel/1/vol/10/feed.xml');
@@ -112,6 +113,8 @@ describe('production web bundle', () => {
       const after = await (await fetch(`${origin}/health`)).json();
       expect(after.calls).toBe(before.calls);
       expect(after.novelCalls - before.novelCalls).toBe(1);
+      expect(after.volumeCalls).toBe(before.volumeCalls);
+      expect(after.chapterCalls).toBe(before.chapterCalls);
     }
   );
 
