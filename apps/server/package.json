@@ -62,10 +62,10 @@
     "drizzle-sqlite": "^0.1.0",
     "feed": "6.0.0",
     "flomise": "0.0.6",
-    "hono": "4.13.5",
+    "hono": "4.13.7",
     "lnovel": "workspace:*",
     "lru-cache": "11.5.2",
-    "playwright-core": "1.62.1",
+    "playwright-core": "1.63.0",
     "zod": "4.5.4"
   },
   "devDependencies": {

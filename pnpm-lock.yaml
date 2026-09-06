@@ -6,9 +6,6 @@ importers:
   .:
     configDependencies: {}
     packageManagerDependencies:
-      '@pnpm/exe':
-        specifier: 12.3.4
-        version: 12.3.4
       pnpm:
         specifier: 12.3.4
         version: 12.3.4
@@ -59,11 +56,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@pnpm/exe@12.3.4':
-    resolution: {integrity: sha512-Rq7JokWAyYF9IFfn8zofB/q2AgnZlmoMuH5fMHB2+Ta61I9aD7sNm+woZpx6iH+5vb38chdSoYRvOtSqlH72YQ==}
-    engines: {node: '>=18.*'}
-    hasBin: true
-
   pnpm@12.3.4:
     resolution: {integrity: sha512-lhqkH7B32joEpEHZ+OFevAyW2o73ELLrZ7+e58sGEOq9SPH9hfUc/+c4RnhfoPh8VqOocqHYk/hEZ0G1zORUVw==}
     engines: {node: '>=18.*'}
@@ -94,17 +86,6 @@ snapshots:
 
   '@pnpm/exe.win32-x64@12.3.4':
     optional: true
-
-  '@pnpm/exe@12.3.4':
-    optionalDependencies:
-      '@pnpm/exe.darwin-arm64': 12.3.4
-      '@pnpm/exe.darwin-x64': 12.3.4
-      '@pnpm/exe.linux-arm64': 12.3.4
-      '@pnpm/exe.linux-arm64-musl': 12.3.4
-      '@pnpm/exe.linux-x64': 12.3.4
-      '@pnpm/exe.linux-x64-musl': 12.3.4
-      '@pnpm/exe.win32-arm64': 12.3.4
-      '@pnpm/exe.win32-x64': 12.3.4
 
   pnpm@12.3.4:
     optionalDependencies:
@@ -166,10 +147,10 @@ importers:
     dependencies:
       '@hono/node-server':
         specifier: 2.1.1
-        version: 2.1.1(hono@4.13.5)
+        version: 2.1.1(hono@4.13.7)
       '@hono/zod-validator':
         specifier: 0.9.1
-        version: 0.9.1(hono@4.13.5)(zod@4.5.4)
+        version: 0.9.1(hono@4.13.7)(zod@4.5.4)
       '@opentelemetry/api-logs':
         specifier: 0.222.0
         version: 0.222.0
@@ -190,7 +171,7 @@ importers:
         version: 1.0.0-beta.18
       cloakbrowser:
         specifier: 0.5.10
-        version: 0.5.10(playwright-core@1.62.1)
+        version: 0.5.10(playwright-core@1.63.0)
       croner:
         specifier: 10.0.1
         version: 10.0.1
@@ -210,8 +191,8 @@ importers:
         specifier: 0.0.6
         version: 0.0.6(patch_hash=03a2178c58377bd8b4db852d40213e5ba38ff8efd85361b3ed67282851aa3cd5)
       hono:
-        specifier: 4.13.5
-        version: 4.13.5
+        specifier: 4.13.7
+        version: 4.13.7
       lnovel:
         specifier: workspace:*
         version: link:../../packages/lnovel
@@ -219,8 +200,8 @@ importers:
         specifier: 11.5.2
         version: 11.5.2
       playwright-core:
-        specifier: 1.62.1
-        version: 1.62.1
+        specifier: 1.63.0
+        version: 1.63.0
       zod:
         specifier: 4.5.4
         version: 4.5.4
@@ -248,7 +229,7 @@ importers:
         version: 5.3.0
       '@hono/node-server':
         specifier: 2.1.1
-        version: 2.1.1(hono@4.13.5)
+        version: 2.1.1(hono@4.13.7)
       '@hugeicons/core-free-icons':
         specifier: 4.3.0
         version: 4.3.0
@@ -286,8 +267,8 @@ importers:
         specifier: 17.4.2
         version: 17.4.2
       hono:
-        specifier: 4.13.5
-        version: 4.13.5
+        specifier: 4.13.7
+        version: 4.13.7
       parse5:
         specifier: 8.0.1
         version: 8.0.1
@@ -2811,8 +2792,8 @@ packages:
   hastscript@9.0.1:
     resolution: {integrity: sha512-g7df9rMFX/SPi34tyGCyUBREQoKkapwdY/T04Qn9TDWfHhAYt4/I0gMVirzK5wEzeUqIjEB+LXC/ypb7Aqno5w==}
 
-  hono@4.13.5:
-    resolution: {integrity: sha512-O6+/eCYRkzzzy0rPWwKLiGBR1nFuUPZynnwjxN1MBA62NNqbT0wQEzQyK2gSO5yDIDB336sXQleAhOHrzlYyKw==}
+  hono@4.13.7:
+    resolution: {integrity: sha512-c8/gF9ac8Y78/agExVocyLevgR+JlpNB444Py0FSX8pJoPdYUfUzRcXtYEYGwt6l19qIlVZPN5Mfsw9jFShmQQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@6.1.1:
@@ -3406,8 +3387,8 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.62.1:
-    resolution: {integrity: sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw==}
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -4777,13 +4758,13 @@ snapshots:
 
   '@fontsource-variable/ibm-plex-sans@5.3.0': {}
 
-  '@hono/node-server@2.1.1(hono@4.13.5)':
+  '@hono/node-server@2.1.1(hono@4.13.7)':
     dependencies:
-      hono: 4.13.5
+      hono: 4.13.7
 
-  '@hono/zod-validator@0.9.1(hono@4.13.5)(zod@4.5.4)':
+  '@hono/zod-validator@0.9.1(hono@4.13.7)(zod@4.5.4)':
     dependencies:
-      hono: 4.13.5
+      hono: 4.13.7
       zod: 4.5.4
 
   '@hugeicons/core-free-icons@4.3.0': {}
@@ -4817,7 +4798,7 @@ snapshots:
 
   '@modelcontextprotocol/sdk@1.30.0(zod@3.25.76)':
     dependencies:
-      '@hono/node-server': 2.1.1(hono@4.13.5)
+      '@hono/node-server': 2.1.1(hono@4.13.7)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -4827,7 +4808,7 @@ snapshots:
       eventsource-parser: 3.1.0
       express: 5.2.1
       express-rate-limit: 8.6.1(express@5.2.1)
-      hono: 4.13.5
+      hono: 4.13.7
       jose: 6.2.7
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -5688,11 +5669,11 @@ snapshots:
 
   cli-spinners@2.9.2: {}
 
-  cloakbrowser@0.5.10(playwright-core@1.62.1):
+  cloakbrowser@0.5.10(playwright-core@1.63.0):
     dependencies:
       tar: 7.5.22
     optionalDependencies:
-      playwright-core: 1.62.1
+      playwright-core: 1.63.0
 
   clsx@2.1.1: {}
 
@@ -6249,7 +6230,7 @@ snapshots:
       property-information: 7.2.0
       space-separated-tokens: 2.0.2
 
-  hono@4.13.5: {}
+  hono@4.13.7: {}
 
   hookable@6.1.1: {}
 
@@ -6706,7 +6687,7 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.62.1: {}
+  playwright-core@1.63.0: {}
 
   postcss-selector-parser@7.1.4:
     dependencies:
