@@ -28,7 +28,7 @@ describe('volume EPUB export', () => {
     const opts = options();
     const result = await generateVolumeEpub(opts);
     expect(result.blob.type).toBe('application/epub+zip');
-    expect(result.filename).toBe('测试小说 & _书名_ 第一卷.epub');
+    expect(result.filename).toBe('第一卷.epub');
     const bytes = new Uint8Array(await result.blob.arrayBuffer());
     // The first ZIP entry is the uncompressed EPUB mimetype.
     expect(new DataView(bytes.buffer).getUint16(8, true)).toBe(0);
@@ -86,6 +86,37 @@ describe('volume EPUB export', () => {
     );
     await expect(generateVolumeEpub(options())).rejects.toThrow('尚未准备好');
     expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['玩乐关系', '玩乐关系 4', '第四卷', '玩乐关系 4'],
+    ['玩乐关系', '玩玩的恋爱关系 1', '第一卷', '玩玩的恋爱关系 1'],
+    [
+      '借给朋友500圆，他竟然拿妹妹来抵债，我到底该如何是好',
+      '借给朋友500圆，他竟然拿妹妹来抵债，我到底该如何是好 1',
+      '第一卷',
+      '借给朋友500圆，他竟然拿妹妹来抵债，我到底该如何是好 1'
+    ],
+    ['测试小说', '  独立卷名 & <文字>  ', '第一卷', '独立卷名 & <文字>'],
+    ['测试小说', '  ', '第一卷', '测试小说 第一卷'],
+    ['测试小说', '', '', '测试小说']
+  ])('uses the volume title consistently for %s / %s', async (name, title, volume, expected) => {
+    setup().mockImplementation(async (url) =>
+      url.includes('/vol/')
+        ? Response.json({ ok: true, data: { ...epubVolume, description: '' } })
+        : epubResponse(url)
+    );
+    const opts = options();
+    opts.novel = { ...opts.novel, name, description: '' };
+    opts.volume = { ...opts.volume, title, volume };
+    const result = await generateVolumeEpub(opts);
+    const files = unzipSync(new Uint8Array(await result.blob.arrayBuffer()));
+    const opf = xml(strFromU8(files['OEBPS/content.opf']));
+    expect(result.filename).toBe(epubFilename(expected));
+    expect(opf.getElementsByTagName('dc:title')[0].textContent).toBe(expected);
+    expect(opf.getElementsByTagName('dc:description')[0].textContent).toBe(expected);
+    const cover = xml(strFromU8(files['OEBPS/cover.xhtml']));
+    expect(cover.getElementsByTagName('img')[0].getAttribute('alt')).toBe(expected);
   });
 
   it.each([
@@ -157,7 +188,7 @@ describe('volume EPUB export', () => {
       const files = unzipSync(new Uint8Array(await result.blob.arrayBuffer()));
       const opf = xml(strFromU8(files['OEBPS/content.opf']));
       expect(opf.getElementsByTagName('dc:description')[0].textContent).toBe(
-        description || '测试小说 & <书名> 第一卷'
+        description || '第一卷'
       );
       expect(files['OEBPS/cover.xhtml']).toBeUndefined();
     }

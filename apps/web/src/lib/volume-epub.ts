@@ -268,7 +268,9 @@ export async function generateVolumeEpub({
     novel.nid,
     summary.vid
   );
-  const title = [novel.name, summary.title || summary.volume].filter(Boolean).join(' ');
+  // The source volume title already names the book, sometimes using a different translation.
+  const title =
+    summary.title.trim() || [novel.name.trim(), summary.volume.trim()].filter(Boolean).join(' ');
   const description =
     descriptionToText(volume.description || '') || novel.description.trim() || title;
   const authors = novel.authors.filter((author) => author.name.trim());
