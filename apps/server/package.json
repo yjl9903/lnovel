@@ -55,7 +55,7 @@
     "@opentelemetry/sdk-logs": "0.222.0",
     "bilinovel": "workspace:*",
     "breadc": "1.0.0-beta.18",
-    "cloakbrowser": "0.5.10",
+    "cloakbrowser": "0.5.11",
     "croner": "10.0.1",
     "dotenv": "17.4.2",
     "drizzle-orm": "0.45.2",
