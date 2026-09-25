@@ -24,7 +24,7 @@
     "bumpp": "latest",
     "prettier": "^3.9.9",
     "tsdown": "^0.23.0",
-    "tsx": "^4.23.13",
+    "tsx": "^4.23.15",
     "turbo": "^2.10.13",
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
