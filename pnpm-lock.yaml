@@ -236,11 +236,11 @@ importers:
         specifier: 17.4.2
         version: 17.4.2
       drizzle-orm:
-        specifier: 0.45.2
-        version: 0.45.2(@opentelemetry/api@1.9.1)
+        specifier: 0.45.3
+        version: 0.45.3(@opentelemetry/api@1.9.1)
       drizzle-sqlite:
         specifier: ^0.1.0
-        version: 0.1.0(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1))
+        version: 0.1.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1))
       feed:
         specifier: 6.0.0
         version: 6.0.0
@@ -264,8 +264,8 @@ importers:
         version: 4.6.5
     devDependencies:
       drizzle-kit:
-        specifier: 0.31.10
-        version: 0.31.10
+        specifier: 0.31.11
+        version: 0.31.11
 
   apps/web:
     dependencies:
@@ -2424,12 +2424,12 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  drizzle-kit@0.31.10:
-    resolution: {integrity: sha512-7OZcmQUrdGI+DUNNsKBn1aW8qSoKuTH7d0mYgSP8bAzdFzKoovxEFnoGQp2dVs82EOJeYycqRtciopszwUf8bw==}
+  drizzle-kit@0.31.11:
+    resolution: {integrity: sha512-YCYqxTLIB2OCqf6w9/Vef13baBVbwQIPcbT4Y56AfO6B9ajZhDhD8Jkveg/hJvT/iuMloKD/IYYkyMMNhr7Kqg==}
     hasBin: true
 
-  drizzle-orm@0.45.2:
-    resolution: {integrity: sha512-kY0BSaTNYWnoDMVoyY8uxmyHjpJW1geOmBMdSSicKo9CIIWkSxMIj2rkeSR51b8KAPB7m+qysjuHme5nKP+E5Q==}
+  drizzle-orm@0.45.3:
+    resolution: {integrity: sha512-CAloER21cDdcgZ1OmjrZX82EeRNsdP+y0onX/eyoYDaYzki/adrAa91lzM5jWh7zZPK4qUbw/6LGv9J+A+uizA==}
     peerDependencies:
       '@aws-sdk/client-rds-data': '>=3'
       '@cloudflare/workers-types': '>=4'
@@ -2437,6 +2437,7 @@ packages:
       '@libsql/client': '>=0.10.0'
       '@libsql/client-wasm': '>=0.10.0'
       '@neondatabase/serverless': '>=0.10.0'
+      '@netlify/db': '>=0.4.0'
       '@op-engineering/op-sqlite': '>=2'
       '@opentelemetry/api': ^1.4.1
       '@planetscale/database': '>=1.13'
@@ -2472,6 +2473,8 @@ packages:
       '@libsql/client-wasm':
         optional: true
       '@neondatabase/serverless':
+        optional: true
+      '@netlify/db':
         optional: true
       '@op-engineering/op-sqlite':
         optional: true
@@ -3861,11 +3864,6 @@ packages:
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
-
-  tsx@4.23.13:
-    resolution: {integrity: sha512-BL5MGkRln6aDYhb0xbQlEAGw743BaZYWdbWtdJOBriYJboKgUUYCadFp2/FpBBZquBC/ezNBn7wMMPx7FDZUDw==}
-    engines: {node: '>=18.0.0'}
-    hasBin: true
 
   tsx@4.23.15:
     resolution: {integrity: sha512-Yiex1Ovn8z2xPpOWckIiysV1SSyRMY9BkLF++q0yKiDxCqRhosKfMg3janKkiLBwZ5c/YryloKwGZcrEmtwxKw==}
@@ -5831,20 +5829,20 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  drizzle-kit@0.31.10:
+  drizzle-kit@0.31.11:
     dependencies:
       '@drizzle-team/brocli': 0.10.2
       '@esbuild-kit/esm-loader': 2.6.5
       esbuild: 0.25.12
-      tsx: 4.23.13
+      tsx: 4.23.15
 
-  drizzle-orm@0.45.2(@opentelemetry/api@1.9.1):
+  drizzle-orm@0.45.3(@opentelemetry/api@1.9.1):
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
 
-  drizzle-sqlite@0.1.0(drizzle-orm@0.45.2(@opentelemetry/api@1.9.1)):
+  drizzle-sqlite@0.1.0(drizzle-orm@0.45.3(@opentelemetry/api@1.9.1)):
     dependencies:
-      drizzle-orm: 0.45.2(@opentelemetry/api@1.9.1)
+      drizzle-orm: 0.45.3(@opentelemetry/api@1.9.1)
 
   dts-resolver@3.0.0: {}
 
@@ -7170,12 +7168,6 @@ snapshots:
       - vue-tsc
 
   tslib@2.8.1: {}
-
-  tsx@4.23.13:
-    dependencies:
-      esbuild: 0.28.2
-    optionalDependencies:
-      fsevents: 2.3.3
 
   tsx@4.23.15:
     dependencies:
