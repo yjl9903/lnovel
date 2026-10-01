@@ -44,7 +44,7 @@
     "@tanstack/store": "0.11.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
-    "dotenv": "18.0.4",
+    "dotenv": "18.0.5",
     "hono": "4.13.12",
     "parse5": "8.0.1",
     "react": "19.3.0",
