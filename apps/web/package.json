@@ -40,7 +40,7 @@
     "@tanstack/react-router": "1.170.40",
     "@tanstack/react-router-ssr-query": "1.167.3",
     "@tanstack/react-start": "1.168.59",
-    "@tanstack/react-store": "0.11.1",
+    "@tanstack/react-store": "0.11.2",
     "@tanstack/store": "0.11.1",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
