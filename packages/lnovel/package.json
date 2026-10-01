@@ -46,12 +46,12 @@
   "dependencies": {
     "@breadc/color": "^1.0.0-beta.18",
     "@breadc/death": "^1.0.0-beta.18",
-    "@clack/prompts": "^1.7.0",
+    "@clack/prompts": "^1.8.1",
     "@epubook/core": "^0.0.11",
     "bilinovel": "workspace:*",
     "breadc": "^1.0.0-beta.18",
     "epubook": "^0.0.11",
-    "yaml": "^2.9.0"
+    "yaml": "^2.9.1"
   },
   "engines": {
     "node": ">=v24.0.0"
