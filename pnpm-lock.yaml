@@ -312,8 +312,8 @@ importers:
         specifier: 0.11.2
         version: 0.11.2(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tanstack/store':
-        specifier: 0.11.1
-        version: 0.11.1
+        specifier: 0.11.2
+        version: 0.11.2
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -1719,9 +1719,6 @@ packages:
   '@tanstack/start-storage-context@1.167.35':
     resolution: {integrity: sha512-yY0lF1hHt0yWJHziYH71htEhmRlh467E7LKc8qJMgd/Rh1d4mjgKAEd9n39TyCGs9xFVNxIO0WrIvkSqfJOPYQ==}
     engines: {node: '>=22.12.0'}
-
-  '@tanstack/store@0.11.1':
-    resolution: {integrity: sha512-mzTOBhypOuDJAy/D8n2MfUZ1HFkXnmSETviRyhqEC8LUE7/IZQExOTxMANj3KjTofYTkFNpBY67qaVrT41YccA==}
 
   '@tanstack/store@0.11.2':
     resolution: {integrity: sha512-sJ4mjol8uQsHV0gOJzzjwXfh2Fwm+Sz0+8deqiTm4jGbMdjzNSW+xZCFm0kUa870uhd8yi+DpKnZb5Kc4apa0Q==}
@@ -5363,8 +5360,6 @@ snapshots:
   '@tanstack/start-storage-context@1.167.35':
     dependencies:
       '@tanstack/router-core': 1.171.33
-
-  '@tanstack/store@0.11.1': {}
 
   '@tanstack/store@0.11.2': {}
 
