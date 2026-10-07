@@ -233,8 +233,8 @@ importers:
         specifier: 10.0.1
         version: 10.0.1
       dotenv:
-        specifier: 18.0.4
-        version: 18.0.4
+        specifier: 18.0.6
+        version: 18.0.6
       drizzle-orm:
         specifier: 0.45.3
         version: 0.45.3(@opentelemetry/api@1.9.1)
@@ -321,8 +321,8 @@ importers:
         specifier: 2.1.1
         version: 2.1.1
       dotenv:
-        specifier: 18.0.4
-        version: 18.0.4
+        specifier: 18.0.6
+        version: 18.0.6
       hono:
         specifier: 4.13.12
         version: 4.13.12
@@ -2435,8 +2435,8 @@ packages:
     resolution: {integrity: sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==}
     engines: {node: '>=12'}
 
-  dotenv@18.0.4:
-    resolution: {integrity: sha512-jGt9uI5BIxpVO15kvy+iEFqNAwxYClKWnkptLjSNPnFLC003Imd0ofr3aEVsbpHdSBdSsbcApNIlz4nbyGMwdA==}
+  dotenv@18.0.6:
+    resolution: {integrity: sha512-ZMVmohV6CvAJtj++pZNyggluUt6hbRdQAxc2+Z635RL6/AG/ruXv5lHnybUFoxMPL/yrTL/tsF4paZu2l7RA6Q==}
     engines: {node: '>=12'}
     hasBin: true
 
@@ -5872,7 +5872,7 @@ snapshots:
 
   dotenv@17.4.2: {}
 
-  dotenv@18.0.4: {}
+  dotenv@18.0.6: {}
 
   drizzle-kit@0.31.11:
     dependencies:
