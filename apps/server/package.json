@@ -54,7 +54,7 @@
     "@opentelemetry/resources": "2.11.0",
     "@opentelemetry/sdk-logs": "0.222.0",
     "bilinovel": "workspace:*",
-    "breadc": "1.0.0-beta.18",
+    "breadc": "1.0.0-beta.21",
     "cloakbrowser": "0.5.11",
     "croner": "10.0.1",
     "dotenv": "18.0.6",
