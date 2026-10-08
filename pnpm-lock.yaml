@@ -228,7 +228,7 @@ importers:
         version: 1.0.0-beta.21
       cloakbrowser:
         specifier: 0.5.12
-        version: 0.5.12(playwright-core@1.63.0)
+        version: 0.5.12(playwright-core@1.64.0)
       croner:
         specifier: 10.0.1
         version: 10.0.1
@@ -257,8 +257,8 @@ importers:
         specifier: 11.5.3
         version: 11.5.3
       playwright-core:
-        specifier: 1.63.0
-        version: 1.63.0
+        specifier: 1.64.0
+        version: 1.64.0
       zod:
         specifier: 4.6.5
         version: 4.6.5
@@ -3404,8 +3404,8 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.63.0:
-    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+  playwright-core@1.64.0:
+    resolution: {integrity: sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg==}
     engines: {node: '>=20'}
     hasBin: true
 
@@ -5692,11 +5692,11 @@ snapshots:
 
   cli-spinners@2.9.2: {}
 
-  cloakbrowser@0.5.12(playwright-core@1.63.0):
+  cloakbrowser@0.5.12(playwright-core@1.64.0):
     dependencies:
       tar: 7.5.22
     optionalDependencies:
-      playwright-core: 1.63.0
+      playwright-core: 1.64.0
 
   clsx@2.1.1: {}
 
@@ -6672,7 +6672,7 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.63.0: {}
+  playwright-core@1.64.0: {}
 
   postcss-selector-parser@7.1.6:
     dependencies:

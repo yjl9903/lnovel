@@ -65,7 +65,7 @@
     "hono": "4.13.13",
     "lnovel": "workspace:*",
     "lru-cache": "11.5.3",
-    "playwright-core": "1.63.0",
+    "playwright-core": "1.64.0",
     "zod": "4.6.5"
   },
   "devDependencies": {
