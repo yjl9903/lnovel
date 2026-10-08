@@ -224,8 +224,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/bilinovel
       breadc:
-        specifier: 1.0.0-beta.18
-        version: 1.0.0-beta.18
+        specifier: 1.0.0-beta.21
+        version: 1.0.0-beta.21
       cloakbrowser:
         specifier: 0.5.11
         version: 0.5.11(playwright-core@1.63.0)
@@ -382,11 +382,11 @@ importers:
   packages/lnovel:
     dependencies:
       '@breadc/color':
-        specifier: ^1.0.0-beta.18
-        version: 1.0.0-beta.18
+        specifier: ^1.0.0-beta.21
+        version: 1.0.0-beta.21
       '@breadc/death':
-        specifier: ^1.0.0-beta.18
-        version: 1.0.0-beta.18
+        specifier: ^1.0.0-beta.21
+        version: 1.0.0-beta.21
       '@clack/prompts':
         specifier: ^1.8.1
         version: 1.8.1
@@ -397,8 +397,8 @@ importers:
         specifier: workspace:*
         version: link:../bilinovel
       breadc:
-        specifier: ^1.0.0-beta.18
-        version: 1.0.0-beta.18
+        specifier: ^1.0.0-beta.21
+        version: 1.0.0-beta.21
       epubook:
         specifier: ^0.0.11
         version: 0.0.11
@@ -580,17 +580,17 @@ packages:
     resolution: {integrity: sha512-ctxtJ/eA+t+6q2++vj5j7FYX3nRu311q1wfYH3xjlLOsczhlhxAg2FWNUXhpGvAw3BWo1xBcvOV6/YLc2r5FJw==}
     hasBin: true
 
-  '@breadc/color@1.0.0-beta.18':
-    resolution: {integrity: sha512-vClJTkTXJSScmk9kzX0N4C0a0a282X9fb0KYU/2emaHvseAUidrh7FBrueE3vzfHTuYiE2o4PHBfPTr0wOBsdQ==}
+  '@breadc/color@1.0.0-beta.21':
+    resolution: {integrity: sha512-bqmvDeij7D/j+KnVuGDgHUth8af2xFREggIDn6o+lt8DuDk+IKC2zF7cU7LxviSDhK9tylHJrJwjXSkV3JCBqg==}
 
-  '@breadc/core@1.0.0-beta.18':
-    resolution: {integrity: sha512-PMAB7Gwh8M1+/yYb8gK5mjUzPSjMtaJrpA6e0hPIm0V0+rukNLOczul26Gn47Ivbju/XyL3PK0UDapnuI8difQ==}
+  '@breadc/core@1.0.0-beta.21':
+    resolution: {integrity: sha512-wK2teIn/1Pl+buofxhigfQ58aZJqg34u4hVcmqaOGaFxbojZtkM88zyFHvr/AbTvsVNkl6puwVFOT9+s9EFWsg==}
 
-  '@breadc/death@1.0.0-beta.18':
-    resolution: {integrity: sha512-cunyKh7QPgY6mSmazqikkQ1n7QFHiTPP885H093QY/mCTKLyvIFM6MsT8yo6J3CeLtBzN30EiEVRqMlJT3ZMbA==}
+  '@breadc/death@1.0.0-beta.21':
+    resolution: {integrity: sha512-MmI5aCVEbNCtZLutHoGg15HVqiWtIJrNf0JvqgxS28/EjoL7Ey8M1KjIPsv+86/Jr67mZVhoB6mjPHOif3L/Bg==}
 
-  '@breadc/tui@1.0.0-beta.18':
-    resolution: {integrity: sha512-q3d2OkuoLsT9aYHroUqfbBo1yX5TCtbFvi7e4P857m7MDAZisfpOHY9/mXd59u4bH69vcC4rmrfYZ5YIO8GqvQ==}
+  '@breadc/tui@1.0.0-beta.21':
+    resolution: {integrity: sha512-9/8oH5ofTtjYCXChO3l427vGmTqLqrS1Gf8ba9JoSnY4AnxWU67L7oCcc5AmhY5DOUQSG4/8tWBTFTyRfMg5jQ==}
 
   '@clack/core@1.5.1':
     resolution: {integrity: sha512-iHTrHA8MtVuLl2TfZySmcKv1qO2PoyC9Z7pfSDozEuV5vtY3/wcOPKJXlqJ5Oq2Cx5DDGQGAMVx6HZfRRoVEbQ==}
@@ -1467,6 +1467,9 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
+  '@standard-schema/spec@1.1.0':
+    resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
   '@tailwindcss/node@4.3.3':
     resolution: {integrity: sha512-/T8IKEsf9VTU6tLjgC7+sv2mOPtQxzE2jMw7u4Tt40Tx+QSZxpzh95/H6cMKoja9XuW7iMdLJYBB0o9G1CaAgg==}
 
@@ -2162,8 +2165,8 @@ packages:
     resolution: {integrity: sha512-yQbXgO/OSZVD2IsiLlro+7Hf6Q18EJrKSEsdoMzKePKXct3gvD8oLcOQdIzGupr5Fj+EDe8gO/lxc1BzfMpxvA==}
     engines: {node: '>=8'}
 
-  breadc@1.0.0-beta.18:
-    resolution: {integrity: sha512-L/gKQSCc0yY1VtV/y4y4EKI52FVSX0gLRy29rV6jd+S1xrIQTxV8cBtAY75r542lB2clNh1kxMGB8ia9yjz33A==}
+  breadc@1.0.0-beta.21:
+    resolution: {integrity: sha512-RKwio3Jn8Yl852XbK76ncT5CnpuTp20f+Vv3WDUrcUFt6gsCDwHhwsdfuWQ6yWcKI/VdqXCnNxLPDzFxFB7LrQ==}
 
   browserslist@4.28.9:
     resolution: {integrity: sha512-EWazOblFYUvlGZcfGhPUPmYh3nikUxBVb+y9MJun5f3hBi812X+8MSQTujLBtgK3cf51fJWbWfOjyeO954d+Eg==}
@@ -4422,20 +4425,19 @@ snapshots:
     dependencies:
       css-tree: 3.2.1
 
-  '@breadc/color@1.0.0-beta.18': {}
+  '@breadc/color@1.0.0-beta.21': {}
 
-  '@breadc/core@1.0.0-beta.18':
+  '@breadc/core@1.0.0-beta.21':
     dependencies:
-      '@breadc/color': 1.0.0-beta.18
+      '@standard-schema/spec': 1.1.0
 
-  '@breadc/death@1.0.0-beta.18': {}
+  '@breadc/death@1.0.0-beta.21': {}
 
-  '@breadc/tui@1.0.0-beta.18':
+  '@breadc/tui@1.0.0-beta.21':
     dependencies:
-      '@breadc/color': 1.0.0-beta.18
-      '@breadc/death': 1.0.0-beta.18
+      '@breadc/color': 1.0.0-beta.21
+      '@breadc/death': 1.0.0-beta.21
       fast-string-width: 3.0.2
-      std-env: 4.2.0
 
   '@clack/core@1.5.1':
     dependencies:
@@ -5007,6 +5009,8 @@ snapshots:
   '@sec-ant/readable-stream@0.4.1': {}
 
   '@sindresorhus/merge-streams@4.0.0': {}
+
+  '@standard-schema/spec@1.1.0': {}
 
   '@tailwindcss/node@4.3.3':
     dependencies:
@@ -5612,12 +5616,13 @@ snapshots:
     dependencies:
       fill-range: 7.1.1
 
-  breadc@1.0.0-beta.18:
+  breadc@1.0.0-beta.21:
     dependencies:
-      '@breadc/color': 1.0.0-beta.18
-      '@breadc/core': 1.0.0-beta.18
-      '@breadc/death': 1.0.0-beta.18
-      '@breadc/tui': 1.0.0-beta.18
+      '@breadc/color': 1.0.0-beta.21
+      '@breadc/core': 1.0.0-beta.21
+      '@breadc/death': 1.0.0-beta.21
+      '@breadc/tui': 1.0.0-beta.21
+      fast-string-width: 3.0.2
 
   browserslist@4.28.9:
     dependencies:
