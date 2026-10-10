@@ -27,7 +27,7 @@
     "test:ci": "vitest run"
   },
   "dependencies": {
-    "@base-ui/react": "1.8.0",
+    "@base-ui/react": "1.9.0",
     "@epubook/bundler": "0.0.12-beta.4",
     "@epubook/core": "0.0.12-beta.4",
     "@epubook/xml": "0.0.12-beta.4",
